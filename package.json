@@ -13,11 +13,18 @@
     "test:feedback": "tsx --tsconfig tsconfig.test.json tests/feedback-test.ts",
     "test:category": "tsx --tsconfig tsconfig.test.json tests/category-enforcement-test.ts",
     "test": "tsx --tsconfig tsconfig.test.json",
+    "test:roles": "tsx --tsconfig tsconfig.test.json tests/all-roles-test.ts",
+    "test:client": "tsx --tsconfig tsconfig.test.json tests/client-logic-test.ts",
+    "test:vendor": "tsx --tsconfig tsconfig.test.json tests/vendor-logic-test.ts",
+    "test:delivery": "tsx --tsconfig tsconfig.test.json tests/delivery-logic-test.ts",
+    "test:admin": "tsx --tsconfig tsconfig.test.json tests/admin-logic-test.ts",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
     "test:e2e:headed": "npx playwright test --headed",
     "test:e2e:debug": "npx playwright test --debug",
-    "playwright:install": "npx playwright install"
+    "playwright:install": "npx playwright install",
+    "analyze": "cross-env ANALYZE=true next build",
+    "perf:check": "npx tsx --tsconfig tsconfig.test.json tests/performance-test.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
