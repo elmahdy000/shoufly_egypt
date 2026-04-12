@@ -19,13 +19,35 @@ type Notification = {
   requestId?: number;
 };
 
+type UserRole = "CLIENT" | "VENDOR" | "ADMIN" | "DELIVERY";
+
+function getRequestLink(role: UserRole | null, requestId: number): string {
+  if (!role) return `/client/requests/${requestId}`;
+  switch (role) {
+    case "ADMIN": return `/admin/requests/${requestId}`;
+    case "VENDOR": return `/vendor/requests/${requestId}`;
+    case "DELIVERY": return `/delivery/requests/${requestId}`;
+    default: return `/client/requests/${requestId}`;
+  }
+}
+
+function getNotificationsLink(role: UserRole | null): string {
+  if (!role) return "/client/notifications";
+  switch (role) {
+    case "ADMIN": return "/admin/notifications";
+    case "VENDOR": return "/vendor/notifications";
+    case "DELIVERY": return "/delivery/notifications";
+    default: return "/client/notifications";
+  }
+}
+
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<"CLIENT" | "ADMIN" | "DELIVERY" | null>(null);
+  const [userRole, setUserRole] = useState<"CLIENT" | "VENDOR" | "ADMIN" | "DELIVERY" | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { data: notifications, refresh, loading } = useAsyncData<Notification[]>(
-    () => apiFetch("/api/notifications", "CLIENT"), 
-    []
+    () => apiFetch("/api/notifications", userRole || "CLIENT"), 
+    [userRole]
   );
 
   const unreadCount = (notifications ?? []).filter(n => !n.isRead).length;
@@ -35,6 +57,7 @@ export function NotificationDropdown() {
     const path = window.location.pathname;
     if (path.startsWith("/admin")) setUserRole("ADMIN");
     else if (path.startsWith("/delivery")) setUserRole("DELIVERY");
+    else if (path.startsWith("/vendor")) setUserRole("VENDOR");
     else setUserRole("CLIENT");
   }, []);
 
@@ -62,7 +85,7 @@ export function NotificationDropdown() {
 
   async function markAsRead(id: number) {
     try {
-      await apiFetch(`/api/notifications/${id}/read`, "CLIENT", { method: "PATCH" });
+      await apiFetch(`/api/notifications/${id}/read`, userRole || "CLIENT", { method: "PATCH" });
       refresh();
     } catch (err) {
       console.error("Failed to mark notification as read", err);
@@ -72,7 +95,7 @@ export function NotificationDropdown() {
   async function markAllAsRead() {
     try {
       // Assuming endpoint exists for all
-      await apiFetch("/api/notifications/mark-all-read", "CLIENT", { method: "POST" });
+      await apiFetch("/api/notifications/mark-all-read", userRole || "CLIENT", { method: "POST" });
       refresh();
     } catch (err) {
       console.error(err);
@@ -165,7 +188,7 @@ export function NotificationDropdown() {
                          </span>
                          {n.requestId && (
                            <Link 
-                             href={userRole === "ADMIN" ? `/admin/requests/${n.requestId}` : `/client/requests/${n.requestId}`} 
+                             href={getRequestLink(userRole, n.requestId)} 
                              className="text-[10px] font-medium text-primary hover:text-orange-600 flex items-center gap-0.5"
                              onClick={(e) => {
                                e.stopPropagation();
@@ -186,7 +209,7 @@ export function NotificationDropdown() {
           {/* Footer */}
           <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
              <Link 
-               href="/client/notifications"
+               href={getNotificationsLink(userRole)}
                onClick={() => setIsOpen(false)}
                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1"
              >

@@ -35,6 +35,7 @@ export type ApiRequestDetails = ApiRequestSummary & {
   deliveryPhone?: string;
   notes?: string | null;
   bids?: ApiBid[];
+  selectedBid?: ApiBid | null; // Populated when client accepts a bid
   images?: Array<{ id: number; filePath: string; fileName: string }>;
   review?: {
     rating: number;

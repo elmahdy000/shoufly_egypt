@@ -3,7 +3,13 @@ import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-shoofly-2026';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return secret;
+}
 
 // 1. Request Reset Link (Generates Token)
 export async function POST(request: NextRequest) {
@@ -13,15 +19,19 @@ export async function POST(request: NextRequest) {
     // STEP A: Requesting a reset link
     if (action === 'request') {
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        
+        // Always return success to prevent user enumeration
+        if (!user) {
+            return NextResponse.json({ success: true, message: 'If an account exists, a reset email has been sent' });
+        }
 
         // Generate 15-minute token containing the user ID
-        const resetToken = jwt.sign({ resetUserId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+        const resetToken = jwt.sign({ resetUserId: user.id }, getJwtSecret(), { expiresIn: '15m' });
         
         // In reality, email this token. For now, we mock the email:
         console.log(`[EMAIL MOCK] Password reset link for ${email}: https://shoofly.com/reset?token=${resetToken}`);
 
-        return NextResponse.json({ success: true, message: 'Reset email sent' });
+        return NextResponse.json({ success: true, message: 'If an account exists, a reset email has been sent' });
     }
 
     // STEP B: Submitting the new password with token
@@ -29,7 +39,7 @@ export async function POST(request: NextRequest) {
         if (!token || !newPassword) return NextResponse.json({ error: 'Token and new password required' }, { status: 400 });
 
         try {
-            const decoded = jwt.verify(token, JWT_SECRET) as { resetUserId: number };
+            const decoded = jwt.verify(token, getJwtSecret()) as { resetUserId: number };
             
             const hashedPassword = await bcrypt.hash(newPassword, 10);
             

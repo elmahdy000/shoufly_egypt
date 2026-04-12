@@ -23,6 +23,6 @@ export const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   phone: z.string().optional(),
-  role: UserRole,
+  role: z.enum(["CLIENT", "VENDOR", "ADMIN", "DELIVERY"]),
 });
 export type RegisterInput = z.infer<typeof RegisterSchema>;

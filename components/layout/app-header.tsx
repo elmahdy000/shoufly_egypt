@@ -40,7 +40,7 @@ export function AppHeader({ title, subtitle, actions }: { title: string; subtitl
               title="المحادثات"
             >
               <FiMessageSquare size={18} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[8px] font-medium text-white flex items-center justify-center">3</span>
+              {/* TODO: Fetch unread message count from API */}
             </Link>
           </div>
 

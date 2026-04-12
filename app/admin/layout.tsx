@@ -14,7 +14,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [adminName, setAdminName] = useState('مدير النظام');
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
+  // TODO: Fetch actual notification count from API on mount
 
   useEffect(() => {
     // جلب بيانات الأدمن من localStorage أو API

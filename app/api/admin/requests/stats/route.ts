@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
       pendingReview,
       totalRequests
     ] = await Promise.all([
-      // Dispatched today
+      // Orders paid and pending delivery (dispatched)
       prisma.request.count({
         where: {
-          status: 'DISPATCHED',
+          status: 'ORDER_PAID_PENDING_DELIVERY',
           updatedAt: { gte: today }
         }
       }),
