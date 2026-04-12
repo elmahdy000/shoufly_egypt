@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #F8F9FA;
+  --color-foreground: #0F1111;
+  --color-primary: #FF5A00;
+  --color-primary-foreground: #FFFFFF;
+  --color-muted: #565959;
+  --color-muted-foreground: #767684;
+  --color-border: #E7E7E7;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0F1111;
+  
+  --radius-xl: 12px;
+  --radius-lg: 8px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+
+  --font-tajawal: var(--next-tajawal, "Tajawal"), var(--font-sans);
+  --font-cairo: var(--next-cairo, "Cairo"), var(--font-sans);
+  --font-jakarta: var(--next-jakarta, "Plus Jakarta Sans"), var(--font-sans);
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cairo);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+}
+
+:root {
+  --background: #F8F9FA;
+  --foreground: #0F1111;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-tajawal);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* RTL Layout Fixes */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* E-commerce Card Style (Clean, Solid) */
+.shoofly-card {
+  background: white;
+  border: 1px solid #E7E7E7;
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.shoofly-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Standard Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F9FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5D9D9;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #999999;
+}

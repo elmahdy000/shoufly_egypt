@@ -1,0 +1,31 @@
+import { NextRequest } from 'next/server';
+import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
+import { markReturned } from '@/lib/services/delivery';
+import { DeliveryRouteParamSchema, MarkReturnedBodySchema } from '@/lib/validations/delivery';
+import { fail, ok } from '@/lib/utils/http-response';
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ requestId: string }> }
+) {
+  try {
+    const user = await getCurrentUser(req.headers);
+    requireUser(user);
+    requireRole(user, 'VENDOR');
+
+    const routeParams = DeliveryRouteParamSchema.parse(await params);
+    const body = MarkReturnedBodySchema.parse(await req.json().catch(() => ({})));
+
+    const result = await markReturned({
+      requestId: routeParams.requestId,
+      actorId: user.id,
+      actorRole: 'VENDOR',
+      note: body.note,
+      locationText: body.locationText,
+    });
+
+    return ok(result);
+  } catch (error) {
+    return fail(error);
+  }
+}

@@ -1,0 +1,793 @@
+{
+  "info": {
+    "_postman_id": "b3e5b32a-7e61-4c12-98ba-d52e5c8e3b20",
+    "name": "Shoofly API Complete Suite - 2026",
+    "description": "The complete, production-ready API endpoint collection for the Shoofly platform, encompassing Client, Vendor, Admin, Delivery Agent logic, alongside Real-time Chat and Notifications.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"testuser@shoofly.com\",\n  \"password\": \"securepassword123\",\n  \"role\": \"CLIENT\",\n  \"phone\": \"01000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@shoofly.com\",\n  \"password\": \"securepassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Public & Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"phone\": \"01111111111\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Client Flow",
+      "item": [
+        {
+          "name": "Create Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix Laptop Screen\",\n  \"description\": \"Screen is flickering constantly.\",\n  \"categoryId\": 1,\n  \"address\": \"Cairo, Egypt\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357,\n  \"deliveryPhone\": \"0123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Accept Vendor Offer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bidId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/requests/accept-offer",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "requests", "accept-offer"]
+            }
+          }
+        },
+        {
+          "name": "Pay for Request (Escrow)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/requests/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "requests", "pay"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Vendor Flow",
+      "item": [
+        {
+          "name": "Get Open Requests (Marketplace)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor/requests/open?latitude=30.0&longitude=31.0&radiusKm=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor", "requests", "open"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "30.0"
+                },
+                {
+                  "key": "longitude",
+                  "value": "31.0"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Bid",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": 1,\n  \"description\": \"I can fix it in 2 days using premium parts.\",\n  \"netPrice\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor/bids",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor", "bids"]
+            }
+          }
+        },
+        {
+          "name": "Update Delivery Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": 1,\n  \"status\": \"READY_FOR_PICKUP\",\n  \"note\": \"Package is ready at the front desk.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "delivery", "status"]
+            }
+          }
+        },
+        {
+          "name": "Request Withdrawal",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/withdrawals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "withdrawals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin Flow",
+      "item": [
+        {
+          "name": "List Pending Requests",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/requests?status=PENDING_ADMIN_REVISION",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "requests"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING_ADMIN_REVISION"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Request (Approve/Reject)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"approve\",\n  \"categoryId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/requests/1/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "requests", "1", "review"]
+            }
+          }
+        },
+        {
+          "name": "Forward Bid to Client",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/bids/1/forward",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "bids", "1", "forward"]
+            }
+          }
+        },
+        {
+          "name": "Get Finance Transactions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/finance/transactions?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "finance", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review Withdrawal",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"note\": \"Transferred successfully\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/withdrawals/1/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "withdrawals", "1", "review"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Delivery Flow",
+      "item": [
+        {
+          "name": "Accept Delivery Task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "delivery", "accept"]
+            }
+          }
+        },
+        {
+          "name": "Complete Delivery",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "delivery", "complete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Chat & Communication",
+      "item": [
+        {
+          "name": "Get Chat History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat?otherUserId=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"],
+              "query": [
+                {
+                  "key": "otherUserId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": 2,\n  \"content\": \"Hello, I am checking on my order.\",\n  \"requestId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Mark Messages as Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Real-time Notifications",
+      "item": [
+        {
+          "name": "Get Notification History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications?limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Connect Live Stream (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/stream?userId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "stream"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your_test_bearer_token_here",
+      "type": "string"
+    }
+  ]
+}
