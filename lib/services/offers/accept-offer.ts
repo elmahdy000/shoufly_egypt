@@ -38,7 +38,7 @@ export async function acceptOffer(bidId: number, clientId: number) {
       where: { id: bid.requestId },
       data: {
         selectedBidId: bid.id,
-        status: 'OFFERS_FORWARDED',
+        status: 'OFFERS_FORWARDED',  // Keep as is - no OFFERS_ACCEPTED in enum
       },
     });
 

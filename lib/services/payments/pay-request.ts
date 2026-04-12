@@ -74,11 +74,19 @@ export async function payRequest(requestId: number, clientId: number) {
       };
     }
 
+    // Atomic decrement with balance check - prevents race conditions
     const updatedClient = await tx.user.update({
-      where: { id: clientId },
-      data: { walletBalance: toTwo(currentWallet - amountToPay) },
+      where: { 
+        id: clientId,
+        walletBalance: { gte: amountToPay } // Ensures sufficient balance at DB level
+      },
+      data: { walletBalance: { decrement: amountToPay } },
       select: { id: true, walletBalance: true },
     });
+    
+    if (!updatedClient) {
+      throw new Error('Insufficient balance or concurrent modification detected');
+    }
 
     await tx.transaction.create({
       data: {

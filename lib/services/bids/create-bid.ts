@@ -35,6 +35,16 @@ export async function createBid(vendorId: number, data: CreateBidInput) {
       );
     }
 
+    // Check if bidding period has expired (72 hours from request creation)
+    const BIDDING_DURATION_HOURS = 72;
+    const requestCreatedAt = new Date(request.createdAt);
+    const biddingDeadline = new Date(requestCreatedAt.getTime() + BIDDING_DURATION_HOURS * 60 * 60 * 1000);
+    const now = new Date();
+    
+    if (now > biddingDeadline) {
+      throw new Error(`Bidding period has expired. This request closed for bidding at ${biddingDeadline.toISOString()}`);
+    }
+
     // Fetch commission percentage from settings
     const settings = await tx.platformSetting.findFirst({
       orderBy: { id: 'desc' },

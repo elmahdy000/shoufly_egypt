@@ -35,10 +35,13 @@ export async function createRefund(params: {
       throw new Error('Cannot refund successfully closed request');
     }
 
-    const alreadyRefunded = request.transactions.some((txr) => txr.type === 'REFUND');
-    if (alreadyRefunded) {
-      logger.warn('refund.request.duplicate', { requestId });
-      throw new Error('Refund already issued for this request');
+    // Check for existing refund at database level (race-condition safe)
+    const existingRefund = await tx.transaction.findFirst({
+      where: { requestId, type: 'REFUND' }
+    });
+    if (existingRefund) {
+      logger.warn('refund.request.duplicate', { requestId, refundTxId: existingRefund.id });
+      throw new Error(`Refund already issued for this request (TX: ${existingRefund.id})`);
     }
 
     const escrow = request.transactions.find((txr) => txr.type === 'ESCROW_DEPOSIT');
@@ -48,11 +51,11 @@ export async function createRefund(params: {
     }
 
     const refundAmount = toTwo(Number(escrow.amount));
-    const newBalance = toTwo(Number(request.client.walletBalance) + refundAmount);
 
+    // Atomic increment to prevent race conditions
     const updatedClient = await tx.user.update({
       where: { id: request.clientId },
-      data: { walletBalance: newBalance },
+      data: { walletBalance: { increment: refundAmount } },
       select: { id: true, walletBalance: true },
     });
 

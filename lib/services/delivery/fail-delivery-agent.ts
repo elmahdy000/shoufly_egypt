@@ -30,15 +30,18 @@ export async function failDeliveryAgent(params: {
 
     await tx.request.update({
       where: { id: requestId },
-      data: { assignedDeliveryAgentId: null, status: "CLOSED_CANCELLED" },
+      data: { 
+        assignedDeliveryAgentId: null,  // Remove assignment so another agent can take it
+        status: "ORDER_PAID_PENDING_DELIVERY"  // Keep as paid/pending, not cancelled
+      },
     });
 
     await tx.notification.create({
       data: {
         userId: request.clientId,
         type: "DELIVERY_FAILED",
-        title: "Delivery Failed",
-        message: `Delivery for request #${requestId} has failed. Admin will review for refund.`,
+        title: "Delivery Failed - Reassigning",
+        message: `Delivery for request #${requestId} has failed. Another delivery agent will be assigned shortly.`,
       },
     });
 
@@ -52,8 +55,8 @@ export async function failDeliveryAgent(params: {
         data: admins.map((a: { id: number }) => ({
           userId: a.id,
           type: "DELIVERY_FAILED",
-          title: "FAILED DELIVERY - Refund Action Required",
-          message: `Request #${requestId} failed delivery. Escrow funds need review.`,
+          title: "Delivery Failed - Reassign Needed",
+          message: `Request #${requestId} delivery failed. Reassign to new agent or review for refund if repeated failures occur.`,
         })),
       });
     }

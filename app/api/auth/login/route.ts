@@ -3,9 +3,33 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { LoginSchema } from "@/lib/validations/auth";
 import { createSessionToken } from "@/lib/session";
+import { checkRateLimit, getClientIP } from "@/lib/utils/rate-limiter";
+
+// Rate limit: 5 login attempts per minute per IP
+const LOGIN_RATE_LIMIT = 5;
+const LOGIN_WINDOW_MS = 60000; // 1 minute
 
 export async function POST(req: NextRequest) {
   try {
+    // Check rate limit
+    const clientIP = getClientIP(req.headers);
+    const rateLimitKey = `login:${clientIP}`;
+    const rateLimitResult = checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT, LOGIN_WINDOW_MS);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(rateLimitResult.limit),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+          }
+        },
+      );
+    }
+
     const body = await req.json();
     const data = LoginSchema.parse(body);
 

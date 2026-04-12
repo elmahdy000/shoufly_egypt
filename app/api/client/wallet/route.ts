@@ -26,14 +26,18 @@ export async function POST(req: NextRequest) {
       });
 
       if (action === 'withdraw') {
-        if (freshUser.walletBalance.lessThan(decimalAmount)) {
-          throw new Error('الرصيد المتاح غير كافٍ للاسترداد.');
-        }
-
+        // Atomic decrement with balance check at database level
         const updatedUser = await tx.user.update({
-          where: { id: user.id },
+          where: { 
+            id: user.id,
+            walletBalance: { gte: decimalAmount }
+          },
           data: { walletBalance: { decrement: decimalAmount } }
         });
+        
+        if (!updatedUser) {
+          throw new Error('الرصيد المتاح غير كافٍ للاسترداد أو تم تعديله في نفس اللحظة.');
+        }
 
         const transaction = await tx.transaction.create({
           data: {
