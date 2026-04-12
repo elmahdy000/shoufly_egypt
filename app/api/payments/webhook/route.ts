@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { depositFunds } from '@/lib/services/transactions';
 
 /**
- * Webhook handler to receive payment confirmations from external gateways (Fawry/Paymob/etc.)
+ * Universal Webhook handler for mock/simulation payments
+ * For production, use specific handlers:
+ * - /api/payments/paymob/webhook - Paymob payments
+ * - /api/payments/fawry/webhook - Fawry payments
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     logger.info('payment.webhook.received', { body });
 
-    // TODO: Verify Signature/Hash here based on the provider (Security)
-    
     const { 
       transactionId, // Reference from our system 
       externalId,    // ID from the payment provider 
@@ -21,48 +23,40 @@ export async function POST(req: NextRequest) {
 
     if (status !== 'SUCCESS') {
       logger.warn('payment.webhook.failed_status', { transactionId, status });
-      return NextResponse.json({ received: true });
+      return NextResponse.json({ received: true, status: 'failed_recorded' });
     }
 
-    // Process the successful payment atomically
-    await prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.findFirst({
-        where: { id: parseInt(transactionId) },
-        include: { user: true }
-      });
-
-      if (!transaction) throw new Error('Transaction record not found');
-
-      // 1. Update the user balance (Deposit the funds)
-      await tx.user.update({
-        where: { id: transaction.userId },
-        data: {
-          walletBalance: { increment: amount }
-        }
-      });
-
-      // 2. If this payment is linked to a request, Auto-Pay the request
-      if (transaction.requestId) {
-        logger.info('payment.webhook.auto_pay_request', { requestId: transaction.requestId });
-        // We'll call payRequest logic manually in this transaction or via service
-        // Since we are already in a transaction, we should use the same 'tx'
-        // For simplicity in this mock, we assume user now has enough balance
-      }
-
-      // 3. Notify the user
-      await tx.notification.create({
-        data: {
-          userId: transaction.userId,
-          type: 'WALLET_TOPUP',
-          title: 'تم السداد بنجاح',
-          message: transaction.requestId 
-            ? `تم استلام دفعتك للأوردر #${transaction.requestId} بنجاح.` 
-            : `تم إضافة مبلغ ${amount} ج.م لمحفظتك بنجاح.`,
-        }
-      });
+    // Find transaction
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: parseInt(transactionId) },
+      include: { user: true },
     });
 
-    return NextResponse.json({ success: true });
+    if (!transaction) {
+      throw new Error('Transaction record not found');
+    }
+
+    // Process using depositFunds service
+    await depositFunds(transaction.userId, amount);
+
+    // If this payment is linked to a request, Auto-Pay the request
+    if (transaction.requestId) {
+      logger.info('payment.webhook.auto_pay_request', { requestId: transaction.requestId });
+      
+      const { payRequest } = await import('@/lib/services/payments');
+      
+      try {
+        await payRequest(transaction.requestId, transaction.userId);
+        logger.info('payment.webhook.auto_pay_success', { requestId: transaction.requestId });
+      } catch (payError: any) {
+        logger.error('payment.webhook.auto_pay_failed', {
+          requestId: transaction.requestId,
+          error: payError.message,
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, received: true });
   } catch (error: any) {
     logger.error('payment.webhook.error', { error: error.message });
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 400 });

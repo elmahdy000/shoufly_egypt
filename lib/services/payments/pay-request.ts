@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { getPaymentRedirectUrl } from '@/lib/payments/config';
 
 function toTwo(value: number): number {
   return Math.round(value * 100) / 100;
@@ -69,7 +70,11 @@ export async function payRequest(requestId: number, clientId: number) {
 
       return {
         insufficientBalance: true,
-        redirectUrl: `/payments/mock-gateway?txnId=${pendingTx.id}&amount=${amountToPay}&requestId=${request.id}`,
+        redirectUrl: getPaymentRedirectUrl(
+          String(pendingTx.id), 
+          amountToPay, 
+          String(request.id)
+        ),
         message: 'رصيد المحفظة غير كافٍ. جاري تحويلك لخيارات الدفع الإلكتروني لسداد قيمة الأوردر...'
       };
     }

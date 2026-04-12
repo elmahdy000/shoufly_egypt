@@ -15170,6 +15170,7 @@ export namespace Prisma {
     amount: number
     type: number
     description: number
+    metadata: number
     createdAt: number
     _all: number
   }
@@ -15216,6 +15217,7 @@ export namespace Prisma {
     amount?: true
     type?: true
     description?: true
+    metadata?: true
     createdAt?: true
     _all?: true
   }
@@ -15313,6 +15315,7 @@ export namespace Prisma {
     amount: Decimal
     type: $Enums.TransactionType
     description: string | null
+    metadata: JsonValue | null
     createdAt: Date
     _count: TransactionCountAggregateOutputType | null
     _avg: TransactionAvgAggregateOutputType | null
@@ -15342,6 +15345,7 @@ export namespace Prisma {
     amount?: boolean
     type?: boolean
     description?: boolean
+    metadata?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     request?: boolean | Transaction$requestArgs<ExtArgs>
@@ -15354,6 +15358,7 @@ export namespace Prisma {
     amount?: boolean
     type?: boolean
     description?: boolean
+    metadata?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     request?: boolean | Transaction$requestArgs<ExtArgs>
@@ -15366,6 +15371,7 @@ export namespace Prisma {
     amount?: boolean
     type?: boolean
     description?: boolean
+    metadata?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     request?: boolean | Transaction$requestArgs<ExtArgs>
@@ -15378,10 +15384,11 @@ export namespace Prisma {
     amount?: boolean
     type?: boolean
     description?: boolean
+    metadata?: boolean
     createdAt?: boolean
   }
 
-  export type TransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "requestId" | "amount" | "type" | "description" | "createdAt", ExtArgs["result"]["transaction"]>
+  export type TransactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "requestId" | "amount" | "type" | "description" | "metadata" | "createdAt", ExtArgs["result"]["transaction"]>
   export type TransactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     request?: boolean | Transaction$requestArgs<ExtArgs>
@@ -15408,6 +15415,7 @@ export namespace Prisma {
       amount: Prisma.Decimal
       type: $Enums.TransactionType
       description: string | null
+      metadata: Prisma.JsonValue | null
       createdAt: Date
     }, ExtArgs["result"]["transaction"]>
     composites: {}
@@ -15840,6 +15848,7 @@ export namespace Prisma {
     readonly amount: FieldRef<"Transaction", 'Decimal'>
     readonly type: FieldRef<"Transaction", 'TransactionType'>
     readonly description: FieldRef<"Transaction", 'String'>
+    readonly metadata: FieldRef<"Transaction", 'Json'>
     readonly createdAt: FieldRef<"Transaction", 'DateTime'>
   }
     
@@ -23408,6 +23417,7 @@ export namespace Prisma {
     amount: 'amount',
     type: 'type',
     description: 'description',
+    metadata: 'metadata',
     createdAt: 'createdAt'
   };
 
@@ -23680,20 +23690,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'NotificationType'
-   */
-  export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType'>
-    
-
-
-  /**
-   * Reference to a field of type 'NotificationType[]'
-   */
-  export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -23704,6 +23700,20 @@ export namespace Prisma {
    * Reference to a field of type 'QueryMode'
    */
   export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'NotificationType'
+   */
+  export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType'>
+    
+
+
+  /**
+   * Reference to a field of type 'NotificationType[]'
+   */
+  export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType[]'>
     
 
 
@@ -24581,6 +24591,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Transaction"> | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
     description?: StringNullableFilter<"Transaction"> | string | null
+    metadata?: JsonNullableFilter<"Transaction">
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     request?: XOR<RequestNullableScalarRelationFilter, RequestWhereInput> | null
@@ -24593,6 +24604,7 @@ export namespace Prisma {
     amount?: SortOrder
     type?: SortOrder
     description?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
     request?: RequestOrderByWithRelationInput
@@ -24608,6 +24620,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Transaction"> | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
     description?: StringNullableFilter<"Transaction"> | string | null
+    metadata?: JsonNullableFilter<"Transaction">
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     request?: XOR<RequestNullableScalarRelationFilter, RequestWhereInput> | null
@@ -24620,6 +24633,7 @@ export namespace Prisma {
     amount?: SortOrder
     type?: SortOrder
     description?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: TransactionCountOrderByAggregateInput
     _avg?: TransactionAvgOrderByAggregateInput
@@ -24638,6 +24652,7 @@ export namespace Prisma {
     amount?: DecimalWithAggregatesFilter<"Transaction"> | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeWithAggregatesFilter<"Transaction"> | $Enums.TransactionType
     description?: StringNullableWithAggregatesFilter<"Transaction"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"Transaction">
     createdAt?: DateTimeWithAggregatesFilter<"Transaction"> | Date | string
   }
 
@@ -25945,6 +25960,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutTransactionsInput
     request?: RequestCreateNestedOneWithoutTransactionsInput
@@ -25957,6 +25973,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -25964,6 +25981,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutTransactionsNestedInput
     request?: RequestUpdateOneWithoutTransactionsNestedInput
@@ -25976,6 +25994,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -25986,6 +26005,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -25993,6 +26013,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -26003,6 +26024,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -27370,6 +27392,29 @@ export namespace Prisma {
     notIn?: $Enums.TransactionType[] | ListEnumTransactionTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumTransactionTypeFilter<$PrismaModel> | $Enums.TransactionType
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type RequestNullableScalarRelationFilter = {
     is?: RequestWhereInput | null
@@ -27383,6 +27428,7 @@ export namespace Prisma {
     amount?: SortOrder
     type?: SortOrder
     description?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -27429,21 +27475,14 @@ export namespace Prisma {
     _min?: NestedEnumTransactionTypeFilter<$PrismaModel>
     _max?: NestedEnumTransactionTypeFilter<$PrismaModel>
   }
-
-  export type EnumNotificationTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
-  }
-  export type JsonNullableFilter<$PrismaModel = never> =
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
       >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
 
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
     path?: string[]
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
@@ -27458,6 +27497,16 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type EnumNotificationTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
   }
 
   export type NotificationCountOrderByAggregateInput = {
@@ -27514,32 +27563,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumNotificationTypeFilter<$PrismaModel>
     _max?: NestedEnumNotificationTypeFilter<$PrismaModel>
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type ChatMessageCountOrderByAggregateInput = {
@@ -29780,23 +29803,6 @@ export namespace Prisma {
     _min?: NestedEnumTransactionTypeFilter<$PrismaModel>
     _max?: NestedEnumTransactionTypeFilter<$PrismaModel>
   }
-
-  export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
-  }
-
-  export type NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.NotificationType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumNotificationTypeFilter<$PrismaModel>
-    _max?: NestedEnumNotificationTypeFilter<$PrismaModel>
-  }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -29819,6 +29825,23 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumNotificationTypeFilter<$PrismaModel> | $Enums.NotificationType
+  }
+
+  export type NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.NotificationType | EnumNotificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.NotificationType[] | ListEnumNotificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumNotificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.NotificationType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumNotificationTypeFilter<$PrismaModel>
+    _max?: NestedEnumNotificationTypeFilter<$PrismaModel>
   }
 
   export type NestedEnumWithdrawalStatusFilter<$PrismaModel = never> = {
@@ -29999,6 +30022,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     request?: RequestCreateNestedOneWithoutTransactionsInput
   }
@@ -30009,6 +30033,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -30495,6 +30520,7 @@ export namespace Prisma {
     amount?: DecimalFilter<"Transaction"> | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
     description?: StringNullableFilter<"Transaction"> | string | null
+    metadata?: JsonNullableFilter<"Transaction">
     createdAt?: DateTimeFilter<"Transaction"> | Date | string
   }
 
@@ -31765,6 +31791,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutTransactionsInput
   }
@@ -31775,6 +31802,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -34695,6 +34723,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -34942,6 +34971,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     request?: RequestUpdateOneWithoutTransactionsNestedInput
   }
@@ -34952,6 +34982,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34961,6 +34992,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35616,6 +35648,7 @@ export namespace Prisma {
     amount: Decimal | DecimalJsLike | number | string
     type: $Enums.TransactionType
     description?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
   }
 
@@ -35733,6 +35766,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutTransactionsNestedInput
   }
@@ -35743,6 +35777,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35752,6 +35787,7 @@ export namespace Prisma {
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     type?: EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

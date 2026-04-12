@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/shoofly/button';
 import { FiShield, FiLock, FiCheckCircle, FiCreditCard } from 'react-icons/fi';
 
 /**
  * MOCK PAYMENT GATEWAY
- * Simulates an external provider like Paymob or Fawry. 
+ * Simulates an external provider like Paymob or Fawry.
  * Allows testing the full integration lifecycle.
  */
-export default function MockGatewayPage() {
+function MockGatewayContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -116,5 +116,20 @@ export default function MockGatewayPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MockGatewayPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-500 font-bold">جاري التحميل...</p>
+        </div>
+      </div>
+    }>
+      <MockGatewayContent />
+    </Suspense>
   );
 }

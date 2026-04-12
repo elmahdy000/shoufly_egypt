@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/app/generated/prisma';
+import { getPaymentRedirectUrl } from '@/lib/payments/config';
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,12 +62,16 @@ export async function POST(req: NextRequest) {
           }
         });
 
-        // PREPARE REDIRECT URL (In production, this would be Paymob/Fawry URL)
-        const redirectUrl = `/payments/mock-gateway?txnId=${transaction.id}&amount=${parsedAmount}`;
+        // Get redirect URL based on configured payment gateway
+        const redirectUrl = getPaymentRedirectUrl(
+          String(transaction.id), 
+          parsedAmount
+        );
         
         return { 
           success: true, 
           redirectUrl,
+          transactionId: transaction.id,
           message: 'جاري تحويلك لبوابة الدفع الآمنة...'
         };
       }

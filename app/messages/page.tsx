@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/shoofly/button";
@@ -10,7 +10,7 @@ import { FiSend, FiMessageSquare, FiSearch, FiArrowRight } from "react-icons/fi"
 import { formatRelative } from "date-fns";
 import { ar } from "date-fns/locale";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const searchParams = useSearchParams();
   const initialOtherId = searchParams.get('otherId');
   
@@ -196,5 +196,20 @@ export default function MessagesPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-screen bg-slate-50 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-500 font-bold">جاري التحميل...</p>
+        </div>
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   );
 }

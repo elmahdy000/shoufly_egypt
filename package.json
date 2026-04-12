@@ -12,7 +12,12 @@
     "test:full-flow": "tsx --tsconfig tsconfig.test.json tests/full-flow-test.ts",
     "test:feedback": "tsx --tsconfig tsconfig.test.json tests/feedback-test.ts",
     "test:category": "tsx --tsconfig tsconfig.test.json tests/category-enforcement-test.ts",
-    "test": "tsx --tsconfig tsconfig.test.json"
+    "test": "tsx --tsconfig tsconfig.test.json",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:e2e:debug": "npx playwright test --debug",
+    "playwright:install": "npx playwright install"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
@@ -46,6 +51,7 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@playwright/test": "^1.44.0"
   }
 }
