@@ -13,20 +13,18 @@ export type MobileNavItem = {
 export function MobileBottomNav({ items }: { items: MobileNavItem[] }) {
   const pathname = usePathname();
 
-  // Longest-prefix match: among all items whose href is a prefix of the
-  // current path, pick the one with the longest href (most specific).
-  const activeHref = items
-    .filter(item =>
-      pathname === item.href ||
-      (item.href !== "/" && pathname.startsWith(item.href + "/"))
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? pathname;
+  // Compare the second path segment only.
+  // e.g. /client/requests/5 → segment = "requests"
+  //      /client            → segment = ""
+  // This way /client never matches /client/requests, /client/wallet, etc.
+  const pathSegment = pathname.split("/")[2] ?? "";
 
   return (
     <nav className="fixed bottom-0 start-0 end-0 z-30 border-t border-slate-200 bg-white px-2 py-1 md:hidden">
       <ul className="mx-auto grid max-w-xl" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((item) => {
-          const isActive = item.href === activeHref;
+          const itemSegment = item.href.split("/")[2] ?? "";
+          const isActive = itemSegment === pathSegment;
           return (
             <li key={item.href}>
               <Link
