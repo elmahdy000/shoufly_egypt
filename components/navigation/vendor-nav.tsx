@@ -1,11 +1,14 @@
+"use client";
+
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { FiHome, FiPackage, FiTag, FiTrendingUp, FiUser } from "react-icons/fi";
 
 const items = [
-  { href: "/vendor", label: "الرئيسية" },
-  { href: "/vendor/requests", label: "الطلبات" },
-  { href: "/vendor/bids", label: "عروضي" },
-  { href: "/vendor/earnings", label: "الأرباح" },
-  { href: "/vendor/profile", label: "الملف" },
+  { href: "/vendor",          label: "الرئيسية", icon: <FiHome size={19} /> },
+  { href: "/vendor/requests", label: "الطلبات",  icon: <FiPackage size={19} /> },
+  { href: "/vendor/bids",     label: "عروضي",    icon: <FiTag size={19} /> },
+  { href: "/vendor/earnings", label: "الأرباح",  icon: <FiTrendingUp size={19} /> },
+  { href: "/vendor/profile",  label: "الملف",    icon: <FiUser size={19} /> },
 ];
 
 export function VendorNav() {
