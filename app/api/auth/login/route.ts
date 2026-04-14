@@ -75,10 +75,12 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
+    // Use SameSite=none + Secure to support cross-origin iframe previews (e.g. Replit dev environment)
+    const isSecureContext = process.env.NODE_ENV === "production" || !!process.env.REPLIT_DOMAINS;
     res.cookies.set("session_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isSecureContext,
+      sameSite: isSecureContext ? "none" : "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
