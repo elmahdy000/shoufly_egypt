@@ -12,7 +12,9 @@ import {
   FiPlus, 
   FiGrid, 
   FiArrowLeft, 
-  FiClock, 
+  FiClock,
+  FiMessageSquare,
+  FiAlertCircle,
   FiCheckCircle, 
   FiBox,
   FiMapPin,
@@ -231,10 +233,36 @@ export default function ClientHomePage() {
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
             </Link>
+
+            <Link href="/client/chat" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-primary/30 transition-all group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 group-hover:bg-violet-500 group-hover:text-white transition-colors">
+                  <FiMessageSquare size={20} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-900 text-sm">المحادثات</p>
+                  <p className="text-xs text-slate-500">رسائلك مع التجار</p>
+                </div>
+                <FiArrowLeft className="text-slate-300" size={16} />
+              </div>
+            </Link>
+
+            <Link href="/client/complaints" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-rose-200 transition-all group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <FiAlertCircle size={20} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-900 text-sm">تقديم شكوى</p>
+                  <p className="text-xs text-slate-500">الإبلاغ عن مشكلة</p>
+                </div>
+                <FiArrowLeft className="text-slate-300" size={16} />
+              </div>
+            </Link>
           </div>
 
           {/* Tip Card */}
-          <div className="bg-gradient-to-br from-primary to-primary/90 rounded-2xl p-5 text-white">
+          <div className="bg-primary rounded-2xl p-5 text-white">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                 <FiTrendingUp size={16} />

@@ -2,25 +2,66 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/shoofly/button";
+import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { apiFetch } from "@/lib/api/client";
+import { formatCurrency } from "@/lib/formatters";
 import { logoutUser } from "@/lib/api/auth";
-import { 
-  FiUser, 
-  FiSettings, 
-  FiShield, 
-  FiLogOut, 
-  FiBell, 
-  FiArrowRight,
-  FiChevronLeft,
-  FiPackage,
-  FiMapPin,
-  FiPhone,
-  FiMail,
-  FiEdit3
+import {
+  FiUser, FiShield, FiLogOut, FiBell,
+  FiArrowRight, FiChevronLeft, FiPackage, FiPhone,
+  FiMail, FiEdit3, FiX, FiCheck, FiRefreshCw,
+  FiAlertCircle, FiCalendar, FiDollarSign, FiMessageSquare
 } from "react-icons/fi";
+
+interface UserProfile {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: string;
+  isActive: boolean;
+  walletBalance: number;
+  createdAt: string;
+}
 
 export default function ClientProfilePage() {
   const router = useRouter();
+  const { data: user, loading, error, refresh } = useAsyncData<UserProfile>(
+    () => apiFetch('/api/user/profile', 'CLIENT'), []
+  );
+
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  function openEdit() {
+    setEditName(user?.fullName ?? '');
+    setEditPhone(user?.phone ?? '');
+    setSaveMsg(null);
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    try {
+      setSaving(true);
+      setSaveMsg(null);
+      await apiFetch('/api/user/profile', 'CLIENT', {
+        method: 'PATCH',
+        body: { fullName: editName, phone: editPhone },
+      });
+      setSaveMsg({ type: 'success', text: 'تم حفظ التغييرات بنجاح' });
+      refresh();
+      setTimeout(() => setEditing(false), 1200);
+    } catch (err) {
+      setSaveMsg({ type: 'error', text: err instanceof Error ? err.message : 'حدث خطأ' });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleLogout() {
     await logoutUser();
@@ -28,162 +69,172 @@ export default function ClientProfilePage() {
     router.push("/login");
   }
 
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(w => w[0]).slice(0, 2).join('')
+    : '؟';
+
   return (
-    <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-8 font-sans dir-rtl text-right pb-24 lg:pb-10">
-      
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <Link href="/client" className="text-sm text-slate-500 hover:text-primary flex items-center gap-1 mb-2">
-            <FiArrowRight size={14} /> العودة للرئيسية
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <FiUser className="text-primary" /> الملف الشخصي
-          </h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">إدارة حسابك وإعداداتك</p>
-        </div>
+    <div className="p-5 max-w-2xl mx-auto space-y-5 font-sans text-right pb-28" dir="rtl">
+
+      {/* Header */}
+      <div>
+        <Link href="/client" className="text-sm text-slate-500 hover:text-primary flex items-center gap-1 mb-2">
+          <FiArrowRight size={14} /> الرئيسية
+        </Link>
+        <h1 className="text-xl font-bold text-slate-900">الملف الشخصي</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Profile Card */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiUser size={36} className="text-primary" />
+      {/* Avatar + Name card */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        {loading ? (
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <FiUser size={28} className="text-slate-300" />
+          </div>
+        ) : (
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
+            {initials}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-2">
+            <div className="h-5 bg-slate-100 rounded-lg w-32 mx-auto" />
+            <div className="h-4 bg-slate-100 rounded-lg w-48 mx-auto" />
+          </div>
+        ) : error ? (
+          <p className="text-rose-500 text-sm">{error}</p>
+        ) : (
+          <>
+            <h2 className="text-lg font-bold text-slate-900">{user?.fullName}</h2>
+            <p className="text-sm text-slate-500 mt-0.5">{user?.email}</p>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full ${user?.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                <FiShield size={11} /> {user?.isActive ? 'حساب نشط' : 'حساب معلق'}
+              </span>
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-1">أحمد محمد</h2>
-            <p className="text-sm text-slate-500 mb-4">client@shoofly.com</p>
-            
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-full">
-              <FiShield size={12} /> حساب نشط
+          </>
+        )}
+
+        <button
+          onClick={openEdit}
+          disabled={loading || !!error}
+          className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-40"
+        >
+          <FiEdit3 size={15} /> تعديل البيانات
+        </button>
+      </div>
+
+      {/* Info rows */}
+      <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
+        <InfoRow icon={<FiPhone size={16} className="text-slate-500" />} label="رقم الهاتف"
+          value={user?.phone ?? '—'} loading={loading} />
+        <InfoRow icon={<FiMail size={16} className="text-slate-500" />} label="البريد الإلكتروني"
+          value={user?.email ?? '—'} loading={loading} />
+        <InfoRow icon={<FiDollarSign size={16} className="text-slate-500" />} label="رصيد المحفظة"
+          value={user ? formatCurrency(Number(user.walletBalance)) : '—'} loading={loading} />
+        <InfoRow icon={<FiCalendar size={16} className="text-slate-500" />} label="تاريخ الانضمام"
+          value={user ? new Date(user.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} loading={loading} />
+      </div>
+
+      {/* Quick links */}
+      <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
+        <QuickLink href="/client/notifications" icon={<FiBell size={18} className="text-amber-500" />} label="الإشعارات" desc="عرض إشعاراتك" />
+        <QuickLink href="/client/requests" icon={<FiPackage size={18} className="text-blue-500" />} label="طلباتي" desc="متابعة الطلبات" />
+        <QuickLink href="/client/chat" icon={<FiMessageSquare size={18} className="text-violet-500" />} label="المحادثات" desc="رسائلك مع التجار" />
+        <QuickLink href="/client/complaints" icon={<FiAlertCircle size={18} className="text-rose-500" />} label="تقديم شكوى" desc="الإبلاغ عن مشكلة" />
+      </div>
+
+      {/* Logout */}
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-rose-200 bg-rose-50 text-rose-600 text-sm font-semibold hover:bg-rose-100 transition-colors"
+      >
+        <FiLogOut size={16} /> تسجيل الخروج
+      </button>
+
+      {/* Edit Modal */}
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40" dir="rtl">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 text-base">تعديل البيانات</h3>
+              <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+                <FiX size={18} />
+              </button>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-                  <FiPhone size={14} />
-                </div>
-                <span>+20 123 456 7890</span>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-slate-500 font-medium block mb-1.5">الاسم الكامل</label>
+                <input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
+                  placeholder="الاسم الكامل"
+                />
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-                  <FiMapPin size={14} />
-                </div>
-                <span className="truncate">القاهرة، مصر</span>
+              <div>
+                <label className="text-xs text-slate-500 font-medium block mb-1.5">رقم الهاتف</label>
+                <input
+                  value={editPhone}
+                  onChange={e => setEditPhone(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
+                  placeholder="01xxxxxxxxx"
+                  dir="ltr"
+                />
               </div>
             </div>
 
-            <Button 
-              variant="secondary" 
-              className="w-full mt-6 h-11 text-sm font-medium"
-            >
-              <FiEdit3 size={16} className="ml-2" /> تعديل الملف الشخصي
-            </Button>
+            {saveMsg && (
+              <div className={`flex items-center gap-2 text-sm p-3 rounded-xl ${saveMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                {saveMsg.type === 'success' ? <FiCheck size={15} /> : <FiAlertCircle size={15} />}
+                {saveMsg.text}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setEditing(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
+                إلغاء
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {saving ? <FiRefreshCw size={14} className="animate-spin" /> : <FiCheck size={14} />}
+                حفظ
+              </button>
+            </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
 
-        {/* Settings & Options */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Account Settings */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900">إعدادات الحساب</h3>
-            </div>
-            
-            <div className="divide-y divide-slate-100">
-              <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <FiSettings size={18} />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-slate-900">تغيير كلمة المرور</p>
-                    <p className="text-xs text-slate-500">تحديث كلمة المرور الخاصة بك</p>
-                  </div>
-                </div>
-                <FiChevronLeft className="text-slate-300" size={18} />
-              </button>
-
-              <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <FiMail size={18} />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-slate-900">البريد الإلكتروني</p>
-                    <p className="text-xs text-slate-500">client@shoofly.com</p>
-                  </div>
-                </div>
-                <FiChevronLeft className="text-slate-300" size={18} />
-              </button>
-
-              <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <FiPhone size={18} />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-slate-900">رقم الهاتف</p>
-                    <p className="text-xs text-slate-500">+20 123 456 7890</p>
-                  </div>
-                </div>
-                <FiChevronLeft className="text-slate-300" size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900">تفضيلات الإشعارات</h3>
-            </div>
-            
-            <div className="divide-y divide-slate-100">
-              <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <FiBell size={18} />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-slate-900">إشعارات البريد</p>
-                    <p className="text-xs text-slate-500">استلام إشعارات عبر البريد الإلكتروني</p>
-                  </div>
-                </div>
-                <div className="w-11 h-6 bg-primary rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                </div>
-              </button>
-
-              <button className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <FiPackage size={18} />
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm text-slate-900">تحديثات الطلبات</p>
-                    <p className="text-xs text-slate-500">إشعارات عند تحديث حالة الطلبات</p>
-                  </div>
-                </div>
-                <div className="w-11 h-6 bg-primary rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Logout Button */}
-          <Button 
-            variant="secondary" 
-            onClick={handleLogout} 
-            className="w-full h-12 text-sm font-medium bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 rounded-xl"
-          >
-            <FiLogOut size={18} className="ml-2" /> تسجيل الخروج
-          </Button>
-
-        </div>
+function InfoRow({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: string; loading: boolean }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-4">
+      <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-slate-400 font-medium">{label}</p>
+        {loading
+          ? <div className="h-4 bg-slate-100 rounded w-32 mt-1" />
+          : <p className="text-sm font-semibold text-slate-800 mt-0.5 truncate">{value}</p>}
       </div>
     </div>
+  );
+}
+
+function QuickLink({ href, icon, label, desc }: { href: string; icon: React.ReactNode; label: string; desc: string }) {
+  return (
+    <Link href={href} className="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 transition-colors">
+      <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center shrink-0">{icon}</div>
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-slate-800">{label}</p>
+        <p className="text-xs text-slate-400">{desc}</p>
+      </div>
+      <FiChevronLeft size={16} className="text-slate-300" />
+    </Link>
   );
 }
