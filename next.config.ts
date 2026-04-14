@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Cache static assets
-        source: '/:path(.+\\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2|ttf))',
+        source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
