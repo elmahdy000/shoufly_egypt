@@ -8,7 +8,11 @@ import {
   FiPackage, FiDollarSign, FiUser, FiAlertCircle,
   FiTruck, FiRefreshCw, FiInfo
 } from "react-icons/fi";
-import { listNotifications, markNotificationRead } from "@/lib/api/notifications";
+import {
+  listAllNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "@/lib/api/notifications";
 import type { ApiNotification } from "@/lib/types/api";
 
 const TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
@@ -47,7 +51,7 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listNotifications("ADMIN");
+      const data = await listAllNotifications("ADMIN");
       setNotifications(data);
     } catch {
       // silent
@@ -85,11 +89,10 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
   }
 
   async function handleMarkAll() {
-    const unread = notifications.filter((n) => !n.isRead);
-    if (!unread.length) return;
+    if (unreadCount === 0) return;
     setMarkingAll(true);
     try {
-      await Promise.all(unread.map((n) => markNotificationRead("ADMIN", n.id)));
+      await markAllNotificationsRead("ADMIN");
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch {
       // silent
