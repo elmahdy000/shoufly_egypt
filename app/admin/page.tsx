@@ -409,33 +409,49 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {/* Platform Health */}
+          {/* Activity Feed */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-3">
-              <FiShoppingBag size={15} className="text-primary" /> حالة المنصة
-            </h3>
-            <div className="space-y-2">
-              <StatusPill
-                count={analytics?.counters.pendingRequests ?? 0}
-                label="طلبات معلقة"
-                color="border-amber-100 bg-amber-50 text-amber-700"
-              />
-              <StatusPill
-                count={analytics?.counters.openComplaints ?? 0}
-                label="شكاوى مفتوحة"
-                color="border-rose-100 bg-rose-50 text-rose-700"
-              />
-              <StatusPill
-                count={stats?.pendingWithdrawals ?? 0}
-                label="سحوبات تنتظر"
-                color="border-violet-100 bg-violet-50 text-violet-700"
-              />
-              <StatusPill
-                count={stats?.totalVendors ?? 0}
-                label="إجمالي التجار"
-                color="border-emerald-100 bg-emerald-50 text-emerald-700"
-              />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <FiActivity size={15} className="text-primary" /> آخر الأحداث
+              </h3>
+              <Link href="/admin/finance" className="text-[11px] font-semibold text-primary hover:text-orange-600 flex items-center gap-1">
+                عرض الكل <FiArrowUpRight size={11} />
+              </Link>
             </div>
+            {tL ? (
+              <div className="py-6 flex items-center justify-center text-slate-300">
+                <FiRefreshCw size={18} className="animate-spin" />
+              </div>
+            ) : !txs || txs.length === 0 ? (
+              <div className="py-6 text-center text-slate-400 text-xs">لا توجد أحداث</div>
+            ) : (
+              <div className="space-y-3">
+                {txs.slice(0, 6).map(tx => {
+                  const meta = txLabel(tx.type);
+                  const dotColors: Record<string, string> = {
+                    ADMIN_COMMISSION: 'bg-indigo-400',
+                    ESCROW_DEPOSIT: 'bg-emerald-400',
+                    VENDOR_PAYMENT: 'bg-blue-400',
+                    WALLET_TOPUP: 'bg-violet-400',
+                    WITHDRAWAL: 'bg-rose-400',
+                    REFUND: 'bg-amber-400',
+                  };
+                  return (
+                    <div key={tx.id} className="flex items-start gap-3">
+                      <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColors[tx.type] ?? 'bg-slate-300'}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-semibold ${meta.color}`}>{meta.ar}</p>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {tx.user?.fullName ?? '—'} · {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true, locale: ar })}
+                        </p>
+                      </div>
+                      <p className="text-xs font-bold text-slate-800 shrink-0" dir="ltr">{formatCurrency(tx.amount)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

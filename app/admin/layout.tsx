@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { label: 'لوحة التحكم', icon: FiGrid, href: '/admin' },
       { label: 'الطلبات', icon: FiPackage, href: '/admin/requests', badge: 'openRequests' },
       { label: 'التتبع المباشر', icon: FiTruck, href: '/admin/tracking' },
+      { label: 'التحليلات', icon: FiBarChart2, href: '/admin/analytics' },
     ]
   },
   {
