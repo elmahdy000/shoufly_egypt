@@ -86,7 +86,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     nameAr: 'فودافون كاش',
     icon: <VodafoneCashIcon />,
     color: 'text-red-600',
-    bgColor: 'bg-gradient-to-br from-red-50 to-red-100/50',
+    bgColor: 'bg-red-50',
     borderColor: 'border-red-100',
     hoverBorder: 'hover:border-red-300',
     description: 'تحويل فوري عبر محفظة فودافون كاش',
@@ -101,7 +101,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     nameAr: 'إنستا باي',
     icon: <InstaPayIcon />,
     color: 'text-violet-600',
-    bgColor: 'bg-gradient-to-br from-violet-50 to-violet-100/50',
+    bgColor: 'bg-violet-50',
     borderColor: 'border-violet-100',
     hoverBorder: 'hover:border-violet-300',
     description: 'تحويل سريع عبر شبكة إنستا باي',
@@ -116,7 +116,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     nameAr: 'بطاقة ائتمان',
     icon: <StripeIcon />,
     color: 'text-indigo-600',
-    bgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100/50',
+    bgColor: 'bg-indigo-50',
     borderColor: 'border-indigo-100',
     hoverBorder: 'hover:border-indigo-300',
     description: 'دفع آمن ببطاقة Visa أو Mastercard',
@@ -131,7 +131,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     nameAr: 'محفظة إلكترونية',
     icon: <WalletIcon />,
     color: 'text-emerald-600',
-    bgColor: 'bg-gradient-to-br from-emerald-50 to-emerald-100/50',
+    bgColor: 'bg-emerald-50',
     borderColor: 'border-emerald-100',
     hoverBorder: 'hover:border-emerald-300',
     description: 'أورانج كاش، وي باي، أو أي محفظة أخرى',
@@ -251,9 +251,9 @@ export default function WalletPage() {
 
   const executeWithdraw = async () => {
     const amount = Number(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) return alert("الرجاء إدخال مبلغ صحيح");
-    if (amount > ledger.available) return alert("رصيد غير كافٍ");
-    
+    if (isNaN(amount) || amount <= 0) { setPaymentError("الرجاء إدخال مبلغ صحيح"); return; }
+    if (amount > ledger.available) { setPaymentError("رصيد غير كافٍ"); return; }
+    setPaymentError(null);
     try {
       setIsProcessing(true);
       await withdrawClientWallet(amount, withdrawMethod);
@@ -261,7 +261,7 @@ export default function WalletPage() {
       setWithdrawAmount("");
       window.location.reload();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "فشلت عملية السحب");
+      setPaymentError(err instanceof Error ? err.message : "فشلت عملية السحب");
       setIsProcessing(false);
     }
   };
@@ -390,12 +390,9 @@ export default function WalletPage() {
               <div className="p-5 border-b border-[#E7E7E7]">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-bold text-[#0F1111]">السجل المالي</h2>
-                  <button 
-                    onClick={() => alert("سيتم تنزيل كشف الحساب قريباً")}
-                    className="text-sm font-medium text-[#FF5A00] hover:text-[#FF5A00]/80 flex items-center gap-1.5 transition-colors"
-                  >
-                    <FiDownload size={16} /> تصدير
-                  </button>
+                  <span className="text-sm font-medium text-slate-400 flex items-center gap-1.5 cursor-not-allowed">
+                    <FiDownload size={16} /> تصدير (قريباً)
+                  </span>
                 </div>
               </div>
 
@@ -464,7 +461,7 @@ export default function WalletPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-6 border-b border-[#E7E7E7] flex items-center justify-between bg-gradient-to-r from-emerald-50/50 to-white">
+            <div className="p-6 border-b border-[#E7E7E7] flex items-center justify-between bg-emerald-50/40">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
                   <FiPlusCircle size={22} />
@@ -681,7 +678,7 @@ export default function WalletPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-6 border-b border-[#E7E7E7] flex items-center justify-between bg-gradient-to-r from-amber-50/50 to-white">
+            <div className="p-6 border-b border-[#E7E7E7] flex items-center justify-between bg-amber-50/40">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
                   <FiArrowDownLeft size={22} />

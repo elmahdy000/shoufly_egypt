@@ -31,17 +31,20 @@ export default function VendorOrderDetailsPage() {
   );
 
   const [updating, setUpdating] = useState(false);
+  const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   async function updateStatus(status: string) {
     setUpdating(true);
+    setActionMsg(null);
     try {
       await apiFetch(`/api/vendor/bids/${bidId}/status`, "VENDOR", {
         method: "PATCH",
         body: { status }
       });
+      setActionMsg({ text: "تم تحديث الحالة بنجاح", ok: true });
       refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "فشل تحديث الحالة");
+      setActionMsg({ text: err instanceof Error ? err.message : "فشل تحديث الحالة", ok: false });
     } finally {
       setUpdating(false);
     }
@@ -50,7 +53,7 @@ export default function VendorOrderDetailsPage() {
   if (loading) return (
     <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
       <div className="flex flex-col items-center text-[#767684]">
-        <div className="w-12 h-12 border-3 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
         <p className="text-sm font-medium">جاري تحميل التفاصيل...</p>
       </div>
     </div>
@@ -74,6 +77,14 @@ export default function VendorOrderDetailsPage() {
   return (
     <div className="font-sans dir-rtl text-right">
       <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+        {actionMsg && (
+          <div className={`p-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
+            actionMsg.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"
+          }`}>
+            {actionMsg.ok ? <FiCheckCircle size={15} /> : null}
+            {actionMsg.text}
+          </div>
+        )}
         {/* Status Banner */}
         <div className={`p-3 rounded-lg border ${
           currentStatus === 'READY_FOR_PICKUP' 

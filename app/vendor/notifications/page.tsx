@@ -23,7 +23,7 @@ export default function VendorNotificationsPage() {
         {(data ?? []).map((item) => (
           <button key={item.id} onClick={() => markRead(item.id)} className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-right">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">{item.type}</p>
+              <p className="text-sm font-semibold">{item.title || item.type}</p>
               <span className="text-xs text-slate-500">{formatDate(item.createdAt)}</span>
             </div>
             <p className="mt-1 text-sm text-slate-600">{item.message}</p>

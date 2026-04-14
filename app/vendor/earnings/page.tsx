@@ -12,7 +12,9 @@ import {
   FiClock, 
   FiDownload, 
   FiShield,
-  FiTrendingUp
+  FiTrendingUp,
+  FiCheckCircle,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 export default function VendorEarningsPage() {
@@ -21,6 +23,7 @@ export default function VendorEarningsPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [withdrawInput, setWithdrawInput] = useState("");
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const summary = useMemo(() => {
     const rows = data ?? [];
@@ -37,19 +40,18 @@ export default function VendorEarningsPage() {
   const handleWithdrawal = async () => {
     const amount = Number(withdrawInput);
     if (isNaN(amount) || amount <= 0 || amount > summary.available) {
-      alert("الرجاء إدخال مبلغ صحيح وضمن حدود رصيدك المتاح");
+      setMessage({ text: "الرجاء إدخال مبلغ صحيح وضمن حدود رصيدك المتاح", type: "error" });
       return;
     }
-    
     try {
       setIsProcessing(true);
       await requestVendorWithdrawal(amount);
-      alert(`تم تقديم طلب سحب بقيمة ${formatCurrency(amount)}`);
+      setMessage({ text: `تم تقديم طلب سحب بقيمة ${formatCurrency(amount)}`, type: "success" });
       setWithdrawInput("");
       setIsWithdrawOpen(false);
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "حدث خطأ أثناء معالجة السحب");
+      setMessage({ text: err instanceof Error ? err.message : "حدث خطأ أثناء معالجة السحب", type: "error" });
       setIsProcessing(false);
     }
   };
@@ -57,9 +59,17 @@ export default function VendorEarningsPage() {
   return (
     <div className="font-sans dir-rtl text-right">
       <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+        {message && (
+          <div className={`p-3 rounded-xl flex items-center gap-2 text-sm font-medium ${
+            message.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"
+          }`}>
+            {message.type === "success" ? <FiCheckCircle size={16} /> : <FiAlertCircle size={16} />}
+            {message.text}
+          </div>
+        )}
         {(loading || isProcessing) && (
           <div className="flex flex-col items-center justify-center py-16 text-[#767684]">
-             <div className="w-12 h-12 border-3 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+             <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
              <p className="text-sm font-medium">جاري تحميل البيانات...</p>
           </div>
         )}
@@ -136,12 +146,9 @@ export default function VendorEarningsPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[#0F1111]">سجل المعاملات</h3>
-                <button 
-                  className="text-[10px] font-medium text-primary flex items-center gap-1 hover:text-primary/80 transition-colors" 
-                  onClick={() => alert("سيتم تحميل ملف Excel قريباً")}
-                >
-                  <FiDownload size={12} /> تصدير
-                </button>
+                <span className="text-[10px] font-medium text-slate-400 flex items-center gap-1 cursor-not-allowed">
+                  <FiDownload size={12} /> تصدير (قريباً)
+                </span>
               </div>
 
               {!data || data.length === 0 ? (

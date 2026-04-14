@@ -250,7 +250,7 @@ export default function ClientNotificationsPage() {
   }, [filteredNotifications]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 pb-24 font-sans dir-rtl text-right">
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans dir-rtl text-right">
       {/* Header */}
       <div className="bg-white border-b border-slate-200/60 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-6">
