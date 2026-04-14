@@ -4,217 +4,304 @@ import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/formatters";
-import { FiUsers, FiUserCheck, FiUserX, FiShield, FiSearch, FiFilter, FiMoreVertical, FiStar, FiMail, FiPhone, FiCheck, FiX, FiAlertCircle, FiArrowLeft, FiActivity } from "react-icons/fi";
-import { Button } from "@/components/shoofly/button";
+import {
+  FiSearch, FiX, FiPhone, FiCalendar,
+  FiDollarSign, FiTruck, FiStar, FiSlash, FiCheckCircle,
+  FiAlertCircle, FiLoader, FiBriefcase, FiUser
+} from "react-icons/fi";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
+
+type Role = "ALL" | "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN";
+
+const ROLE_META: Record<string, { label: string; color: string; bg: string }> = {
+  ADMIN:    { label: "أدمن",   color: "text-violet-700", bg: "bg-violet-50 border-violet-200" },
+  CLIENT:   { label: "عميل",   color: "text-blue-700",   bg: "bg-blue-50 border-blue-200" },
+  VENDOR:   { label: "تاجر",   color: "text-orange-700", bg: "bg-orange-50 border-orange-200" },
+  DELIVERY: { label: "مندوب",  color: "text-emerald-700",bg: "bg-emerald-50 border-emerald-200" },
+};
+
+function RolePill({ role }: { role: string }) {
+  const m = ROLE_META[role] ?? { label: role, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" };
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-bold border ${m.bg} ${m.color}`}>{m.label}</span>;
+}
+
+function ActionBtn({ icon, label, color, loading, onClick }: {
+  icon: React.ReactNode; label: string; color: string; loading: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border font-semibold text-sm transition-all disabled:opacity-60 ${color}`}
+    >
+      {loading ? <FiLoader size={14} className="animate-spin" /> : icon}
+      {label}
+    </button>
+  );
+}
 
 export default function AdminUsersPage() {
-  const [activeTab, setActiveTab] = useState<'ALL' | 'VENDORS_PENDING' | 'REPORTS'>('ALL');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [roleFilter, setRoleFilter] = useState<Role>("ALL");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<any>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const { data: users, loading, error } = useAsyncData<any[]>(() => apiFetch("/api/admin/users", "ADMIN"), []);
-  
-  if (error) {
-    console.error("Users API Error:", error);
-  }
-  
-  // حساب الإحصائيات ديناميكياً
+  const { data: users, loading, error, setData } = useAsyncData<any[]>(
+    () => apiFetch("/api/admin/users", "ADMIN"), []
+  );
+
+  const filtered = useMemo(() => {
+    let list = users ?? [];
+    if (roleFilter !== "ALL") list = list.filter((u: any) => u.role === roleFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((u: any) =>
+        u.fullName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || String(u.id) === q
+      );
+    }
+    return list;
+  }, [users, roleFilter, search]);
+
   const stats = useMemo(() => {
-    const allUsers = users ?? [];
-    const pendingVendors = allUsers.filter((u: any) => u.role === 'VENDOR' && !u.isVerified).length;
-    const vipClients = allUsers.filter((u: any) => u.role === 'CLIENT' && (u.wallet?.balance > 1000 || u.totalSpent > 5000)).length;
+    const all = users ?? [];
     return {
-      total: allUsers.length,
-      pendingVendors,
-      vipClients,
-      activeNow: Math.min(allUsers.length, 42), // placeholder until we have real-time data
+      total: all.length,
+      vendors: all.filter((u: any) => u.role === "VENDOR").length,
+      clients: all.filter((u: any) => u.role === "CLIENT").length,
+      delivery: all.filter((u: any) => u.role === "DELIVERY").length,
     };
   }, [users]);
 
+  async function doAction(userId: number, action: string) {
+    setActionLoading(action);
+    setActionMsg(null);
+    try {
+      await apiFetch<any>(`/api/admin/users/${userId}/moderation`, "ADMIN", {
+        method: "PATCH", body: { action },
+      });
+      const patch: any = {};
+      if (action === "BLOCK") patch.isActive = false;
+      if (action === "UNBLOCK") patch.isActive = true;
+      setData((prev: any[]) => (prev ?? []).map((u) => u.id === userId ? { ...u, ...patch } : u));
+      setSelected((prev: any) => prev?.id === userId ? { ...prev, ...patch } : prev);
+      setActionMsg({ text: "تم تنفيذ الإجراء بنجاح ✓", ok: true });
+    } catch (e: any) {
+      setActionMsg({ text: e.message ?? "فشل تنفيذ الإجراء", ok: false });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   return (
-    <div className="p-8 lg:p-12 max-w-[1600px] mx-auto space-y-8 dir-rtl text-right font-sans">
-        {/* Error Display */}
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm">
-            <p className="font-bold">خطأ في تحميل البيانات:</p>
-            <p>{error}</p>
-            <p className="mt-2 text-xs">تأكد من تسجيل الدخول كـ Admin</p>
+    <div className="space-y-5 text-right" dir="rtl">
+      <div>
+        <h1 className="text-xl font-bold text-slate-900">إدارة المستخدمين</h1>
+        <p className="text-sm text-slate-400 mt-0.5">اضغط على أي مستخدم لعرض التفاصيل والإجراءات</p>
+      </div>
+
+      {/* Role Tabs */}
+      <div className="flex flex-wrap gap-2">
+        {([
+          { label: "الكل", val: stats.total, filter: "ALL" as Role },
+          { label: "عملاء", val: stats.clients, filter: "CLIENT" as Role },
+          { label: "تجار", val: stats.vendors, filter: "VENDOR" as Role },
+          { label: "مندوبون", val: stats.delivery, filter: "DELIVERY" as Role },
+        ]).map((s) => (
+          <button
+            key={s.label}
+            onClick={() => setRoleFilter(s.filter)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
+              roleFilter === s.filter
+                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            {s.label}
+            <span className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${roleFilter === s.filter ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+              {loading ? "…" : s.val}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="ابحث بالاسم أو البريد الإلكتروني..."
+          className="w-full pr-9 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all"
+        />
+      </div>
+
+      {/* Table + Detail */}
+      <div className="flex gap-4 items-start">
+        {/* Table */}
+        <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 min-w-0 ${selected ? "hidden lg:block" : ""}`}>
+          {error && <div className="p-4 m-4 bg-rose-50 text-rose-600 rounded-xl text-sm border border-rose-200">خطأ في تحميل البيانات</div>}
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">المستخدم</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">الدور</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden sm:table-cell">المحفظة</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden md:table-cell">الحالة</th>
+                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden lg:table-cell">التسجيل</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i}>
+                      {[0,1,2,3,4].map((j) => (
+                        <td key={j} className="py-4 px-4">
+                          <div className="h-4 bg-slate-100 rounded animate-pulse" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={5} className="py-12 text-center text-slate-400">لا يوجد مستخدمون</td></tr>
+                ) : filtered.map((u: any) => (
+                  <tr
+                    key={u.id}
+                    onClick={() => { setSelected(u); setActionMsg(null); }}
+                    className={`hover:bg-primary/5 cursor-pointer transition-colors ${selected?.id === u.id ? "bg-primary/5 border-r-[3px] border-primary" : ""}`}
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-700 font-bold shrink-0">
+                          {u.fullName?.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900 leading-none">{u.fullName}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4"><RolePill role={u.role} /></td>
+                    <td className="py-3 px-4 hidden sm:table-cell font-bold text-slate-900 text-xs">
+                      {formatCurrency(Number(u.walletBalance))}
+                    </td>
+                    <td className="py-3 px-4 hidden md:table-cell">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${u.isActive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"}`}>
+                        {u.isActive ? "نشط" : "محظور"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 hidden lg:table-cell text-xs text-slate-400">
+                      {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true, locale: ar })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-        
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">إدارة المستخدمين</h1>
-            <p className="text-sm text-slate-500 font-medium mt-1">التحكم في العملاء والموردين.</p>
-          </div>
-          
-          <div className="relative w-full md:w-72 group">
-             <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all" />
-             <input 
-               type="text" 
-               placeholder="بحث بالاسم..." 
-               className="w-full pr-12 pl-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all"
-             />
-          </div>
+          {!loading && (
+            <div className="px-4 py-3 border-t border-slate-100 text-xs text-slate-400">
+              {filtered.length} من أصل {users?.length ?? 0} مستخدم
+            </div>
+          )}
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-           {[
-             { label: 'إجمالي المشتركين', val: loading ? '...' : stats.total, icon: <FiUsers />, bg: 'bg-blue-50', color: 'text-blue-600' },
-             { label: 'طلبات توثيق', val: loading ? '...' : stats.pendingVendors, icon: <FiShield />, bg: 'bg-amber-50', color: 'text-amber-600' },
-             { label: 'VIP عملاء', val: loading ? '...' : stats.vipClients, icon: <FiStar />, bg: 'bg-rose-50', color: 'text-rose-600' },
-             { label: 'نشط الآن', val: loading ? '...' : stats.activeNow, icon: <FiUserCheck />, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-           ].map((s, i) => (
-             <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${s.bg} ${s.color} flex items-center justify-center text-xl`}>
-                  {s.icon}
+        {/* Detail Panel */}
+        {selected && (
+          <div className="w-full lg:w-[380px] shrink-0 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 200px)" }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 shrink-0">
+              <h3 className="font-bold text-slate-800 text-sm">تفاصيل المستخدم</h3>
+              <button onClick={() => setSelected(null)} className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors">
+                <FiX size={16} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-4 space-y-4">
+              {/* Avatar Hero */}
+              <div className="p-4 bg-gradient-to-l from-slate-50 to-orange-50/40 rounded-xl border border-slate-100 flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center text-white font-black text-xl shadow-md shrink-0">
+                  {selected.fullName?.charAt(0)}
                 </div>
-                <div>
-                   <p className="text-xs text-slate-500 font-medium">{s.label}</p>
-                   <p className="text-2xl font-bold text-slate-900">{s.val}</p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-slate-900 truncate">{selected.fullName}</h4>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">{selected.email}</p>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <RolePill role={selected.role} />
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${selected.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-600 border-rose-200"}`}>
+                      {selected.isActive ? "✓ نشط" : "✗ محظور"}
+                    </span>
+                  </div>
                 </div>
-             </div>
-           ))}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
-           {[
-             { id: 'ALL', label: 'الجميع', icon: <FiUsers /> },
-             { id: 'VENDORS_PENDING', label: 'التوثيق', icon: <FiShield />, count: loading ? 0 : stats.pendingVendors },
-             { id: 'REPORTS', label: 'البلاغات', icon: <FiAlertCircle /> },
-           ].map((t) => (
-             <button 
-               key={t.id}
-               onClick={() => setActiveTab(t.id as any)}
-               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                 activeTab === t.id 
-                   ? 'bg-slate-900 text-white' 
-                   : 'text-slate-600 hover:bg-slate-100'
-               }`}
-             >
-               {t.icon} {t.label}
-               {t.count ? <span className="bg-primary/20 text-white text-xs px-2 py-0.5 rounded-full">{t.count}</span> : null}
-             </button>
-           ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-           {/* Users Table */}
-           <div className="lg:col-span-8">
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                 <table className="w-full text-right">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                       <tr>
-                          <th className="py-3 px-6 text-xs font-semibold text-slate-500">المستخدم</th>
-                          <th className="py-3 px-6 text-xs font-semibold text-slate-500 text-center">النوع</th>
-                          <th className="py-3 px-6 text-xs font-semibold text-slate-500 text-center">الحالة</th>
-                          <th className="py-3 px-6 text-xs font-semibold text-slate-500 text-center">التقييم</th>
-                          <th className="py-3 px-6"></th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                       {loading ? (
-                         <tr><td colSpan={5} className="py-12 text-center text-slate-400 text-sm font-medium">جاري تحميل المستخدمين...</td></tr>
-                       ) : users?.map((u) => (
-                         <tr 
-                          key={u.id} 
-                          className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${selectedUser?.id === u.id ? 'bg-primary/5' : ''}`}
-                          onClick={() => setSelectedUser(u)}
-                         >
-                            <td className="py-4 px-6">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden">
-                                    <img src={`https://ui-avatars.com/api/?name=${u.name}&background=fff&color=0f172a&bold=true`} alt={u.name} />
-                                  </div>
-                                  <div>
-                                     <p className="font-semibold text-slate-900">{u.name}</p>
-                                     <p className="text-xs text-slate-400">{u.email}</p>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="py-4 px-6 text-center">
-                               <span className={`text-xs font-medium px-3 py-1 rounded-lg ${
-                                 u.role === 'VENDOR' ? 'bg-amber-50 text-amber-600' : 
-                                 u.role === 'ADMIN' ? 'bg-slate-900 text-white' : 
-                                 'bg-slate-100 text-slate-600'
-                               }`}>
-                                 {u.role}
-                               </span>
-                            </td>
-                            <td className="py-4 px-6 text-center">
-                               <div className="flex items-center justify-center gap-2">
-                                  <div className={`w-2 h-2 rounded-full ${u.isVerified ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                                  <p className="text-xs text-slate-600">{u.isVerified ? 'موثق' : 'قيد الانتظار'}</p>
-                               </div>
-                            </td>
-                            <td className="py-4 px-6 text-center text-sm font-medium text-slate-900">
-                               {u.avgRating ? `${u.avgRating.toFixed(1)} ⭐` : '---'}
-                            </td>
-                            <td className="py-4 px-6 text-left">
-                               <button className="p-2 text-slate-400 hover:text-slate-900 transition-colors"><FiArrowLeft size={16} /></button>
-                            </td>
-                         </tr>
-                       ))}
-                    </tbody>
-                 </table>
               </div>
-           </div>
 
-           {/* User Profile */}
-           <div className="lg:col-span-4 space-y-6">
-              {selectedUser ? (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-                   <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden">
-                         <img src={`https://ui-avatars.com/api/?name=${selectedUser.name}&background=fff&color=0f172a&bold=true`} alt="User" />
-                      </div>
-                      <div className="flex-1">
-                         <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold text-slate-900">{selectedUser.name}</h3>
-                            {selectedUser.isVerified && <FiCheck className="text-emerald-500" size={16} />}
-                         </div>
-                         <p className="text-xs text-slate-400">{selectedUser.email}</p>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                      <div className="p-4 bg-slate-50 rounded-xl text-center">
-                         <p className="text-xs text-slate-400">المحفظة</p>
-                         <p className="text-lg font-bold text-slate-900">{formatCurrency(selectedUser.wallet?.balance || 0)}</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-xl text-center">
-                         <p className="text-xs text-slate-400">الأداء</p>
-                         <p className="text-lg font-bold text-emerald-600">{selectedUser.successRate || '---'}{selectedUser.successRate ? '%' : ''}</p>
-                      </div>
-                   </div>
-
-                   <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <p className="text-xs font-semibold text-slate-400">الإجراءات</p>
-                      <div className="grid gap-2">
-                         {selectedUser.role === 'VENDOR' && (
-                           <Button 
-                             variant={selectedUser.isVerified ? 'secondary' : 'primary'}
-                             className="w-full"
-                           >
-                             {selectedUser.isVerified ? 'إلغاء التوثيق' : 'توثيق الحساب'}
-                           </Button>
-                         )}
-                         <Button variant="danger" className="w-full">
-                            <FiUserX size={16} /> حظر الحساب
-                         </Button>
-                      </div>
-                   </div>
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-primary/5 border border-primary/15 rounded-xl col-span-2">
+                  <p className="text-xs text-primary/70 flex items-center gap-1 mb-1"><FiDollarSign size={11} />رصيد المحفظة</p>
+                  <p className="font-black text-primary text-lg">{formatCurrency(Number(selected.walletBalance))}</p>
                 </div>
-              ) : (
-                <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4">
-                   <FiUsers size={32} className="text-slate-300" />
-                   <p className="text-sm text-slate-400">اختر مستخدم لعرض التفاصيل</p>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mb-1"><FiCalendar size={11} />تاريخ التسجيل</p>
+                  <p className="font-bold text-slate-800 text-xs">{new Date(selected.createdAt).toLocaleDateString("ar-EG")}</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-xs text-slate-400 mb-1">رقم المستخدم</p>
+                  <p className="font-mono font-black text-slate-900">#{selected.id}</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
+                  <p className="text-xs text-slate-400 flex items-center gap-1 mb-1"><FiPhone size={11} />رقم الهاتف</p>
+                  <p className="font-bold text-slate-800 text-sm" dir="ltr">{selected.phone ?? "—"}</p>
+                </div>
+              </div>
+
+              {/* Feedback */}
+              {actionMsg && (
+                <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${actionMsg.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}>
+                  {actionMsg.ok ? <FiCheckCircle size={13} /> : <FiAlertCircle size={13} />}
+                  {actionMsg.text}
                 </div>
               )}
-           </div>
-        </div>
+
+              {/* Actions */}
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">إجراءات الإشراف</p>
+                <div className="space-y-2">
+                  {selected.role === "VENDOR" && (
+                    <ActionBtn
+                      icon={<FiStar size={15} />}
+                      label={selected.isVerified ? "إلغاء توثيق الحساب" : "توثيق حساب التاجر"}
+                      color={selected.isVerified
+                        ? "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        : "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600"
+                      }
+                      loading={actionLoading === (selected.isVerified ? "UNVERIFY" : "VERIFY")}
+                      onClick={() => doAction(selected.id, selected.isVerified ? "UNVERIFY" : "VERIFY")}
+                    />
+                  )}
+                  {selected.isActive ? (
+                    <ActionBtn
+                      icon={<FiSlash size={15} />}
+                      label="حظر الحساب"
+                      color="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
+                      loading={actionLoading === "BLOCK"}
+                      onClick={() => doAction(selected.id, "BLOCK")}
+                    />
+                  ) : (
+                    <ActionBtn
+                      icon={<FiCheckCircle size={15} />}
+                      label="رفع الحظر وإعادة التفعيل"
+                      color="bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                      loading={actionLoading === "UNBLOCK"}
+                      onClick={() => doAction(selected.id, "UNBLOCK")}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

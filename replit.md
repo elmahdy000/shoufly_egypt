@@ -1,6 +1,6 @@
-# Shoofly
+# Shoofly (منصة شوفلي)
 
-A Next.js 16 marketplace platform with a role-based frontend shell. Supports three user roles: Client, Vendor, and Admin.
+A Next.js 16 Arabic logistics marketplace platform with 4 roles: Admin, Client, Vendor, Delivery Agent.
 
 ## Tech Stack
 

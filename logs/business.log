@@ -5983,3 +5983,4 @@
 {"ts":"2026-04-11T23:26:43.447Z","level":"info","event":"withdrawal.request.started","vendorId":32,"amount":121}
 {"ts":"2026-04-11T23:26:43.517Z","level":"info","event":"withdrawal.requested","withdrawalId":16,"recipients":[27],"role":"ADMIN"}
 {"ts":"2026-04-11T23:26:43.517Z","level":"info","event":"withdrawal.request.completed","withdrawalId":16,"vendorId":32,"amount":121,"status":"PENDING"}
+{"ts":"2026-04-14T22:00:55.433Z","level":"info","event":"admin.moderation.verify","userId":25,"isVerified":true}
