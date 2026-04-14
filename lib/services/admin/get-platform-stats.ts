@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 export async function getPlatformStats() {
   const [
     totalUsers,
-    activeVendors,
+    totalVendors,
     openRequests,
     totalTransactions,
     pendingWithdrawals,
@@ -28,7 +28,7 @@ export async function getPlatformStats() {
 
   return {
     totalUsers,
-    activeVendors,
+    totalVendors,
     openRequests,
     totalTransactions,
     pendingWithdrawals,

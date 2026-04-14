@@ -9,8 +9,6 @@ import {
   FiStar, FiSlash, FiCheckCircle, FiAlertCircle, FiLoader,
   FiBriefcase, FiTag, FiUsers, FiTrendingUp, FiShield
 } from "react-icons/fi";
-import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
 
 interface VendorCategory {
   category: { name: string };
@@ -76,7 +74,22 @@ export default function AdminVendorsPage() {
   const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const { data: vendors, loading, error, setData } = useAsyncData<Vendor[]>(
-    () => apiFetch("/api/admin/vendors?limit=200", "ADMIN"), []
+    async () => {
+      const PAGE = 100;
+      const results: Vendor[] = [];
+      let offset = 0;
+      while (true) {
+        const page = await apiFetch<Vendor[]>(
+          `/api/admin/vendors?limit=${PAGE}&offset=${offset}`,
+          "ADMIN"
+        );
+        results.push(...page);
+        if (page.length < PAGE) break;
+        offset += PAGE;
+      }
+      return results;
+    },
+    []
   );
 
   const filtered = useMemo(() => {

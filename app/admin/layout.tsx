@@ -26,7 +26,7 @@ const NAV_GROUPS = [
     label: 'إدارة المستخدمين',
     items: [
       { label: 'المستخدمون', icon: FiUsers, href: '/admin/users' },
-      { label: 'التجار', icon: FiBriefcase, href: '/admin/vendors', badge: 'activeVendors' },
+      { label: 'التجار', icon: FiBriefcase, href: '/admin/vendors', badge: 'totalVendors' },
     ]
   },
   {
@@ -49,7 +49,7 @@ interface AdminStats {
   totalUsers: number;
   openRequests: number;
   pendingWithdrawals: number;
-  activeVendors: number;
+  totalVendors: number;
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

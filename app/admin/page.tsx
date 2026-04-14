@@ -17,7 +17,7 @@ import {
 /* ─────────────────── Types ─────────────────── */
 interface PlatformStats {
   totalUsers: number;
-  activeVendors: number;
+  totalVendors: number;
   openRequests: number;
   totalTransactions: number;
   pendingWithdrawals: number;
@@ -431,8 +431,8 @@ export default function AdminDashboard() {
                 color="border-violet-100 bg-violet-50 text-violet-700"
               />
               <StatusPill
-                count={stats?.activeVendors ?? 0}
-                label="تجار نشطون"
+                count={stats?.totalVendors ?? 0}
+                label="إجمالي التجار"
                 color="border-emerald-100 bg-emerald-50 text-emerald-700"
               />
             </div>
