@@ -47,27 +47,32 @@ interface Vendor {
 }
 
 /* ─── Donut Chart ─── */
-const DONUT_PALETTE: Record<string, string> = {
-  WALLET_TOPUP:     '#fbbf24',
-  ESCROW_DEPOSIT:   '#60a5fa',
-  WITHDRAWAL:       '#fb7185',
-  REFUND:           '#34d399',
-  ADMIN_COMMISSION: '#a78bfa',
-  VENDOR_PAYMENT:   '#94a3b8',
-  PLATFORM_FEE:     '#a78bfa',
+const DONUT_TYPES = ['WALLET_TOPUP', 'ESCROW_DEPOSIT', 'WITHDRAWAL', 'REFUND', 'PLATFORM_FEE'] as const;
+type DonutType = typeof DONUT_TYPES[number];
+
+const DONUT_PALETTE: Record<DonutType, string> = {
+  WALLET_TOPUP:   '#fbbf24',
+  ESCROW_DEPOSIT: '#60a5fa',
+  WITHDRAWAL:     '#fb7185',
+  REFUND:         '#34d399',
+  PLATFORM_FEE:   '#a78bfa',
 };
 
-const TX_LABELS: Record<string, string> = {
-  WALLET_TOPUP:     'شحن محفظة',
-  ESCROW_DEPOSIT:   'إيداع ضمان',
-  WITHDRAWAL:       'سحب',
-  REFUND:           'استرداد',
-  ADMIN_COMMISSION: 'عمولة المنصة',
-  VENDOR_PAYMENT:   'دفع للتاجر',
-  PLATFORM_FEE:     'رسوم المنصة',
+const TX_LABELS: Record<DonutType, string> = {
+  WALLET_TOPUP:   'شحن محفظة',
+  ESCROW_DEPOSIT: 'إيداع ضمان',
+  WITHDRAWAL:     'سحب',
+  REFUND:         'استرداد',
+  PLATFORM_FEE:   'رسوم المنصة',
 };
 
-function DonutChart({ segments }: { segments: { type: string; count: number }[] }) {
+function normalizeToDonutType(type: string): DonutType {
+  if (type === 'ADMIN_COMMISSION') return 'PLATFORM_FEE';
+  if ((DONUT_TYPES as readonly string[]).includes(type)) return type as DonutType;
+  return 'PLATFORM_FEE';
+}
+
+function DonutChart({ segments }: { segments: { type: DonutType; count: number }[] }) {
   const R = 40;
   const C = 2 * Math.PI * R;
   const total = segments.reduce((s, seg) => s + seg.count, 0) || 1;
@@ -78,7 +83,7 @@ function DonutChart({ segments }: { segments: { type: string; count: number }[] 
     const dash = portion * C;
     const startAngle = -90 + (accumulated / total) * 360;
     accumulated += seg.count;
-    return { ...seg, dash, gap: C - dash, startAngle };
+    return { ...seg, dash, gap: C - dash, startAngle, color: DONUT_PALETTE[seg.type] };
   });
 
   return (
@@ -89,7 +94,7 @@ function DonutChart({ segments }: { segments: { type: string; count: number }[] 
             key={i}
             cx="50" cy="50" r={R}
             fill="none"
-            stroke={DONUT_PALETTE[arc.type] ?? '#cbd5e1'}
+            stroke={arc.color}
             strokeWidth="20"
             strokeDasharray={`${arc.dash.toFixed(1)} ${arc.gap.toFixed(1)}`}
             strokeDashoffset="0"
@@ -106,8 +111,8 @@ function DonutChart({ segments }: { segments: { type: string; count: number }[] 
           const pct = Math.round((arc.count / total) * 100);
           return (
             <div key={i} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: DONUT_PALETTE[arc.type] ?? '#cbd5e1' }} />
-              <span className="text-xs text-slate-600 flex-1 truncate">{TX_LABELS[arc.type] ?? arc.type}</span>
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: arc.color }} />
+              <span className="text-xs text-slate-600 flex-1 truncate">{TX_LABELS[arc.type]}</span>
               <span className="text-xs font-bold text-slate-700">{arc.count}</span>
               <span className="text-[10px] text-slate-400 w-8 text-left">{pct}%</span>
             </div>
@@ -172,10 +177,16 @@ export default function AnalyticsPage() {
 
   const txSegments = useMemo(() => {
     const txs: Transaction[] = Array.isArray(txsRaw) ? txsRaw : [];
-    const counts: Record<string, number> = {};
-    txs.forEach(tx => { counts[tx.type] = (counts[tx.type] ?? 0) + 1; });
-    return Object.entries(counts)
-      .map(([type, count]) => ({ type, count }))
+    const counts: Record<DonutType, number> = {
+      WALLET_TOPUP: 0, ESCROW_DEPOSIT: 0, WITHDRAWAL: 0, REFUND: 0, PLATFORM_FEE: 0,
+    };
+    txs.forEach(tx => {
+      const key = normalizeToDonutType(tx.type);
+      counts[key] = (counts[key] ?? 0) + 1;
+    });
+    return DONUT_TYPES
+      .map(type => ({ type, count: counts[type] }))
+      .filter(s => s.count > 0)
       .sort((a, b) => b.count - a.count);
   }, [txsRaw]);
 

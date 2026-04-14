@@ -429,17 +429,19 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {txs.slice(0, 6).map(tx => {
                   const meta = txLabel(tx.type);
-                  const dotColors: Record<string, string> = {
-                    ADMIN_COMMISSION: 'bg-indigo-400',
-                    ESCROW_DEPOSIT: 'bg-emerald-400',
-                    VENDOR_PAYMENT: 'bg-blue-400',
-                    WALLET_TOPUP: 'bg-violet-400',
-                    WITHDRAWAL: 'bg-rose-400',
-                    REFUND: 'bg-amber-400',
+                  const iconMap: Record<string, React.ReactNode> = {
+                    ADMIN_COMMISSION: <FiBarChart2 size={12} className={meta.color} />,
+                    ESCROW_DEPOSIT:   <FiCheckCircle size={12} className={meta.color} />,
+                    VENDOR_PAYMENT:   <FiShoppingBag size={12} className={meta.color} />,
+                    WALLET_TOPUP:     <FiCreditCard size={12} className={meta.color} />,
+                    WITHDRAWAL:       <FiArrowUpRight size={12} className={meta.color} />,
+                    REFUND:           <FiRefreshCw size={12} className={meta.color} />,
                   };
                   return (
-                    <div key={tx.id} className="flex items-start gap-3">
-                      <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColors[tx.type] ?? 'bg-slate-300'}`} />
+                    <div key={tx.id} className="flex items-center gap-2.5">
+                      <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${meta.bg}`}>
+                        {iconMap[tx.type] ?? <FiCreditCard size={12} className={meta.color} />}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-xs font-semibold ${meta.color}`}>{meta.ar}</p>
                         <p className="text-[10px] text-slate-400 truncate">
