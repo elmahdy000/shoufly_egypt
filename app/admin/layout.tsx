@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/client';
+import { NotificationsDrawer } from '@/components/admin/notifications-drawer';
 import { 
-  FiGrid, FiPackage, FiUsers, FiDollarSign, FiSettings, 
+  FiGrid, FiPackage, FiUsers, FiSettings, 
   FiLogOut, FiBell, FiShield, FiCreditCard, FiAlertTriangle,
   FiBarChart2, FiChevronRight, FiX, FiMenu, FiTruck,
   FiLoader
@@ -52,10 +53,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifDrawerOpen, setNotifDrawerOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [adminName, setAdminName] = useState('مدير النظام');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [notifCount, setNotifCount] = useState(0);
+
+  const handleUnreadCountChange = useCallback((count: number) => {
+    setNotifCount(count);
+  }, []);
 
   useEffect(() => {
     apiFetch<AdminStats>('/api/admin/stats', 'ADMIN')
@@ -198,7 +204,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <button
               className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-              onClick={() => router.push('/admin/settings')}
+              onClick={() => setNotifDrawerOpen(true)}
+              aria-label="الإشعارات"
             >
               <FiBell size={19} />
               {notifCount > 0 && (
@@ -223,6 +230,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
+
+      <NotificationsDrawer
+        isOpen={notifDrawerOpen}
+        onClose={() => setNotifDrawerOpen(false)}
+        onUnreadCountChange={handleUnreadCountChange}
+      />
     </div>
   );
 }
