@@ -56,10 +56,17 @@ export async function createBid(vendorId: number, data: CreateBidInput) {
       data.netPrice * (1 + commissionPercentage / 100) * 100
     ) / 100;
 
-    const bid = await tx.bid.create({
-      data: {
+    const bid = await tx.bid.upsert({
+      where: { requestId_vendorId: { requestId: data.requestId, vendorId } },
+      create: {
         requestId: data.requestId,
         vendorId,
+        description: data.description,
+        netPrice: data.netPrice,
+        clientPrice,
+        status: 'PENDING',
+      },
+      update: {
         description: data.description,
         netPrice: data.netPrice,
         clientPrice,
