@@ -1,24 +1,25 @@
 import type { NextConfig } from "next";
 
+// Replit dev domain for cross-origin iframe support
+const replitDomain = process.env.REPLIT_DOMAINS ?? "";
+const allowedOrigins = replitDomain
+  ? [replitDomain, `*.${replitDomain.split(".").slice(1).join(".")}`]
+  : [];
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["*"],
+  allowedDevOrigins: allowedOrigins,
   output: 'standalone',
   
-  // Image optimization settings
   images: {
-    unoptimized: true, // Set to false when using external image optimization service
+    unoptimized: true,
     minimumCacheTTL: 60,
     formats: ['image/webp', 'image/avif'],
   },
   
-  // Compression for API responses
   compress: true,
-  
-  // Production optimizations
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   
-  // Experimental features for performance
   experimental: {
     optimizePackageImports: [
       'lucide-react',
@@ -27,7 +28,6 @@ const nextConfig: NextConfig = {
     ],
   },
   
-  // Headers for caching and security
   async headers() {
     return [
       {
@@ -44,7 +44,6 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Cache static assets
         source: '/_next/static/:path*',
         headers: [
           {

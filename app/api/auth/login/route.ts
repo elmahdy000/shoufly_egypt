@@ -75,15 +75,25 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
-    // Use SameSite=none + Secure to support cross-origin iframe previews (e.g. Replit dev environment)
-    const isSecureContext = process.env.NODE_ENV === "production" || !!process.env.REPLIT_DOMAINS;
+    const isReplitOrProd = !!process.env.REPLIT_DOMAINS || process.env.NODE_ENV === "production";
+    const maxAge = 60 * 60 * 24 * 7;
+
+    // Base cookie via Next.js API
     res.cookies.set("session_token", token, {
       httpOnly: true,
-      secure: isSecureContext,
-      sameSite: isSecureContext ? "none" : "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      secure: isReplitOrProd,
+      sameSite: isReplitOrProd ? "none" : "lax",
+      maxAge,
       path: "/",
     });
+
+    // Add Partitioned attribute (CHIPS) for cross-origin iframe support in Chrome
+    // This allows the cookie to work inside Replit's iframe preview
+    if (isReplitOrProd) {
+      const existing = res.headers.get("Set-Cookie") ?? "";
+      const partitionedCookie = `${existing}; Partitioned`;
+      res.headers.set("Set-Cookie", partitionedCookie);
+    }
 
     return res;
   } catch (e: unknown) {
