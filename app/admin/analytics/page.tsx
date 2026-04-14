@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
   const { data: txsRaw, loading: tL } = useAsyncData<Transaction[]>(
     () => apiFetch('/api/admin/finance/transactions?limit=200', 'ADMIN'), []
   );
-  const { data: vendorsRaw, loading: vL } = useAsyncData<{ vendors: Vendor[] } | Vendor[]>(
+  const { data: vendorsRaw, loading: vL } = useAsyncData<Vendor[]>(
     () => apiFetch('/api/admin/vendors?limit=200', 'ADMIN'), []
   );
 
@@ -180,9 +180,7 @@ export default function AnalyticsPage() {
   }, [txsRaw]);
 
   const topVendors = useMemo(() => {
-    const list: Vendor[] = Array.isArray(vendorsRaw)
-      ? vendorsRaw
-      : (vendorsRaw as any)?.vendors ?? [];
+    const list: Vendor[] = vendorsRaw ?? [];
     return [...list].sort((a, b) => Number(b.walletBalance) - Number(a.walletBalance)).slice(0, 5);
   }, [vendorsRaw]);
 
