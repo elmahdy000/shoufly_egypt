@@ -12,13 +12,13 @@ import {
 } from "react-icons/fi";
 
 const STATUSES = [
-  { value: "ALL",                       label: "الكل" },
-  { value: "PENDING_ADMIN_REVISION",    label: "قيد المراجعة" },
-  { value: "OPEN_FOR_BIDDING",          label: "مفتوح" },
-  { value: "OFFERS_FORWARDED",          label: "عروض" },
-  { value: "ORDER_PAID_PENDING_DELIVERY", label: "جاري التنفيذ" },
-  { value: "CLOSED_SUCCESS",            label: "مكتمل" },
-  { value: "CLOSED_CANCELLED",          label: "ملغي" },
+  { value: "ALL",                         label: "الكل",      dot: "" },
+  { value: "PENDING_ADMIN_REVISION",      label: "مراجعة",   dot: "bg-slate-400" },
+  { value: "OPEN_FOR_BIDDING",            label: "مفتوح",    dot: "bg-blue-400" },
+  { value: "OFFERS_FORWARDED",            label: "عروض",     dot: "bg-amber-400" },
+  { value: "ORDER_PAID_PENDING_DELIVERY", label: "تنفيذ",    dot: "bg-violet-400" },
+  { value: "CLOSED_SUCCESS",              label: "مكتمل",    dot: "bg-emerald-400" },
+  { value: "CLOSED_CANCELLED",            label: "ملغي",     dot: "bg-rose-400" },
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -117,7 +117,7 @@ export default function ClientRequestsPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {STATUSES.map(s => {
           const count = counts[s.value] ?? 0;
           const active = statusFilter === s.value;
@@ -126,14 +126,17 @@ export default function ClientRequestsPage() {
             <button
               key={s.value}
               onClick={() => setStatusFilter(s.value)}
-              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 active
-                  ? "bg-primary text-white"
-                  : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
+                  ? "bg-primary text-white border-primary shadow-sm"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
+              {s.dot && (
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-white/70" : s.dot}`} />
+              )}
               {s.label}
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+              <span className={`text-[10px] font-bold min-w-[16px] text-center tabular-nums ${active ? "opacity-80" : "text-slate-400"}`}>
                 {count}
               </span>
             </button>
