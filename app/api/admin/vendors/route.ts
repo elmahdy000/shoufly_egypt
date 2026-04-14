@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
         email: true,
         phone: true,
         isActive: true,
+        isVerified: true,
         walletBalance: true,
         createdAt: true,
         vendorCategories: {

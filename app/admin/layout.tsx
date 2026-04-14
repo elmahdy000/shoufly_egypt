@@ -10,7 +10,7 @@ import {
   FiGrid, FiPackage, FiUsers, FiSettings, 
   FiLogOut, FiBell, FiShield, FiCreditCard, FiAlertTriangle,
   FiBarChart2, FiChevronRight, FiX, FiMenu, FiTruck,
-  FiLoader
+  FiLoader, FiBriefcase
 } from 'react-icons/fi';
 
 const NAV_GROUPS = [
@@ -26,6 +26,7 @@ const NAV_GROUPS = [
     label: 'إدارة المستخدمين',
     items: [
       { label: 'المستخدمون', icon: FiUsers, href: '/admin/users' },
+      { label: 'التجار', icon: FiBriefcase, href: '/admin/vendors', badge: 'activeVendors' },
     ]
   },
   {
@@ -48,6 +49,7 @@ interface AdminStats {
   totalUsers: number;
   openRequests: number;
   pendingWithdrawals: number;
+  activeVendors: number;
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
