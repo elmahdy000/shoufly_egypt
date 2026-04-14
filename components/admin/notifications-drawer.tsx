@@ -37,7 +37,6 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
   const [loading, setLoading] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const hasFetched = useRef(false);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -58,10 +57,6 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
   }, []);
 
   useEffect(() => {
-    if (isOpen && !hasFetched.current) {
-      hasFetched.current = true;
-      fetchNotifications();
-    }
     if (isOpen) {
       fetchNotifications();
     }
@@ -114,10 +109,10 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
         aria-hidden="true"
       />
 
-      {/* Drawer — slides in from left (RTL end side) */}
+      {/* Drawer — right side (RTL start side, near sidebar) */}
       <div
         ref={drawerRef}
-        className="fixed inset-y-0 left-0 z-50 w-[380px] max-w-[95vw] bg-white shadow-2xl flex flex-col"
+        className="fixed inset-y-0 right-0 z-50 w-[380px] max-w-[95vw] bg-white shadow-2xl flex flex-col"
         dir="rtl"
       >
         {/* Header */}
@@ -193,10 +188,13 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug ${!n.isRead ? "font-semibold text-slate-900" : "font-medium text-slate-600"}`}>
+                      <p className={`text-sm leading-snug ${!n.isRead ? "font-bold text-slate-900" : "font-semibold text-slate-700"}`}>
+                        {n.title}
+                      </p>
+                      <p className={`text-xs mt-0.5 leading-relaxed ${!n.isRead ? "text-slate-600" : "text-slate-400"}`}>
                         {n.message}
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-400 mt-1.5">
                         {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: ar })}
                       </p>
                     </div>
