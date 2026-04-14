@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/client';
 import { NotificationsDrawer } from '@/components/admin/notifications-drawer';
+import { listAllNotifications } from '@/lib/api/notifications';
 import { 
   FiGrid, FiPackage, FiUsers, FiSettings, 
   FiLogOut, FiBell, FiShield, FiCreditCard, FiAlertTriangle,
@@ -67,8 +68,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     apiFetch<AdminStats>('/api/admin/stats', 'ADMIN')
       .then(s => setStats(s))
       .catch(() => {});
-    apiFetch<any[]>('/api/notifications?limit=20', 'ADMIN')
-      .then(n => setNotifCount(n?.filter((x: any) => !x.isRead).length ?? 0))
+    listAllNotifications('ADMIN')
+      .then(n => setNotifCount(n.filter(x => !x.isRead).length))
       .catch(() => {});
     apiFetch<any>('/api/auth/me', 'ADMIN')
       .then(u => { if (u?.fullName) setAdminName(u.fullName); })
