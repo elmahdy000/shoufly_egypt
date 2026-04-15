@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/session";
 import { handleCorsPreflight, verifyCorsOrigin, addCorsHeaders } from "@/lib/utils/cors";
-import { csrfProtection, refreshCsrfToken, createCsrfToken } from "@/lib/utils/csrf";
+import { csrfProtection, createCsrfToken } from "@/lib/utils/csrf";
 
 // Paths that skip CSRF protection (auth endpoints)
 const CSRF_EXEMPT_PATHS = [
@@ -30,6 +30,7 @@ const ROLE_PREFIXES: Record<string, string> = {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const isApiRoute = pathname.startsWith("/api/");
 
   // Handle CORS preflight requests
   const corsPreflightResponse = handleCorsPreflight(req);
@@ -38,8 +39,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // Verify CORS origin for API routes
-  if (pathname.startsWith("/api/")) {
-    const { allowed, origin } = verifyCorsOrigin(req);
+  if (isApiRoute) {
+    const { allowed } = verifyCorsOrigin(req);
     if (!allowed) {
       return new NextResponse(
         JSON.stringify({ error: "Origin not allowed" }),
@@ -66,7 +67,9 @@ export async function middleware(req: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/icons") ||
-    pathname.startsWith("/public")
+    pathname.startsWith("/public") ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/manifest.json"
   ) {
     return NextResponse.next();
   }
@@ -87,33 +90,76 @@ export async function middleware(req: NextRequest) {
   const secret = process.env.SESSION_SECRET;
 
   if (!token || !secret) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   const payload = await verifySessionToken(token, secret);
   if (!payload) {
+    if (isApiRoute) {
+      const res = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      res.cookies.set("session_token", "", { maxAge: 0 });
+      return res;
+    }
     const res = NextResponse.redirect(new URL("/login", req.url));
     res.cookies.set("session_token", "", { maxAge: 0 });
     return res;
   }
 
-  // 🛡️ SECURITY SHIELD: Check DB for real-time status (Blocked/Active)
-  // This prevents blocked users with valid tokens from accessing the system.
+  // 🚀 PERFORMANCE: Check user status via Redis cache (60s TTL) instead of hitting DB every request.
+  // Cache key: user_status:{userId} → "active" | "blocked"
+  // Cache is invalidated immediately when user is blocked via moderation API.
   try {
-    const { prisma } = await import("@/lib/prisma");
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { isBlocked: true, isActive: true }
-    });
+    let userStatus: string | null = null;
+    const cacheKey = `user_status:${payload.userId}`;
 
-    if (!user || user.isBlocked || !user.isActive) {
-      const res = NextResponse.redirect(new URL("/login?error=account_disabled", req.url));
+    // Try Redis cache first
+    try {
+      const { getRedisClient } = await import("@/lib/redis");
+      const redis = getRedisClient();
+      userStatus = await redis.get(cacheKey);
+    } catch {
+      // Redis unavailable — fall through to DB
+    }
+
+    if (!userStatus) {
+      // Cache miss: hit DB and cache the result
+      const { prisma } = await import("@/lib/prisma");
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { isBlocked: true, isActive: true },
+      });
+
+      if (!user || user.isBlocked || !user.isActive) {
+        const res = isApiRoute
+          ? NextResponse.json({ error: "Account disabled" }, { status: 403 })
+          : NextResponse.redirect(new URL("/login?error=account_disabled", req.url));
+        res.cookies.set("session_token", "", { maxAge: 0 });
+        return res;
+      }
+
+      // Cache the "active" status for 60 seconds
+      try {
+        const { getRedisClient } = await import("@/lib/redis");
+        const redis = getRedisClient();
+        await redis.set(cacheKey, "active", "EX", 60);
+      } catch {
+        // Non-critical: proceed without caching
+      }
+    } else if (userStatus === "blocked") {
+      // Cached blocked status — deny immediately, no DB needed
+      const res = isApiRoute
+        ? NextResponse.json({ error: "Account disabled" }, { status: 403 })
+        : NextResponse.redirect(new URL("/login?error=account_disabled", req.url));
       res.cookies.set("session_token", "", { maxAge: 0 });
       return res;
     }
+    // userStatus === "active" → proceed without any DB call 🎉
   } catch (error) {
-    // If DB check fails, we allow next (fail-safe) or block (strict)? 
-    // Usually fail-safe for UI, but here we proceed as payload was valid.
+    console.error("[MIDDLEWARE] Status check failed:", error);
+    // Fail-safe: allow through if both Redis and DB are down
   }
 
   // Role-based routing guard
@@ -145,14 +191,13 @@ export async function middleware(req: NextRequest) {
     }
   }
   
-  // Refresh CSRF token for API routes (not webhooks or auth endpoints)
-  if (pathname.startsWith("/api/") && !isWebhook && !isCsrfExempt) {
-    const csrfToken = req.cookies.get('csrf_token')?.value;
-    if (!csrfToken) {
-      createCsrfToken(response);
-    }
+  // Ensure CSRF token exists for all authenticated requests
+  // This is needed so client-side API calls can include the token
+  const hasCsrfCookie = req.cookies.get('csrf_token')?.value;
+  if (!hasCsrfCookie) {
+    createCsrfToken(response);
   }
-  
+
   return response;
 }
 

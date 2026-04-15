@@ -162,7 +162,7 @@ export default function ClientHomePage() {
                     <div className="flex items-center gap-3 shrink-0">
                       <StatusBadge 
                         status={hasOffers ? 'pending' : request.status === 'CLOSED_SUCCESS' ? 'completed' : 'active'} 
-                        label={hasOffers ? 'عروض جديدة' : request.status === 'OPEN_FOR_BIDDING' ? 'مفتوح' : request.status === 'CLOSED_SUCCESS' ? 'مكتمل' : request.status} 
+                        label={hasOffers ? 'عروض جديدة' : request.status === 'OPEN_FOR_BIDDING' ? 'مفتوح للعروض' : request.status === 'CLOSED_SUCCESS' ? 'مكتمل' : request.status === 'ORDER_PAID_PENDING_DELIVERY' ? 'جاري التنفيذ' : request.status === 'PENDING_ADMIN_REVISION' ? 'قيد المراجعة' : "طلب نشط"} 
                       />
                       <FiArrowLeft className="text-slate-300 group-hover:text-primary group-hover:-translate-x-1 transition-all" size={18} />
                     </div>

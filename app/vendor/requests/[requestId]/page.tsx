@@ -53,8 +53,22 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
   async function uploadImage(file: File): Promise<string | null> {
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Get CSRF token for upload
+    const getCsrfToken = () => {
+      const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+      return match ? match[2] : null;
+    };
+    
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData, credentials: 'include' });
+      const res = await fetch('/api/upload', { 
+        method: 'POST', 
+        body: formData, 
+        credentials: 'include',
+        headers: {
+          'x-csrf-token': getCsrfToken() || ''
+        }
+      });
       const data = await res.json();
       return data.success ? data.fileUrl : null;
     } catch (err) {
@@ -103,7 +117,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
     <div className="min-h-[80vh] flex items-center justify-center bg-background">
       <div className="flex flex-col items-center">
         <div className="w-12 h-12 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-        <p className="text-muted text-sm font-medium">جاري تحضير تفاصيل الطلب...</p>
+        <p className="text-muted text-sm font-medium">بنجهزلك تفاصيل الطلب...</p>
       </div>
     </div>
   );
@@ -122,10 +136,10 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
         <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/20">
           <CheckCircle size={48} className="text-emerald-600" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 mb-2">تم إرسال عرضك بنجاح!</h2>
-        <p className="text-slate-500 max-w-xs mx-auto mb-8">سيتم إخطار العميل فوراً. يمكنك تتبع حالة عرضك من قائمة "عروضي".</p>
+        <h2 className="text-2xl font-black text-slate-900 mb-2">عرضك اتبعت بنجاح!</h2>
+        <p className="text-slate-500 max-w-xs mx-auto mb-8">هنبعت للعميل إشعار فوراً. وتقدر تتابع حالة عرضك من قايمة صفحة عروضي.</p>
         <Button onClick={() => router.push("/vendor/bids")} className="px-8 h-12 rounded-2xl">
-          الذهاب لعروضي <ArrowLeft className="mr-2" size={18} />
+          روح لعروضي <ArrowLeft className="mr-2" size={18} />
         </Button>
       </div>
     );
@@ -153,10 +167,10 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
           <div className="shoofly-card p-6 space-y-6">
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
-                <label className="text-muted text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText size={14} /> المشكلة المطلوبة
+                <label className="text-slate-500 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText size={14} /> تفاصيل المشكلة
                 </label>
-                <div className="bg-slate-50 p-4 rounded-2xl text-slate-900 text-base leading-relaxed font-medium">
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl text-slate-900 text-base leading-relaxed font-medium">
                   {data.description.includes(']') 
                     ? data.description.substring(data.description.indexOf(']') + 1).trim() 
                     : data.description}
@@ -169,7 +183,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                     <MapPin size={22} />
                   </div>
                   <div>
-                    <label className="text-muted text-xs font-bold">الموقع</label>
+                    <label className="text-xs font-semibold text-slate-500 block mb-0.5">الموقع</label>
                     <p className="text-slate-900 font-bold">{data.address}</p>
                   </div>
                 </div>
@@ -178,7 +192,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                     <Briefcase size={22} />
                   </div>
                   <div>
-                    <label className="text-muted text-xs font-bold">نوع الخدمة</label>
+                    <label className="text-xs font-semibold text-slate-500 block mb-0.5">نوع الخدمة</label>
                     <p className="text-slate-900 font-bold">خدمات عامة</p>
                   </div>
                 </div>
@@ -192,7 +206,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
           <form onSubmit={submitBid} className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-widest">
               <span className="w-6 h-[2px] bg-primary" />
-              عرض السعر والخدمة
+              عرض السعر والتفاصيل
             </div>
 
             <div className="shoofly-card p-6 space-y-8">
@@ -209,8 +223,8 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                   <Package size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-slate-900 font-black">هل يشمل العرض "منتج"؟</p>
-                  <p className="text-muted text-xs">مثل قطع غيار أو أجهزة مطلوبة للمهمة</p>
+                  <p className="text-slate-900 font-black">هل عرضك فيه مجسم يتباع؟</p>
+                  <p className="text-slate-500 text-xs">زي قطع غيار أو أجهزة تبع المشكلة</p>
                 </div>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                   includesProduct ? 'bg-primary border-primary' : 'border-slate-300'
@@ -222,14 +236,14 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
               {/* Description Box */}
               <div className="space-y-3">
                 <label className="text-slate-800 font-black text-sm flex items-center gap-2">
-                  <Send size={16} className="text-primary" /> تفاصيل عرضك للعميل
+                  <Send size={16} className="text-primary" /> اشرح عرضك للعميل
                 </label>
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
                   rows={4}
-                  placeholder="اشرح للعميل خبرتك وكيف ستحل مشكلته بوضوح..."
+                  placeholder="عرف العميل بخبرتك وإزاي هتحل المشكلة بالتفصيل..."
                   className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-3xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 text-base transition-all resize-none"
                 />
               </div>
@@ -238,38 +252,40 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <div className="space-y-3">
                   <label className="text-slate-800 font-black text-sm flex items-center gap-2">
-                    <CircleDollarSign size={16} className="text-primary" /> ما ستتقاضاه (ج.م)
+                    <CircleDollarSign size={16} className="text-primary" /> اللي هتاخده صافي (ج.م)
                   </label>
-                  <div className="relative group">
+                  <div className="relative rounded-3xl border-2 border-slate-200 bg-white focus-within:border-primary focus-within:ring-[6px] focus-within:ring-primary/10 transition-all overflow-hidden flex items-stretch">
+                    <div className="flex items-center justify-center bg-slate-50 border-r-2 border-slate-100 px-6 font-bold text-lg text-slate-400 shrink-0">
+                      ج.م
+                    </div>
                     <input 
                       type="number"
                       value={netPrice}
                       onChange={(e) => setNetPrice(e.target.value)}
                       required
                       placeholder="0.00"
-                      className="w-full bg-slate-50 border-2 border-slate-100 px-6 py-6 rounded-[32px] outline-none focus:border-primary focus:bg-white text-3xl font-black text-center transition-all"
+                      className="w-full bg-transparent px-6 py-6 outline-none text-4xl font-black text-slate-900 tracking-tighter placeholder:text-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       dir="ltr"
                     />
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xl">ج.م</span>
                   </div>
                 </div>
 
                 <div className="bg-slate-900 rounded-[32px] p-6 text-white space-y-4 shadow-xl shadow-slate-900/20">
                   <div className="flex items-center gap-2 text-primary font-black text-xs uppercase">
-                    <ShieldCheck size={14} /> فاتورة العميل التقديرية (شفافة)
+                    <ShieldCheck size={14} /> فاتورة العميل المتوقعة (بكل شفافية)
                   </div>
                   <div className="space-y-2 text-sm font-medium">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">سعرك الصافي</span>
+                      <span className="text-slate-400 text-sm">سعرك الصافي</span>
                       <span className="font-bold">{financialBreakdown.price.toFixed(2)} ج.م</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">عمولة المنصة ({COMMISSION_RATE*100}%)</span>
+                      <span className="text-slate-400 text-sm">عمولة المنصة ({COMMISSION_RATE*100}%)</span>
                       <span className="text-rose-400">+{financialBreakdown.commission.toFixed(2)} ج.م</span>
                     </div>
                     <div className="h-px bg-white/10 my-1" />
                     <div className="flex justify-between items-center text-lg">
-                      <span className="font-bold">المبلغ المطلوب من العميل</span>
+                      <span className="font-bold">المبلغ اللي هيدفعه العميل</span>
                       <span className="text-primary font-black">{financialBreakdown.clientPays.toFixed(2)} ج.م</span>
                     </div>
                   </div>
@@ -280,7 +296,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
               {includesProduct && (
                 <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
                   <label className="text-slate-800 font-black text-sm flex items-center gap-2">
-                    <Camera size={16} className="text-primary" /> صور المنتجات / قطع الغيار
+                    <Camera size={16} className="text-primary" /> صور المنتجات أو قطع الغيار
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {images.map((url, index) => (
@@ -302,7 +318,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                       className="aspect-square rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-primary hover:text-primary transition-all"
                     >
                       {uploadingImages ? <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /> : <Camera size={24} />}
-                      <span className="text-[10px] font-bold">إضافة صورة</span>
+                      <span className="text-xs font-bold">إضافة صورة</span>
                     </button>
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
@@ -324,7 +340,7 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                 isLoading={isSubmitting} 
                 className="w-full h-14 rounded-3xl text-lg font-black shadow-xl shadow-primary/20"
               >
-                إرسال العرض الآن <Send className="mr-2" size={20} />
+                ابعت عرضك دلوقتي <Send className="mr-2" size={20} />
               </Button>
             </div>
           </form>
@@ -333,9 +349,9 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
               <Info size={40} />
             </div>
-            <h3 className="text-xl font-black text-slate-900">نعتذر، هذا الطلب مغلق تماماً</h3>
-            <p className="text-slate-500">العميل لم يعد يستقبل عروضاً جديدة لهذا الطلب حالياً.</p>
-            <Button variant="outline" onClick={() => router.push("/vendor")} className="mt-4 rounded-2xl">العودة للرئيسية</Button>
+            <h3 className="text-xl font-black text-slate-900">عذراً، الطلب ده اتقفل</h3>
+            <p className="text-slate-500">العميل اكتفى ومش بيستقبل عروض جديدة للطلب ده دلوقتي.</p>
+            <Button variant="secondary" onClick={() => router.push("/vendor")} className="mt-4 rounded-2xl">ارجع للرئيسية</Button>
           </div>
         )}
       </div>
@@ -354,6 +370,6 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
 export default function VendorRequestDetailsPage() {
   const params = useParams<{ requestId: string }>();
   const parsed = Number(params.requestId);
-  if (!Number.isFinite(parsed) || parsed <= 0) return <ErrorState message="معرف الطلب غير صحيح" />;
+  if (!Number.isFinite(parsed) || parsed <= 0) return <ErrorState message="رقم الطلب مش مظبوط" />;
   return <VendorRequestDetails requestId={parsed} />;
 }

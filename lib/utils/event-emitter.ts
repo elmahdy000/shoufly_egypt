@@ -1,5 +1,22 @@
 import { EventEmitter } from 'events';
 
+interface NotificationData {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  requestId?: number;
+  createdAt: Date;
+}
+
+interface ChatMessageData {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  content: string;
+  createdAt: Date;
+}
+
 class NotificationEmitter extends EventEmitter {
   static instance: NotificationEmitter;
 
@@ -16,8 +33,12 @@ class NotificationEmitter extends EventEmitter {
     return NotificationEmitter.instance;
   }
 
-  sendNotification(userId: number, notification: any) {
+  sendNotification(userId: number, notification: NotificationData) {
     this.emit(`user:${userId}`, notification);
+  }
+
+  sendChatMessage(receiverId: number, message: ChatMessageData) {
+    this.emit(`chat:${receiverId}`, message);
   }
 }
 

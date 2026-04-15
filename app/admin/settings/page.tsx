@@ -20,9 +20,19 @@ export default function AdminSettingsPage() {
   async function handleSave() {
     setIsSaving(true);
     try {
+      // Get CSRF token for state-changing request
+      const getCsrfToken = () => {
+        const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+        return match ? match[2] : null;
+      };
+      
       const response = await fetch('/api/admin/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken() || ''
+        },
+        credentials: 'include',
         body: JSON.stringify({ commission, vat, radius, minOrder, autoPayout, verifyRequired, otpDelivery })
       });
       if (!response.ok) throw new Error('Failed to save');
@@ -59,37 +69,37 @@ export default function AdminSettingsPage() {
                <div className="p-8 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">عمولة المنصة (%)</label>
+                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">عمولة المنصة (%)</label>
                         <div className="relative">
-                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black">%</span>
+                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black">%</span>
                            <input
                              type="number"
                              value={commission}
                              onChange={(e) => setCommission(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold"
+                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
-                        <p className="text-xs text-slate-400 mr-2">النسبة المقتطعة من إجمالي قيمة الطلب</p>
+                        <p className="text-xs text-slate-500 mr-2">النسبة المقتطعة من إجمالي قيمة الطلب</p>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">ضريبة القيمة المضافة (%)</label>
+                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">ضريبة القيمة المضافة (%)</label>
                         <div className="relative">
-                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black">%</span>
+                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black">%</span>
                            <input
                              type="number"
                              value={vat}
                              onChange={(e) => setVat(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold"
+                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
-                        <p className="text-xs text-slate-400 mr-2">الضريبة المفروضة طبقاً للوائح المحلية</p>
+                        <p className="text-xs text-slate-500 mr-2">الضريبة المفروضة طبقاً للوائح المحلية</p>
                      </div>
                   </div>
 
                   <div className="p-6 bg-slate-50 rounded-2xl flex items-center justify-between gap-4 border border-slate-100/50">
                      <div>
                         <h4 className="text-xs font-bold text-slate-900">التسوية التلقائية للموردين</h4>
-                        <p className="text-xs text-slate-400 mt-1">جدولة تحويل الأرصدة آلياً بعد اكتمال الدورة المالية</p>
+                        <p className="text-xs text-slate-500 mt-1">جدولة تحويل الأرصدة آلياً بعد اكتمال الدورة المالية</p>
                      </div>
                      <button
                        onClick={() => setAutoPayout(!autoPayout)}
@@ -109,24 +119,24 @@ export default function AdminSettingsPage() {
                </div>
                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                     <label className="text-xs font-black text-slate-400 tracking-wide mr-2">قطر التغطية (كم)</label>
+                     <label className="text-xs font-black text-slate-500 tracking-wide mr-2">قطر التغطية (كم)</label>
                      <input
                        type="number"
                        value={radius}
                        onChange={(e) => setRadius(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold"
+                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
-                     <p className="text-xs text-slate-400 mr-2">أقصى مسافة للربط بين العميل والمندوب</p>
+                     <p className="text-xs text-slate-500 mr-2">أقصى مسافة للربط بين العميل والمندوب</p>
                   </div>
                   <div className="space-y-2">
-                     <label className="text-xs font-black text-slate-400 tracking-wide mr-2">الحد الأدنى للطلب (ج.م)</label>
+                     <label className="text-xs font-black text-slate-500 tracking-wide mr-2">الحد الأدنى للطلب (ج.م)</label>
                      <input
                        type="number"
                        value={minOrder}
                        onChange={(e) => setMinOrder(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold"
+                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
-                     <p className="text-xs text-slate-400 mr-2">أقل قيمة مسموح بها لإنشاء طلب جديد</p>
+                     <p className="text-xs text-slate-500 mr-2">أقل قيمة مسموح بها لإنشاء طلب جديد</p>
                   </div>
                </div>
             </section>
@@ -196,7 +206,7 @@ function SettingToggle({ title, desc, active, onToggle, last }: { title: string;
     <div className={`p-8 flex items-center justify-between gap-6 hover:bg-slate-50 transition-colors ${!last ? 'border-b border-slate-100' : ''}`}>
        <div>
           <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-          <p className="text-xs text-slate-400 mt-1">{desc}</p>
+          <p className="text-xs text-slate-500 mt-1">{desc}</p>
        </div>
        <button
          onClick={onToggle}
@@ -211,7 +221,7 @@ function SettingToggle({ title, desc, active, onToggle, last }: { title: string;
 function SummaryRow({ label, val }: { label: string; val: string }) {
   return (
     <div className="flex justify-between items-center text-sm">
-       <span className="font-bold text-slate-400 tracking-wide">{label}</span>
+       <span className="font-bold text-slate-500 tracking-wide">{label}</span>
        <span className="font-black text-slate-900 tabular-nums">{val}</span>
     </div>
   );

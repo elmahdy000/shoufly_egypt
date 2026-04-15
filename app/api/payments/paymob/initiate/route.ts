@@ -134,7 +134,10 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     logger.error('payment.paymob.initiate_error', { error: error.message });
     return NextResponse.json(
-      { error: 'Failed to initiate payment', details: error.message },
+      {
+        error: 'Failed to initiate payment',
+        ...(process.env.NODE_ENV !== 'production' && { details: error.message }),
+      },
       { status: 500 }
     );
   }

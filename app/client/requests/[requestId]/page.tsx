@@ -76,9 +76,18 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
     if (rating === 0) return;
     setSubmittingReview(true);
     try {
+      // Get CSRF token for state-changing request
+      const getCsrfToken = () => {
+        const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+        return match ? match[2] : null;
+      };
+      
       await fetch('/api/client/reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken() || ''
+        },
         body: JSON.stringify({ requestId, rating, comment: reviewComment }),
         credentials: 'include',
       });

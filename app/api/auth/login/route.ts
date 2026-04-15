@@ -5,6 +5,7 @@ import { LoginSchema } from "@/lib/validations/auth";
 import { createSessionToken } from "@/lib/session";
 import { checkRateLimit, getClientIP } from "@/lib/utils/rate-limiter";
 import { createErrorResponse, logError } from "@/lib/utils/error-handler";
+import { generateCsrfToken } from "@/lib/utils/csrf";
 
 // Rate limit: 5 login attempts per minute per IP
 const LOGIN_RATE_LIMIT = 5;
@@ -76,25 +77,34 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
-    const isReplitOrProd = !!process.env.REPLIT_DOMAINS || process.env.NODE_ENV === "production";
+    const isReplit = !!process.env.REPLIT_DOMAINS;
+    const isProduction = process.env.NODE_ENV === "production";
     const maxAge = 60 * 60 * 24 * 7;
 
-    // Base cookie via Next.js API
-    res.cookies.set("session_token", token, {
+    // Cookie settings based on environment
+    // - Replit: Requires SameSite=None + Secure + Partitioned for iframe support
+    // - Production: SameSite=Lax + Secure
+    // - Local dev: SameSite=Lax (no Secure for HTTP localhost)
+    const cookieOptions = {
       httpOnly: true,
-      secure: isReplitOrProd,
-      sameSite: isReplitOrProd ? "none" : "lax",
+      secure: isReplit || isProduction,
+      sameSite: isReplit ? ("none" as const) : ("lax" as const),
       maxAge,
       path: "/",
-    });
+    };
 
-    // Add Partitioned attribute (CHIPS) for cross-origin iframe support in Chrome
-    // This allows the cookie to work inside Replit's iframe preview
-    if (isReplitOrProd) {
-      const existing = res.headers.get("Set-Cookie") ?? "";
-      const partitionedCookie = `${existing}; Partitioned`;
-      res.headers.set("Set-Cookie", partitionedCookie);
-    }
+    // Set the session cookie
+    res.cookies.set("session_token", token, cookieOptions);
+
+    // Set CSRF token cookie for subsequent requests
+    const csrfToken = generateCsrfToken();
+    res.cookies.set("csrf_token", csrfToken, {
+      httpOnly: false, // Must be readable by JavaScript
+      secure: isReplit || isProduction,
+      sameSite: isReplit ? "none" : "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: "/",
+    });
 
     return res;
   } catch (e: unknown) {

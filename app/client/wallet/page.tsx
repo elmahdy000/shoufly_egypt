@@ -412,10 +412,16 @@ export default function WalletPage() {
                     const isTopup = tx.type === "WALLET_TOPUP";
                     
                     const Icon = isDeduction ? FiArrowUpRight : FiArrowDownLeft;
-                    let txLabel = tx.type;
-                    if (isDeduction) txLabel = "مدفوعات";
-                    if (isRefund) txLabel = "استرداد";
-                    if (isTopup) txLabel = "شحن";
+                    const txArabicMap: Record<string, string> = {
+                      PAYMENT: "دفع مبلغ",
+                      CLIENT_PAYMENT: "دفع مبلغ",
+                      ESCROW_DEPOSIT: "دفع متجمد للطلب",
+                      REFUND: "فلوس راجعة",
+                      REFUND_TO_CLIENT: "فلوس راجعة",
+                      WALLET_TOPUP: "شحن رصيد",
+                      WITHDRAWAL: "سحب للمحفظة",
+                    };
+                    let txLabel = txArabicMap[tx.type] || "حركة مالية";
 
                     const getTxHelp = () => {
                       if (isDeduction) return "مبلغ تم خصمه من رصيدك لطلب جديد";
@@ -540,7 +546,10 @@ export default function WalletPage() {
                     <label className="text-sm font-semibold text-[#0F1111] block mb-3">
                       المبلغ (جنيه مصري)
                     </label>
-                    <div className="relative">
+                    <div className="relative rounded-xl border-2 border-[#E7E7E7] bg-white focus-within:border-[#FF5A00] focus-within:ring-4 focus-within:ring-[#FF5A00]/10 transition-all overflow-hidden flex items-stretch">
+                      <div className="flex items-center justify-center bg-slate-50 border-r-2 border-slate-100 px-4 font-bold text-sm text-[#767684] shrink-0">
+                        ج.م
+                      </div>
                       <input
                         type="number"
                         value={amountInput}
@@ -549,7 +558,8 @@ export default function WalletPage() {
                           setPaymentError(null);
                         }}
                         placeholder="0.00"
-                        className="w-full text-2xl font-bold text-center py-4 bg-slate-50 border-2 border-[#E7E7E7] rounded-xl outline-none focus:border-[#FF5A00] transition-colors"
+                        className="w-full bg-transparent px-4 py-3 outline-none text-2xl font-black text-[#0F1111] tracking-tighter placeholder:text-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        dir="ltr"
                         autoFocus
                       />
                     </div>
@@ -733,14 +743,18 @@ export default function WalletPage() {
                 <label className="text-sm font-semibold text-[#0F1111] block mb-3">
                   المبلغ المطلوب سحبه
                 </label>
-                <div className="relative">
+                <div className="relative rounded-xl border-2 border-[#E7E7E7] bg-white focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 transition-all overflow-hidden flex items-stretch">
+                  <div className="flex items-center justify-center bg-slate-50 border-r-2 border-slate-100 px-4 font-bold text-sm text-[#767684] shrink-0">
+                    ج.م
+                  </div>
                   <input
                     type="number"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     placeholder="0.00"
                     max={ledger.available}
-                    className="w-full text-2xl font-bold text-center py-4 bg-slate-50 border-2 border-[#E7E7E7] rounded-xl outline-none focus:border-amber-500 transition-colors"
+                    className="w-full bg-transparent px-4 py-3 outline-none text-2xl font-black text-[#0F1111] tracking-tighter placeholder:text-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    dir="ltr"
                   />
                 </div>
                 {Number(withdrawAmount) > ledger.available && (

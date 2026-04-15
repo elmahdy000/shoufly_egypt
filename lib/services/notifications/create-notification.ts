@@ -27,7 +27,10 @@ export async function createNotification(params: {
 
   // 1. Trigger real-time SSE notification
   const { notificationEmitter } = await import('@/lib/utils/event-emitter');
-  notificationEmitter.sendNotification(userId, created);
+  notificationEmitter.sendNotification(userId, {
+    ...created,
+    requestId: created.requestId ?? undefined,
+  });
 
   // 2. Trigger native Push Notification if token exists
   if (created.user.fcmToken) {

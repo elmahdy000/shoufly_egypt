@@ -70,16 +70,18 @@ export function NotificationDropdown() {
     document.addEventListener("mousedown", handleClickOutside);
 
     // REAL-TIME SSE LISTENER
+    /*
     const eventSource = new EventSource("/api/notifications/sse");
     eventSource.onmessage = (event) => {
        const newNotif = JSON.parse(event.data);
        console.log("Live notification received:", newNotif);
        refresh(); // Re-fetch from API to keep state consistent
     };
+    */
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      eventSource.close();
+      // eventSource.close();
     };
   }, [refresh]);
 

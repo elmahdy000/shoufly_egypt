@@ -17,12 +17,12 @@ export async function GET(req: NextRequest) {
       };
 
       // Notification Listener
-      const onNotification = (notification: any) => {
+      const onNotification = (notification: { id: number; type: string; title: string; message: string }) => {
         send({ type: 'notification', data: notification });
       };
 
       // Chat Listener
-      const onChatMessage = (message: any) => {
+      const onChatMessage = (message: { id: number; senderId: number; content: string }) => {
         send({ type: 'chat', data: message });
       };
 

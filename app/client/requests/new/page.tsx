@@ -46,7 +46,7 @@ export default function NewRequestPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch('/api/categories', { credentials: 'include' })
       .then(r => r.json())
       .then((cats: any[]) => {
         setCategoryList(cats);
@@ -87,6 +87,10 @@ export default function NewRequestPage() {
     }
   };
 
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const nextStep = () => {
     if (step === 1 && (!title || !description)) {
       setError("برجاء ملء بيانات الطلب الأساسية.");
@@ -105,7 +109,21 @@ export default function NewRequestPage() {
   async function uploadImage(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch('/api/upload', { method: 'POST', body: formData });
+    
+    // Get CSRF token for upload
+    const getCsrfToken = () => {
+      const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+      return match ? match[2] : null;
+    };
+    
+    const response = await fetch('/api/upload', { 
+      method: 'POST', 
+      body: formData,
+      credentials: 'include',
+      headers: {
+        'x-csrf-token': getCsrfToken() || ''
+      }
+    });
     const result = await response.json();
     return { filePath: result.url, fileName: file.name, mimeType: file.type, fileSize: file.size };
   }

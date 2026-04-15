@@ -28,9 +28,19 @@ function MockGatewayContent() {
     // Calling OUR webhook to confirm payment 
     // In real life, the PROVIDER (Paymob/Fawry) calls this from their server.
     try {
+      // Get CSRF token for state-changing request
+      const getCsrfToken = () => {
+        const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+        return match ? match[2] : null;
+      };
+      
       const res = await fetch('/api/payments/webhook', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': getCsrfToken() || ''
+        },
+        credentials: 'include',
         body: JSON.stringify({
           transactionId: txnId,
           externalId: `EXT-${Math.floor(Math.random() * 999999)}`,
@@ -63,7 +73,7 @@ function MockGatewayContent() {
               <FiShield className="text-emerald-400" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Checkout Page</span>
            </div>
-           <h2 className="text-2xl font-black italic">Shoofly Checkouts</h2>
+           <h2 className="text-2xl font-black ">Shoofly Checkouts</h2>
         </div>
 
         <div className="p-8 space-y-8">

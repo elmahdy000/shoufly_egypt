@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
     requireRole(user, 'ADMIN');
 
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const vendors = await prisma.user.findMany({
       where: { role: 'VENDOR' },

@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 const ModerationSchema = z.object({
-  action: z.enum(['VERIFY', 'UNVERIFY', 'BLOCK', 'UNBLOCK']),
+  action: z
+    .string()
+    .transform((val) => val.toUpperCase())
+    .pipe(z.enum(['VERIFY', 'UNVERIFY', 'BLOCK', 'UNBLOCK'])),
 });
 
 export async function PATCH(
@@ -30,6 +33,17 @@ export async function PATCH(
       case 'UNVERIFY': result = await verifyUser(uid, false); break;
       case 'BLOCK': result = await blockUser(uid, true); break;
       case 'UNBLOCK': result = await blockUser(uid, false); break;
+    }
+
+    // 🚀 Invalidate middleware Redis cache so block/unblock takes effect immediately
+    if (action === 'BLOCK' || action === 'UNBLOCK') {
+      try {
+        const { getRedisClient } = await import('@/lib/redis');
+        const redis = getRedisClient();
+        await redis.del(`user_status:${uid}`);
+      } catch {
+        // Non-critical: cache will expire naturally in 60s
+      }
     }
 
     return NextResponse.json(result);

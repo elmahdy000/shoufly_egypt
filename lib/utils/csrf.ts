@@ -48,14 +48,14 @@ export function validateCsrfToken(req: NextRequest): boolean {
   if (!requiresCsrfProtection(req.method)) {
     return true;
   }
-  
+
   const { cookieToken, headerToken } = extractCsrfToken(req);
-  
+
   // Both tokens must be present
   if (!cookieToken || !headerToken) {
     return false;
   }
-  
+
   // Tokens must match (timing-safe comparison)
   try {
     return crypto.timingSafeEqual(
@@ -63,7 +63,6 @@ export function validateCsrfToken(req: NextRequest): boolean {
       Buffer.from(headerToken)
     );
   } catch {
-    // If lengths differ, comparison fails
     return false;
   }
 }
@@ -74,19 +73,22 @@ export function validateCsrfToken(req: NextRequest): boolean {
  */
 export function createCsrfToken(response: NextResponse): string {
   const token = generateCsrfToken();
-  
+
+  const isReplit = !!process.env.REPLIT_DOMAINS;
   const isProduction = process.env.NODE_ENV === 'production';
-  const isReplitOrProd = !!process.env.REPLIT_DOMAINS || isProduction;
-  
-  // Set CSRF token cookie (httpOnly is NOT set so JS can read it for double-submit)
+
+  // Cookie settings must match login route exactly
+  // - Replit: Requires SameSite=None + Secure for iframe support
+  // - Production: SameSite=Lax + Secure
+  // - Local dev: SameSite=Lax (no Secure for HTTP localhost)
   response.cookies.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false, // Must be readable by JS for double-submit pattern
-    secure: isReplitOrProd,
-    sameSite: isReplitOrProd ? 'strict' : 'lax',
+    secure: isReplit || isProduction,
+    sameSite: isReplit ? 'none' : 'lax',
     maxAge: 60 * 60 * 24, // 24 hours
     path: '/',
   });
-  
+
   return token;
 }
 
@@ -124,20 +126,22 @@ export function csrfProtection(req: NextRequest): { valid: boolean; response?: N
   if (!requiresCsrfProtection(req.method)) {
     return { valid: true };
   }
-  
+
   if (!validateCsrfToken(req)) {
     const response = new NextResponse(
       JSON.stringify({ error: 'Invalid or missing CSRF token' }),
-      { 
-        status: 403, 
-        headers: { 
+      {
+        status: 403,
+        headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Required': 'true'
-        } 
+        }
       }
     );
+    // Set a new CSRF token so client can retry
+    createCsrfToken(response);
     return { valid: false, response };
   }
-  
+
   return { valid: true };
 }

@@ -113,7 +113,7 @@ function OffersContent({ requestId }: { requestId: number }) {
                   {isAccepted && <div className="mb-4"><StatusBadge status="completed" label="تم الاعتماد" /></div>}
                   
                   <h3 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-2">تقديم المورد:</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
+                  <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 ">
                     {offer.description || 'لم يتم إدراج تفاصيل إضافية لهذا العرض.'}
                   </p>
                 </div>

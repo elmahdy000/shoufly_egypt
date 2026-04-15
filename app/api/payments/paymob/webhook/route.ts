@@ -80,6 +80,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: 'failed_recorded' });
     }
 
+    // IDEMPOTENCY GUARD: Skip if already processed to prevent double-crediting
+    const meta = transaction.metadata as Record<string, unknown> | null;
+    if (meta?.paymobStatus === 'SUCCESS') {
+      logger.warn('payment.paymob.webhook.already_processed', { transactionId });
+      return NextResponse.json({ received: true, status: 'already_processed' });
+    }
+
     // Process successful payment
     logger.info('payment.paymob.webhook.success', {
       transactionId: transaction.id,

@@ -217,12 +217,30 @@ export default function AnalyticsPage() {
             <div className="h-64 flex items-center justify-center text-slate-500 font-bold">لا توجد بيانات</div>
           ) : (
             <div className="space-y-3">
-              {txTypeCounts.map(([type, count]) => (
-                <div key={type} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-                  <span className="text-sm text-slate-600 font-jakarta">{type}</span>
-                  <span className="text-sm font-black text-slate-900 font-jakarta">{count}</span>
-                </div>
-              ))}
+              {txTypeCounts.map(([type, count]) => {
+                const txArabicMap: Record<string, string> = {
+                  WALLET_TOPUP: "شحن رصيد",
+                  ESCROW_DEPOSIT: "دفع متجمد",
+                  ESCROW_RELEASE: "تسليم فلوس",
+                  WITHDRAWAL: "سحب أرباح",
+                  REFUND: "فلوس راجعة",
+                  REFUND_TO_VENDOR: "فلوس راجعة",
+                  REFUND_TO_CLIENT: "فلوس راجعة",
+                  PLATFORM_FEE: "مكسب التطبيق",
+                  VENDOR_PAYOUT: "أرباح مستلمة",
+                  DELIVERY_PAYOUT: "أجرة توصيل",
+                  ADMIN_COMMISSION: "مكسب التطبيق",
+                  PAYMENT: "دفع مبلغ",
+                  CLIENT_PAYMENT: "دفع مبلغ",
+                };
+                const arType = txArabicMap[type] || type;
+                return (
+                  <div key={type} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                    <span className="text-sm text-slate-600 font-jakarta">{arType}</span>
+                    <span className="text-sm font-black text-slate-900 font-jakarta">{count}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

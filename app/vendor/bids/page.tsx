@@ -15,12 +15,12 @@ const FILTERS = [
   { value: "ALL",               label: "الكل",       dot: "" },
   { value: "PENDING",           label: "انتظار",     dot: "bg-amber-400" },
   { value: "SELECTED",          label: "مرشح",       dot: "bg-blue-400" },
-  { value: "ACCEPTED_BY_CLIENT",label: "مقبول",      dot: "bg-emerald-400" },
-  { value: "REJECTED",          label: "مرفوض",      dot: "bg-rose-400" },
+  { value: "ACCEPTED_BY_CLIENT",label: "اتقبل",      dot: "bg-emerald-400" },
+  { value: "REJECTED",          label: "اترفض",      dot: "bg-rose-400" },
 ];
 
 const STATUS_CFG: Record<string, { label: string; badge: string; border: string; icon: any }> = {
-  PENDING:            { label: "قيد الانتظار",       badge: "bg-amber-50 text-amber-600",   border: "border-r-amber-400",   icon: FiClock },
+  PENDING:            { label: "في الانتظار",        badge: "bg-amber-50 text-amber-600",   border: "border-r-amber-400",   icon: FiClock },
   SELECTED:           { label: "مرشح للعميل",        badge: "bg-blue-50 text-blue-600",     border: "border-r-blue-400",    icon: FiPackage },
   ACCEPTED_BY_CLIENT: { label: "تم القبول",          badge: "bg-emerald-50 text-emerald-600", border: "border-r-emerald-400", icon: FiCheckCircle },
   REJECTED:           { label: "مرفوض",              badge: "bg-rose-50 text-rose-600",     border: "border-r-rose-400",    icon: FiXCircle },
@@ -78,7 +78,7 @@ export default function VendorBidsPage() {
             <FiTag className="text-primary" size={20} /> عروضي
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            {loading ? "جاري التحميل..." : `${data?.length ?? 0} عرض`}
+            {loading ? "بنحمل العروض..." : `${data?.length ?? 0} عرض`}
           </p>
         </div>
         <button
@@ -92,15 +92,15 @@ export default function VendorBidsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl border border-slate-200 p-3 text-center">
-          <p className="text-[11px] text-slate-500 font-medium mb-1">مقبولة</p>
+          <p className="text-xs font-semibold text-slate-600 mb-1">اتقبلت</p>
           <p className="text-xl font-bold text-emerald-600">{loading ? "—" : accepted}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-3 text-center">
-          <p className="text-[11px] text-slate-500 font-medium mb-1">قيد المراجعة</p>
+          <p className="text-xs font-semibold text-slate-600 mb-1">بتتراجع</p>
           <p className="text-xl font-bold text-amber-500">{loading ? "—" : pending}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-3 text-center">
-          <p className="text-[11px] text-slate-500 font-medium mb-1">مرفوضة</p>
+          <p className="text-xs font-semibold text-slate-600 mb-1">اترفضت</p>
           <p className="text-xl font-bold text-rose-500">{loading ? "—" : rejected}</p>
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function VendorBidsPage() {
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-white/70" : f.dot}`} />
               )}
               {f.label}
-              <span className={`text-[10px] font-bold min-w-[16px] text-center tabular-nums ${active ? "opacity-80" : "text-slate-400"}`}>
+              <span className={`text-xs font-bold min-w-[18px] text-center tabular-nums ${active ? "opacity-80" : "text-slate-500"}`}>
                 {count}
               </span>
             </button>
@@ -149,9 +149,9 @@ export default function VendorBidsPage() {
           <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400">
             <FiInbox size={22} />
           </div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">لا توجد عروض</p>
+          <p className="text-sm font-semibold text-slate-700 mb-1">مفيش عروض دلوقتي</p>
           <p className="text-xs text-slate-400">
-            {filter === "ALL" ? "لم تقدم أي عروض بعد" : "لا توجد عروض في هذه الحالة"}
+            {filter === "ALL" ? "لسه مقدمتش ولا عرض لحد دلوقتي" : "مفيش عروض في الحالة دي"}
           </p>
         </div>
       )}
@@ -178,7 +178,7 @@ export default function VendorBidsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-slate-900 truncate mb-0.5">{title}</p>
                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {bid.description || "لا يوجد وصف"}
+                      {bid.description || "مفيش وصف متسجل"}
                     </p>
                   </div>
                   <span className={`shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg ${cfg.badge}`}>
@@ -189,7 +189,7 @@ export default function VendorBidsPage() {
 
                 {/* Bottom row */}
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                  <div className="flex items-center gap-1 text-xs text-slate-500">
                     {dateStr && (
                       <>
                         <FiCalendar size={11} />
@@ -203,7 +203,7 @@ export default function VendorBidsPage() {
                         href={`/vendor/bids/${bid.id}`}
                         className="text-[11px] font-semibold text-primary hover:underline"
                       >
-                        عرض التفاصيل
+                        شوف التفاصيل
                       </Link>
                     )}
                     <span className={`text-sm font-bold ${isAccepted ? "text-emerald-600" : "text-slate-800"}`}>

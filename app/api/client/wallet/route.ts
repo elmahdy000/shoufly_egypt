@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
       if (action === 'withdraw') {
         // Atomic decrement with balance check at database level
-        const updatedUser = await tx.user.update({
+        const updateResult = await tx.user.updateMany({
           where: { 
             id: user.id,
             walletBalance: { gte: decimalAmount }
@@ -36,9 +36,12 @@ export async function POST(req: NextRequest) {
           data: { walletBalance: { decrement: decimalAmount } }
         });
         
-        if (!updatedUser) {
+        if (updateResult.count === 0) {
           throw new Error('الرصيد المتاح غير كافٍ للاسترداد أو تم تعديله في نفس اللحظة.');
         }
+
+        // Refetch user since updateMany doesn't return the updated record
+        const updatedUser = await tx.user.findUnique({ where: { id: user.id } });
 
         const transaction = await tx.transaction.create({
           data: {

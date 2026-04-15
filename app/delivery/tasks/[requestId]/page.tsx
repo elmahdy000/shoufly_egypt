@@ -12,16 +12,16 @@ import {
   listDeliveryTasks,
 } from "@/lib/api/delivery-agent";
 import { 
-  FiMapPin, 
-  FiPhone, 
-  FiCheckCircle, 
-  FiXCircle,
-  FiTruck,
-  FiArrowLeft,
-  FiPackage,
-  FiClock,
-  FiAlertCircle
-} from "react-icons/fi";
+  MapPin, 
+  Phone, 
+  CheckCircle, 
+  XCircle,
+  Truck,
+  ArrowLeft,
+  Package,
+  Clock,
+  AlertCircle
+} from "lucide-react";
 
 function TaskDetail({ requestId }: { requestId: number }) {
   const router = useRouter();
@@ -43,7 +43,7 @@ function TaskDetail({ requestId }: { requestId: number }) {
       setMessage("تم تأكيد التسليم بنجاح");
       setTimeout(() => router.push("/delivery"), 1500);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "فشل تأكيد التسليم");
+      setMessage(err instanceof Error ? err.message : "فشلنا في تأكيد التسليم");
       setIsCompleting(false);
     }
   }
@@ -52,7 +52,7 @@ function TaskDetail({ requestId }: { requestId: number }) {
     try {
       setIsFailing(true);
       await failDeliveryTask(requestId, failReason || undefined);
-      setMessage("تم تسجيل فشل التسليم");
+      setMessage("سجلنا المشكلة بنجاح");
       setTimeout(() => router.push("/delivery"), 1500);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "فشل تسجيل المشكلة");
@@ -61,45 +61,45 @@ function TaskDetail({ requestId }: { requestId: number }) {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-      <div className="flex flex-col items-center text-[#767684]">
-        <div className="w-12 h-12 border-3 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">جاري تحميل تفاصيل الطلب...</p>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex flex-col items-center text-slate-500">
+        <div className="w-12 h-12 border-3 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+        <p className="text-sm font-bold">بيحمل بيانات الأوردر...</p>
       </div>
     </div>
   );
   
   if (error) return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <ErrorState message={error} />
     </div>
   );
   
   if (!task) return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6">
-      <ErrorState message="المهمة غير موجودة أو لم تُسند إليك" />
+    <div className="min-h-screen bg-slate-50 p-6">
+      <ErrorState message="الأوردر ده مش موجود أو مش معاك" />
     </div>
   );
 
   const lastStatus = task.deliveryTracking?.[0]?.status ?? "OUT_FOR_DELIVERY";
-  const statusLabel = lastStatus === "OUT_FOR_DELIVERY" ? "جاري التوصيل" : "قيد الإجراء";
-  const statusColor = lastStatus === "OUT_FOR_DELIVERY" ? "indigo" : "amber";
+  const statusLabel = lastStatus === "OUT_FOR_DELIVERY" ? "في السكة" : "بيتجهز";
+  const statusColor = lastStatus === "OUT_FOR_DELIVERY" ? "primary" : "amber";
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24 lg:pb-10 font-sans dir-rtl text-right">
+    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-10 font-sans dir-rtl text-right">
       {/* Page Header */}
-      <div className="bg-white border-b border-[#E7E7E7]">
+      <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link 
               href="/delivery/tasks" 
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
+              className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-all border border-slate-100 shadow-sm"
             >
-              <FiArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Link>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-[#0F1111] truncate">{task.title}</h1>
-              <p className="text-sm text-[#565959] font-medium mt-0.5">طلب #{task.id}</p>
+              <h1 className="text-xl font-bold text-slate-900 truncate">{task.title}</h1>
+              <p className="text-sm text-slate-500 font-medium mt-1">أوردر رقم #{task.id}</p>
             </div>
           </div>
         </div>
@@ -107,21 +107,21 @@ function TaskDetail({ requestId }: { requestId: number }) {
 
       <div className="max-w-[1600px] mx-auto px-6 lg:px-10 py-8 space-y-6">
         {/* Status Banner */}
-        <div className={`p-4 rounded-xl border ${
-          statusColor === "indigo" 
-            ? 'bg-indigo-50 border-indigo-200' 
+        <div className={`p-5 rounded-2xl border ${
+          statusColor === "primary" 
+            ? 'bg-primary/5 border-primary/20' 
             : 'bg-amber-50 border-amber-200'
         }`}>
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              statusColor === "indigo" ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
+              statusColor === "primary" ? 'bg-white text-primary' : 'bg-white text-amber-600'
             }`}>
-              <FiTruck size={20} />
+              <Truck size={24} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#0F1111]">حالة التوصيل</p>
-              <p className={`text-sm font-medium ${
-                statusColor === "indigo" ? 'text-indigo-700' : 'text-amber-700'
+              <p className="text-xs font-medium text-slate-500">حالة الأوردر</p>
+              <p className={`text-base font-bold ${
+                statusColor === "primary" ? 'text-primary' : 'text-amber-700'
               }`}>{statusLabel}</p>
             </div>
           </div>
@@ -129,95 +129,95 @@ function TaskDetail({ requestId }: { requestId: number }) {
 
         {/* Message */}
         {message && (
-          <div className={`p-4 rounded-xl text-sm font-medium ${
+          <div className={`p-4 rounded-xl text-sm font-bold shadow-sm ${
             message.includes('نجاح') 
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
               : 'bg-rose-50 text-rose-700 border border-rose-200'
           }`}>
             <div className="flex items-center gap-2">
-              {message.includes('نجاح') ? <FiCheckCircle size={18} /> : <FiAlertCircle size={18} />}
+              {message.includes('نجاح') ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
               {message}
             </div>
           </div>
         )}
 
         {/* Delivery Info Card */}
-        <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-[#E7E7E7]">
-            <h2 className="text-base font-bold text-[#0F1111] flex items-center gap-2">
-              <FiPackage size={18} className="text-[#565959]" /> تفاصيل الطلب
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
+          <div className="p-6 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Package size={20} className="text-slate-400" /> تفاصيل التوصيل
             </h2>
           </div>
-          <div className="p-5 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                <FiMapPin size={18} />
+          <div className="p-6 space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                <MapPin size={20} />
               </div>
               <div>
-                <p className="text-xs text-[#565959] font-medium mb-1">عنوان التوصيل</p>
-                <p className="text-sm font-semibold text-[#0F1111]">{task.address}</p>
+                <p className="text-xs text-slate-500 font-bold mb-1">العنوان بالتفصيل</p>
+                <p className="text-sm font-medium text-slate-900 leading-relaxed">{task.address}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                <FiPhone size={18} />
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                <Phone size={20} />
               </div>
               <div>
-                <p className="text-xs text-[#565959] font-medium mb-1">رقم التواصل</p>
-                <p className="text-sm font-semibold text-[#0F1111]" dir="ltr">{task.deliveryPhone}</p>
+                <p className="text-xs text-slate-500 font-bold mb-1">رقم تليفون العميل</p>
+                <p className="text-base font-bold text-slate-900" dir="ltr">{task.deliveryPhone}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Actions Card */}
-        <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-sm p-6 space-y-5">
-          <h2 className="text-base font-bold text-[#0F1111] flex items-center gap-2">
-            <FiCheckCircle size={18} className="text-emerald-600" /> إجراءات التوصيل
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/20 p-6 space-y-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <CheckCircle size={20} className="text-emerald-500" /> المطلوب تعمله
           </h2>
           
           <Button 
             onClick={handleComplete} 
-            className="w-full gap-2 bg-emerald-500 hover:bg-emerald-600"
+            className="w-full gap-2 h-12 rounded-xl text-base bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 font-bold"
             isLoading={isCompleting}
           >
-            <FiCheckCircle size={18} /> 
-            {isCompleting ? 'جاري التأكيد...' : 'تم التسليم بنجاح'}
+            <CheckCircle size={20} /> 
+            {isCompleting ? 'بنأكد...' : 'سلمت الأوردر بنجاح'}
           </Button>
 
-          <div className="border-t border-[#E7E7E7] pt-5">
-            <div className="flex items-center gap-2 mb-3">
-              <FiXCircle size={16} className="text-rose-500" />
-              <p className="text-sm font-semibold text-[#0F1111]">تسجيل مشكلة (اختياري)</p>
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <XCircle size={18} className="text-rose-500" />
+              <p className="text-base font-bold text-slate-900">حصلت مشكلة؟ (اختياري)</p>
             </div>
             <input
               value={failReason}
               onChange={(e) => setFailReason(e.target.value)}
-              placeholder="مثال: العميل غير موجود، العنوان غير صحيح..."
-              className="w-full px-4 py-3 bg-slate-50 border-2 border-[#E7E7E7] rounded-xl text-sm outline-none focus:border-rose-400 transition-colors mb-3"
+              placeholder="مثلاً: العميل مابيردش، العنوان غلط..."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-400 focus:bg-white transition-colors mb-4"
             />
             <Button 
               variant="danger" 
               onClick={handleFail} 
-              className="w-full gap-2"
+              className="w-full gap-2 h-12 rounded-xl text-base font-bold"
               isLoading={isFailing}
             >
-              <FiXCircle size={18} /> 
-              {isFailing ? 'جاري التسجيل...' : 'تسجيل مشكلة في التسليم'}
+              <XCircle size={20} /> 
+              {isFailing ? 'بنسجل...' : 'واجهت مشكلة في التوصيل'}
             </Button>
           </div>
         </div>
 
         {/* Tips Card */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-[#E7E7E7]">
+        <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-              <FiClock size={16} />
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 border border-amber-200/50">
+              <Clock size={20} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#0F1111] mb-1">نصيحة سريعة</p>
-              <p className="text-xs text-[#565959]">
-                اتصل بالعميل قبل الوصول لتأكيد العنوان. في حالة عدم الرد، انتظر 10 دقائق قبل تسجيل مشكلة.
+              <p className="text-sm font-bold text-amber-900 mb-1">نصيحة في السريع</p>
+              <p className="text-xs font-medium text-amber-700/80 leading-relaxed">
+                كلم العميل قبل ما توصل عشان تتأكد إن العنوان صح، ولو ماردش استنى 10 دقايق قبل ما تسجل إن فيه مشكلة.
               </p>
             </div>
           </div>
@@ -232,8 +232,8 @@ export default function DeliveryTaskDetailPage() {
   const parsed = Number(params.requestId);
   if (!Number.isFinite(parsed) || parsed <= 0)
     return (
-      <div className="min-h-screen bg-[#F8F9FA] p-6">
-        <ErrorState message="معرف طلب غير صحيح" />
+      <div className="min-h-screen bg-slate-50 p-6">
+        <ErrorState message="رقم الأوردر مش صح" />
       </div>
     );
   return <TaskDetail requestId={parsed} />;

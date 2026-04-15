@@ -34,18 +34,7 @@ export async function getRequestWithDetails(requestId: number) {
         },
         orderBy: { createdAt: 'desc' },
       },
-      selectedBid: {
-        include: {
-          vendor: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-              phone: true,
-            },
-          },
-        },
-      } as any,
+      images: true,
       deliveryTracking: {
         orderBy: { createdAt: 'desc' },
         take: 10, // Limit tracking history
@@ -355,9 +344,9 @@ export async function batchUpdateStatus(
   
   switch (model) {
     case 'request':
-      return prisma.request.updateMany({ where, data: { status } });
+      return prisma.request.updateMany({ where, data: { status: status as any } });
     case 'bid':
-      return prisma.bid.updateMany({ where, data: { status } });
+      return prisma.bid.updateMany({ where, data: { status: status as any } });
     case 'user':
       return prisma.user.updateMany({ where, data: { isActive: status === 'active' } });
     default:

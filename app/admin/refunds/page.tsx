@@ -113,23 +113,25 @@ export default function AdminRefundsPage() {
 
                   <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">رقم الطلب</label>
-                        <div className="relative">
-                           <Hash className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">رقم الطلب</label>
+                        <div className="relative rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex items-stretch focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                           <div className="flex items-center justify-center px-4 border-l border-slate-200 text-slate-500 shrink-0">
+                               <Hash size={16} />
+                           </div>
                            <input
                              type="number"
                              value={requestId}
                              onChange={(e) => setRequestId(e.target.value)}
                              placeholder="مثال: 4509"
-                             className="w-full pr-11 pl-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all"
+                             className="w-full h-11 px-4 bg-transparent text-sm outline-none placeholder:text-slate-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none font-bold text-slate-900"
                              required
                            />
                         </div>
                      </div>
                      <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">سبب الاسترداد</label>
+                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">سبب الاسترداد</label>
                         <div className="relative">
-                           <FileText className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                           <FileText className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                            <input
                              value={reason}
                              onChange={(e) => setReason(e.target.value)}
@@ -160,7 +162,7 @@ export default function AdminRefundsPage() {
                      <p className="text-xs text-slate-500 mt-1">قائمة الطلبات المدفوعة التي لا تزال قيد التنفيذ</p>
                   </div>
                   <div className="relative">
-                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                      <input
                        value={search}
                        onChange={(e) => setSearch(e.target.value)}
@@ -183,16 +185,16 @@ export default function AdminRefundsPage() {
                         {loadingReq ? (
                            [1,2,3].map(i => <tr key={i} className="animate-pulse"><td colSpan={3} className="h-16 bg-slate-50/50" /></tr>)
                         ) : refundable.length === 0 ? (
-                           <tr><td colSpan={3} className="py-16 text-center text-slate-400 italic font-bold">لا توجد طلبات قابلة للاسترداد</td></tr>
+                           <tr><td colSpan={3} className="py-16 text-center text-slate-500 font-bold">لا توجد طلبات قابلة للاسترداد</td></tr>
                         ) : (
                            refundable.map(r => (
                               <tr key={r.id}>
                                  <td>
                                     <div className="flex items-center gap-3">
-                                       <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400"><Package size={14} /></div>
+                                       <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500"><Package size={14} /></div>
                                        <div>
                                           <p className="text-xs font-bold text-slate-900 truncate max-w-[200px]">{r.title}</p>
-                                          <p className="text-xs text-slate-400">#{r.id}</p>
+                                          <p className="text-xs text-slate-500">#{r.id}</p>
                                        </div>
                                     </div>
                                  </td>

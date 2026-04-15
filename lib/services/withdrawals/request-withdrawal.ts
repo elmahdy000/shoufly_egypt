@@ -41,10 +41,19 @@ export async function requestWithdrawal(vendorId: number, amount: number) {
     });
 
     // CRITICAL: Deduct from wallet immediately (hold funds)
-    await tx.user.update({
-      where: { id: vendorId },
+    // We add `walletBalance: { gte: requested }` in updateMany to prevent concurrent race conditions
+    // where parallel requests could bypass the initial JS check and cause a negative balance.
+    const updateResult = await tx.user.updateMany({
+      where: { 
+        id: vendorId,
+        walletBalance: { gte: requested } 
+      },
       data: { walletBalance: { decrement: requested } }
     });
+
+    if (updateResult.count === 0) {
+      throw new Error('الرصيد المتاح غير كافٍ أو تغير أثناء معالجة الطلب.');
+    }
 
 
     const admins = await tx.user.findMany({

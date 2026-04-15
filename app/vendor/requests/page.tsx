@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/shoofly/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listVendorOpenRequests } from "@/lib/api/requests";
-import { 
-  FiBriefcase, FiMapPin, FiClock, 
-  FiFilter
+import {
+  FiBriefcase, FiMapPin, FiFilter, FiInbox, FiChevronLeft
 } from "react-icons/fi";
+
+const FILTERS = [
+  { value: "ALL", label: "كل الطلبات" },
+  { value: "OPEN_FOR_BIDDING", label: "طلبات جديدة" },
+  { value: "BIDS_RECEIVED", label: "عليها عروض" },
+];
 
 export default function VendorRequestsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -22,89 +26,109 @@ export default function VendorRequestsPage() {
   }, [data, statusFilter]);
 
   return (
-    <div className="font-sans dir-rtl text-right">
+    <div className="font-sans text-right" dir="rtl">
       <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 space-y-4">
-        {/* Filter */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
-            <FiFilter className="absolute right-4 top-1/2 -translate-y-1/2 text-[#767684]" size={18} />
-            <select 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-white border border-[#E7E7E7] pl-4 pr-12 py-3 rounded-xl text-sm font-semibold outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 appearance-none"
-            >
-              <option value="ALL">كل الفرص ({data?.length ?? 0})</option>
-              <option value="OPEN_FOR_BIDDING">طلبات جديدة</option>
-              <option value="BIDS_RECEIVED">طلبات قيد التفاوض</option>
-            </select>
+
+        {/* Page header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">طلبات السوق المتاحة</h1>
+            <p className="text-sm text-slate-500">
+              {loading ? "جاري التحميل..." : `${data?.length ?? 0} طلب متاح`}
+            </p>
           </div>
         </div>
 
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16 text-[#767684]">
-             <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-             <p className="text-sm font-medium">جاري تحميل الفرص...</p>
-          </div>
-        )}
-        
-        {error && <ErrorState message={error} />}
-
-        {!loading && !error && rows.length === 0 && (
-          <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-8 text-center">
-             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400">
-               <FiBriefcase size={18} />
-             </div>
-             <h3 className="text-sm font-semibold text-[#0F1111] mb-1">لا توجد طلبات</h3>
-             <p className="text-xs text-[#565959]">سيصلك تنبيه فور ظهور فرصة جديدة</p>
-          </div>
-        )}
-
-        {/* Opportunities Feed */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {rows.map((request: any) => {
-            const isOpen = request.status === 'OPEN_FOR_BIDDING';
-
+        {/* Filter tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {FILTERS.map((f) => {
+            const active = statusFilter === f.value;
             return (
-              <div 
-                key={request.id} 
-                className="bg-white rounded-2xl border border-[#E7E7E7] shadow-sm p-5 hover:border-primary/30 hover:shadow-md transition-all group"
+              <button
+                key={f.value}
+                onClick={() => setStatusFilter(f.value)}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                  active
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                }`}
               >
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium text-primary">طلب جديد</span>
-                    <h3 className="font-semibold text-sm text-[#0F1111] group-hover:text-primary transition-colors line-clamp-1 mt-1">
-                      {request.title}
-                    </h3>
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full shrink-0 ${
-                    isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {isOpen ? 'متاح' : 'مكتفي'}
-                  </span>
-                </div>
-
-                <p className="text-xs text-[#565959] line-clamp-2 mb-3">
-                  {request.description || "لا يوجد وصف تفصيلي"}
-                </p>
-
-                <div className="flex items-center gap-2 text-xs text-[#565959] mb-3">
-                  <FiMapPin size={14} className="text-[#767684] shrink-0" />
-                  <span className="truncate">{request.address}</span>
-                </div>
-                
-                <Link href={`/vendor/requests/${request.id}`}>
-                  <Button 
-                    className={`w-full h-10 text-sm ${
-                      isOpen ? 'bg-primary text-white' : 'bg-slate-100 text-[#0F1111]'
-                    }`}
-                  >
-                    {isOpen ? 'تقديم عرض' : 'التفاصيل'}
-                  </Button>
-                </Link>
-              </div>
+                {f.label}
+              </button>
             );
           })}
         </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
+            <p className="text-sm font-medium">بنجمع الطلبات المتاحة...</p>
+          </div>
+        )}
+
+        {error && <ErrorState message={error} />}
+
+        {/* Empty */}
+        {!loading && !error && rows.length === 0 && (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
+            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400">
+              <FiInbox size={22} />
+            </div>
+            <h3 className="text-sm font-semibold text-slate-800 mb-1">مفيش طلبات دلوقتي</h3>
+            <p className="text-xs text-slate-500">هتجيلك تنبيه أول ما ينزل طلب جديد</p>
+          </div>
+        )}
+
+        {/* Opportunities Grid */}
+        {!loading && !error && rows.length > 0 && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {rows.map((request: any) => {
+              const isOpen = request.status === "OPEN_FOR_BIDDING";
+              return (
+                <Link
+                  key={request.id}
+                  href={`/vendor/requests/${request.id}`}
+                  className="block bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-primary/30 hover:shadow-md transition-all group"
+                >
+                  {/* Top row */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-semibold text-primary">
+                        {isOpen ? "مستني عروض" : "شغالين فيها"}
+                      </span>
+                      <h3 className="font-bold text-sm text-slate-900 group-hover:text-primary transition-colors line-clamp-1 mt-0.5">
+                        {request.title}
+                      </h3>
+                    </div>
+                    <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                    }`}>
+                      {isOpen ? "متاح" : "اكتفى"}
+                    </span>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">
+                    {request.description || "لا يوجد وصف تفصيلي"}
+                  </p>
+
+                  {/* Location row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <FiMapPin size={13} className="text-slate-400 shrink-0" />
+                      <span className="truncate max-w-[180px]">{request.address}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-semibold text-primary">
+                      {isOpen ? "قدم عرضك" : "التفاصيل"}
+                      <FiChevronLeft size={14} />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

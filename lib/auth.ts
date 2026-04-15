@@ -62,7 +62,7 @@ async function resolveUserBySessionToken(
 export async function getCurrentUser(
   headers: Headers,
 ): Promise<CurrentUser | null> {
-  return resolveUserBySessionToken(headers);
+  return getCurrentUserFromCookie();
 }
 
 /**

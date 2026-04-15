@@ -179,9 +179,14 @@
   scrollbar-color: #d8dbe3 transparent;
 }
 
-/* Force flat surfaces: no gradient backgrounds across routes */
-[class*="bg-gradient"] {
-  background-image: none !important;
+/* Performance: GPU-accelerate animated elements */
+.glass-card {
+  content-visibility: auto;
+}
+
+/* Optimize heavy list items */
+.data-table tr {
+  contain: layout style;
 }
 
 @media (prefers-reduced-motion: reduce) {

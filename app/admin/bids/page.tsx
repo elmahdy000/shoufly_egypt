@@ -28,8 +28,8 @@ export default function AdminBidsPage() {
                  <Activity size={22} />
               </div>
               <div>
-                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">مركز العروض</h1>
-                 <p className="text-xs font-bold text-slate-400 tracking-wide mt-1">متابعة حركة العروض</p>
+                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">العروض</h1>
+                 <p className="text-sm text-slate-500 mt-1">متابعة العروض النشطة</p>
               </div>
            </div>
         </div>
@@ -57,20 +57,20 @@ export default function AdminBidsPage() {
                   {loading ? (
                     Array(5).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-16 bg-slate-50/50" /></tr>)
                   ) : error ? (
-                    <tr><td colSpan={4} className="py-20 text-center text-rose-500 font-bold italic">{error}</td></tr>
+                    <tr><td colSpan={4} className="py-20 text-center text-rose-500 font-bold ">{error}</td></tr>
                   ) : !data || data.length === 0 ? (
-                    <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-bold italic bg-slate-50/20">لا توجد عروض قيد الانتظار حالياً</td></tr>
+                    <tr><td colSpan={4} className="py-20 text-center text-slate-500 font-bold bg-slate-50/20">لا توجد عروض قيد الانتظار حالياً</td></tr>
                   ) : (
                     data.map((req) => (
                       <tr key={req.id} className="group hover:bg-slate-50/50 transition-colors">
                         <td>
                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                              <div className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-500 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                                  <Package size={18} />
                               </div>
                               <div>
                                  <p className="text-xs font-bold text-slate-900 leading-none mb-1.5">{req.title}</p>
-                                 <span className="text-xs font-black text-slate-400 tracking-tighter">REQ_ID: {req.id}</span>
+                                 <span className="text-xs font-black text-slate-500 tracking-tighter">REQ_ID: {req.id}</span>
                               </div>
                            </div>
                         </td>
