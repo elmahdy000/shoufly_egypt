@@ -56,6 +56,16 @@ export async function createBid(vendorId: number, data: CreateBidInput) {
       data.netPrice * (1 + commissionPercentage / 100) * 100
     ) / 100;
 
+    // 🛡️ SECURITY SHIELD: Price Locking
+    // Prevent vendors from updating bid price/description after it has been handled by client
+    const existingBid = await tx.bid.findUnique({
+      where: { requestId_vendorId: { requestId: data.requestId, vendorId } }
+    });
+
+    if (existingBid && existingBid.status !== 'PENDING') {
+      throw new Error(`Cannot update bid because its current status is ${existingBid.status}`);
+    }
+
     const bid = await tx.bid.upsert({
       where: { requestId_vendorId: { requestId: data.requestId, vendorId } },
       create: {

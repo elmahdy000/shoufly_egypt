@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/shoofly/button";
 import { formatDate } from "@/lib/formatters";
 import { StatusBadge } from "@/components/shoofly/status-badge";
-import { StatCard } from "@/components/shoofly/stat-card";
 import { forwardAdminBid, listAdminRequestBids } from "@/lib/api/bids";
 import { getRequestDetails } from "@/lib/api/requests";
 import { formatCurrency } from "@/lib/formatters";
@@ -20,7 +19,6 @@ import {
   FiActivity, 
   FiCheckCircle, 
   FiImage,
-  FiShare2,
   FiMessageSquare
 } from "react-icons/fi";
 
@@ -47,12 +45,45 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
     }
   }
 
-  if (request.loading) return <div className="p-10 text-center text-muted font-bold animate-pulse">بنجهز تفاصيل الطلب...</div>;
+  if (request.loading) {
+    return (
+      <div className="admin-page admin-page--detail" dir="rtl">
+        <div className="p-10 text-center text-muted font-bold animate-pulse">بنجهز تفاصيل الطلب...</div>
+      </div>
+    );
+  }
+  if (request.error) {
+    return (
+      <div className="admin-page admin-page--detail" dir="rtl">
+        <div className="shoofly-card border border-rose-200 bg-rose-50 p-6 sm:p-8 text-center space-y-4">
+          <p className="text-rose-700 font-bold">{request.error}</p>
+          <div className="flex items-center justify-center gap-3">
+            <Button onClick={request.refresh}>إعادة المحاولة</Button>
+            <Button variant="secondary" onClick={() => router.push("/admin/requests")}>
+              الرجوع للطلبات
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const req = request.data;
+  if (!req) {
+    return (
+      <div className="admin-page admin-page--detail" dir="rtl">
+        <div className="shoofly-card border border-slate-200 bg-white p-6 sm:p-8 text-center space-y-4">
+          <p className="text-slate-700 font-bold">لا يمكن تحميل بيانات الطلب حاليًا.</p>
+          <Button variant="secondary" onClick={() => router.push("/admin/requests")}>
+            الرجوع للطلبات
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 lg:p-10 max-w-[1400px] mx-auto space-y-8 pb-32 text-right dir-rtl">
+    <div className="admin-page admin-page--detail pb-20" dir="rtl">
       {/* Dynamic Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-8 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="space-y-3">
@@ -63,10 +94,10 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
             >
               <FiArrowRight size={20} />
             </button>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 border-r-4 border-primary pr-4">{req?.title}</h1>
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 border-r-4 border-primary pr-4">{req?.title}</h1>
             <StatusBadge status="active" label={req?.status ?? 'Pending'} />
           </div>
-          <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500 pr-16 font-medium">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-500 pr-0 sm:pr-16 font-medium">
             <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg font-jakarta tracking-tight"><FiClock size={14}/> ID: {requestId}</span>
             <span className="flex items-center gap-1.5"><FiMapPin size={16} className="text-primary" /> {req?.address}</span>
             <span className="flex items-center gap-1.5"><FiMessageSquare size={16} /> التواصل مفعل</span>
@@ -87,7 +118,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
         {/* Left Column: Details & Bids */}
         <div className="lg:col-span-2 space-y-8">
           {/* Main Info Card */}
-          <div className="shoofly-card bg-white p-10 space-y-10 border-2 border-slate-50 shadow-sm relative overflow-hidden">
+          <div className="shoofly-card bg-white p-4 sm:p-8 lg:p-10 space-y-6 sm:space-y-10 border-2 border-slate-50 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
             
             <div className="space-y-6">
@@ -95,21 +126,21 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                 <FiFileText className="text-primary" />
                 <span>شرح المشكلة بالتفصيل</span>
               </div>
-              <div className="text-slate-700 leading-relaxed bg-slate-50/80 p-6 rounded-3xl border border-slate-100 text-lg font-medium">
+              <div className="text-slate-700 leading-relaxed bg-slate-50/80 p-6 rounded-xl border border-slate-100 text-lg font-medium">
                 {req?.description || 'لا يوجد وصف تفصيلي لهذا الطلب.'}
               </div>
             </div>
             
             {/* Visual Evidence */}
             <div className="space-y-6">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-4">
+              <p className="text-xs font-black text-slate-400 tracking-wide flex items-center gap-2 border-b border-slate-50 pb-4">
                 <FiImage /> المعاينة البصرية للموقع
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {[1, 2].map(i => (
-                  <div key={i} className="aspect-square bg-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-200 hover:border-primary/20 transition-all group">
+                  <div key={i} className="aspect-square bg-slate-100 rounded-xl flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-200 hover:border-primary/20 transition-all group">
                     <FiImage size={32} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] mt-2 font-bold uppercase">View Upload {i}</span>
+                    <span className="text-xs mt-2 font-bold">عرض المرفق {i}</span>
                   </div>
                 ))}
               </div>
@@ -130,6 +161,10 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
             <div className="space-y-6">
               {bids.loading ? (
                 <div className="text-center py-20 opacity-50 font-bold animate-pulse">بنفرز عروض الأسعار...</div>
+              ) : bids.error ? (
+                <div className="shoofly-card p-8 text-center border border-rose-200 bg-rose-50 text-rose-700 font-bold">
+                  {bids.error}
+                </div>
               ) : (bids.data ?? []).length === 0 ? (
                 <div className="shoofly-card p-12 text-center text-slate-400 font-bold border-dashed border-2">لسه مفيش عروض وصلت للطلب ده</div>
               ) : (bids.data ?? []).map((bid: any) => (
@@ -143,12 +178,12 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                         <p className="font-black text-xl text-slate-900">{bid.vendor?.fullName || `المورد #${bid.vendorId}`}</p>
                         <div className="flex items-center gap-2 mt-1">
                            <StatusBadge status={bid.status === 'SELECTED' ? 'completed' : 'active'} label={bid.status} />
-                           <span className="text-[10px] text-slate-400 font-bold font-jakarta">UID-{bid.vendorId}</span>
+                           <span className="text-xs text-slate-400 font-bold font-jakarta">UID-{bid.vendorId}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-left bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-sm min-w-[200px]">
-                      <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1 text-center">تكلفة العميل النهائية</p>
+                    <div className="text-left bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-sm w-full sm:min-w-[200px]">
+                      <p className="text-xs text-emerald-600 font-black tracking-wide mb-1 text-center">تكلفة العميل النهائية</p>
                       <p className="text-3xl font-black font-jakarta text-emerald-700 text-center">
                         {formatCurrency(bid.clientPrice || 0)}
                       </p>
@@ -168,7 +203,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                     <Button 
                       onClick={() => handleForward(bid.id)}
                       isLoading={activeActionId === bid.id}
-                      className="w-full sm:flex-1 h-12 rounded-xl font-black shadow-lg uppercase tracking-wider"
+                      className="w-full sm:flex-1 h-12 rounded-xl font-black shadow-lg tracking-wider"
                       variant={bid.status === 'SELECTED' ? 'secondary' : 'primary'}
                       disabled={bid.status === 'SELECTED'}
                     >
@@ -184,16 +219,16 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
         {/* Right Column: Meta & Audit */}
         <div className="space-y-6">
           {/* Client Info Hub */}
-          <div className="shoofly-card bg-slate-900 text-white p-8 space-y-6 relative overflow-hidden">
+          <div className="shoofly-card bg-slate-900 text-white p-4 sm:p-8 space-y-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
-                <h3 className="font-black text-xs text-primary uppercase tracking-[0.2em] relative z-10">بطاقة صاحب الطلب</h3>
+                <h3 className="font-black text-xs text-primary tracking-wide relative z-10">بطاقة صاحب الطلب</h3>
                 <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 relative z-10 transition-all hover:bg-white/10">
                   <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white/20">
                     <FiUser />
                   </div>
                   <div>
                     <p className="font-bold text-lg">{(req as any)?.clientName || `عميل #${req?.clientId}`}</p>
-                    <p className="text-[10px] text-emerald-400 font-black uppercase tracking-tighter">حساب موثق بالعلامة الزرقاء</p>
+                    <p className="text-xs text-emerald-400 font-black tracking-tighter">حساب موثق بالعلامة الزرقاء</p>
                   </div>
                 </div>
                 
@@ -214,8 +249,8 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
           </div>
 
           {/* Audit Trail - Dynamic from API */}
-          <div className="shoofly-card bg-white p-8 space-y-8 border-2 border-slate-50">
-            <h3 className="font-black text-xs text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-4">
+          <div className="shoofly-card bg-white p-4 sm:p-8 space-y-8 border-2 border-slate-50">
+            <h3 className="font-black text-xs text-slate-400 tracking-wide flex items-center gap-2 border-b border-slate-50 pb-4">
               <FiCheckCircle className="text-primary" /> التسلسل الزمني للأحداث
             </h3>
             
@@ -228,7 +263,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                      </div>
                      <div className="space-y-1">
                        <p className="text-md font-black text-slate-900">{track.status}</p>
-                       <div className="flex justify-between text-[11px] text-slate-400 uppercase font-black tracking-wider">
+                       <div className="flex justify-between text-sm text-slate-400 font-black tracking-wider">
                           <span>المنفذ: {track.deliveryAgent?.fullName || 'النظام'}</span>
                           <span className="font-jakarta">{formatDate(track.createdAt)}</span>
                        </div>
@@ -250,7 +285,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                    </div>
                    <div className="space-y-1">
                      <p className="text-md font-black text-slate-400 italic">بانتظار موافقة الأدمن</p>
-                     <div className="flex justify-between text-[11px] text-slate-400 uppercase font-black tracking-wider">
+                     <div className="flex justify-between text-sm text-slate-400 font-black tracking-wider">
                         <span>المنفذ: الأدمن</span>
                         <span className="font-jakarta">قيد الانتظار</span>
                      </div>
@@ -275,3 +310,4 @@ export default function AdminRequestDetailsPage() {
 
   return <AdminRequestDetails requestId={parsed} />;
 }
+

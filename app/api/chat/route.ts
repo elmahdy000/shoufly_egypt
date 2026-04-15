@@ -3,6 +3,8 @@ import { getCurrentUser, requireUser } from '@/lib/auth';
 import { sendMessage } from '@/lib/services/chat/send-message';
 import { listMessages } from '@/lib/services/chat/list-messages';
 import { prisma } from '@/lib/prisma';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
+import { z } from 'zod';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,10 +18,17 @@ export async function GET(req: NextRequest) {
     const messages = await listMessages(user.id, otherId);
     return NextResponse.json(messages);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('CHAT_GET', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }
+
+const SendMessageSchema = z.object({
+  receiverId: z.number().int().positive(),
+  content: z.string().min(1).max(2000),
+  requestId: z.number().int().positive().optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,21 +36,26 @@ export async function POST(req: NextRequest) {
     requireUser(user);
 
     const body = await req.json();
-    const { receiverId, content, requestId } = body;
+    const validated = SendMessageSchema.parse(body);
 
     const msg = await sendMessage({
       senderId: user.id,
-      receiverId,
-      content,
-      requestId,
+      receiverId: validated.receiverId,
+      content: validated.content,
+      requestId: validated.requestId,
     });
 
     return NextResponse.json(msg);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('CHAT_POST', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }
+
+const MarkReadSchema = z.object({
+  senderId: z.number().int().positive(),
+});
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -49,17 +63,23 @@ export async function PATCH(req: NextRequest) {
     requireUser(user);
 
     const body = await req.json();
-    const { senderId } = body; // Mark all messages from this sender as read
+    const validated = MarkReadSchema.parse(body);
 
+    // SECURITY: Validate senderId is a positive integer before using in query
     await prisma.chatMessage.updateMany({
-      where: { senderId, receiverId: user.id, isRead: false },
+      where: { 
+        senderId: validated.senderId, 
+        receiverId: user.id, 
+        isRead: false 
+      },
       data: { isRead: true },
     });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('CHAT_PATCH', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }
 

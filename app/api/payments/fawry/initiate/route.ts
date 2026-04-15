@@ -3,6 +3,7 @@ import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { FAWRY_CONFIG } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 /**
  * Initialize Fawry Payment
@@ -90,11 +91,10 @@ export async function GET(req: NextRequest) {
       amount: amountVal,
     });
 
-  } catch (error: any) {
-    logger.error('payment.fawry.initiate_error', { error: error.message });
-    return NextResponse.json(
-      { error: 'Failed to initiate Fawry payment', details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    logError('FAWRY_INITIATE', error);
+    logger.error('payment.fawry.initiate_error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    const { response, status } = createErrorResponse(error, 500);
+    return NextResponse.json(response, { status });
   }
 }

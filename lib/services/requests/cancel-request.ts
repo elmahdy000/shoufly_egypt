@@ -12,7 +12,13 @@ export async function cancelRequest(params: {
   return prisma.$transaction(async (tx) => {
     const request = await tx.request.findUnique({
       where: { id: requestId },
-      select: { id: true, clientId: true, status: true },
+      include: {
+        deliveryTracking: {
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 1,
+          select: { status: true },
+        },
+      },
     });
 
     if (!request) {
@@ -28,6 +34,14 @@ export async function cancelRequest(params: {
     const cancellableStates = ['PENDING_ADMIN_REVISION', 'OPEN_FOR_BIDDING', 'BIDS_RECEIVED', 'OFFERS_FORWARDED'];
     if (!cancellableStates.includes(request.status)) {
       throw new Error(`Cannot cancel request in status ${request.status}. Please contact support for refunds if already paid.`);
+    }
+
+    // SECURITY: Prevent cancellation if vendor has started preparing (ORDER_PLACED or later)
+    const vendorStartedPreparing = request.deliveryTracking.some(
+      (t) => t.status === 'ORDER_PLACED' || t.status === 'VENDOR_PREPARING' || t.status === 'READY_FOR_PICKUP'
+    );
+    if (vendorStartedPreparing) {
+      throw new Error('Cannot cancel - vendor has already started preparing the order');
     }
 
     const updated = await tx.request.update({

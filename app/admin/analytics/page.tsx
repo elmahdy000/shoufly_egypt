@@ -1,15 +1,20 @@
 "use client";
 
-import React, { useMemo } from 'react';
-import Link from 'next/link';
-import { useAsyncData } from '@/lib/hooks/use-async-data';
-import { apiFetch } from '@/lib/api/client';
-import { formatCurrency } from '@/lib/formatters';
+import { useCallback, useMemo, useState } from "react";
+import type { ElementType } from "react";
+import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { apiFetch } from "@/lib/api/client";
+import { formatCurrency } from "@/lib/formatters";
 import {
-  FiTrendingUp, FiUsers, FiPackage, FiBarChart2,
-  FiStar, FiCheckCircle, FiRefreshCw, FiArrowUpRight,
-  FiDollarSign
-} from 'react-icons/fi';
+  BarChart3,
+  CheckCircle,
+  Download,
+  DollarSign,
+  RefreshCw,
+  ShoppingBag,
+  Star,
+  Target,
+} from "lucide-react";
 
 interface AnalyticsData {
   overview: {
@@ -18,15 +23,6 @@ interface AnalyticsData {
     fulfillmentRate: number;
     avgPlatformRating: number;
   };
-  counters: {
-    totalRequests: number;
-    pendingRequests: number;
-    openComplaints: number;
-    totalUsers: number;
-    vendorsCount: number;
-    clientsCount: number;
-  };
-  today: { requests: number; commission: number };
   topCategories: { name: string; requestCount: number }[];
   trends: { day: string; requests: number; revenue: number }[];
 }
@@ -36,7 +32,6 @@ interface Transaction {
   type: string;
   amount: number;
   createdAt: string;
-  user?: { fullName: string };
 }
 
 interface Vendor {
@@ -46,304 +41,262 @@ interface Vendor {
   isVerified: boolean;
 }
 
-/* ─── Donut Chart ─── */
-const DONUT_TYPES = ['WALLET_TOPUP', 'ESCROW_DEPOSIT', 'WITHDRAWAL', 'REFUND', 'PLATFORM_FEE'] as const;
-type DonutType = typeof DONUT_TYPES[number];
+const RANGE_OPTIONS = [
+  { key: "7d", label: "٧ أيام", days: 7 },
+  { key: "30d", label: "٣٠ يوم", days: 30 },
+  { key: "90d", label: "٩٠ يوم", days: 90 },
+] as const;
 
-const DONUT_PALETTE: Record<DonutType, string> = {
-  WALLET_TOPUP:   '#fbbf24',
-  ESCROW_DEPOSIT: '#60a5fa',
-  WITHDRAWAL:     '#fb7185',
-  REFUND:         '#34d399',
-  PLATFORM_FEE:   '#a78bfa',
-};
-
-const TX_LABELS: Record<DonutType, string> = {
-  WALLET_TOPUP:   'شحن محفظة',
-  ESCROW_DEPOSIT: 'إيداع ضمان',
-  WITHDRAWAL:     'سحب',
-  REFUND:         'استرداد',
-  PLATFORM_FEE:   'رسوم المنصة',
-};
-
-function normalizeToDonutType(type: string): DonutType {
-  if (type === 'ADMIN_COMMISSION') return 'PLATFORM_FEE';
-  if ((DONUT_TYPES as readonly string[]).includes(type)) return type as DonutType;
-  return 'PLATFORM_FEE';
-}
-
-function DonutChart({ segments }: { segments: { type: DonutType; count: number }[] }) {
-  const R = 40;
-  const C = 2 * Math.PI * R;
-  const total = segments.reduce((s, seg) => s + seg.count, 0) || 1;
-
-  let accumulated = 0;
-  const arcs = segments.map(seg => {
-    const portion = seg.count / total;
-    const dash = portion * C;
-    const startAngle = -90 + (accumulated / total) * 360;
-    accumulated += seg.count;
-    return { ...seg, dash, gap: C - dash, startAngle, color: DONUT_PALETTE[seg.type] };
-  });
-
-  return (
-    <div className="flex flex-col sm:flex-row items-center gap-6">
-      <svg viewBox="0 0 100 100" className="w-36 h-36 shrink-0">
-        {arcs.map((arc, i) => (
-          <circle
-            key={i}
-            cx="50" cy="50" r={R}
-            fill="none"
-            stroke={arc.color}
-            strokeWidth="20"
-            strokeDasharray={`${arc.dash.toFixed(1)} ${arc.gap.toFixed(1)}`}
-            strokeDashoffset="0"
-            transform={`rotate(${arc.startAngle} 50 50)`}
-            strokeLinecap="butt"
-          />
-        ))}
-        <circle cx="50" cy="50" r="28" fill="white" />
-        <text x="50" y="47" textAnchor="middle" fontSize="11" fill="#1e293b" fontWeight="bold">{total}</text>
-        <text x="50" y="57" textAnchor="middle" fontSize="7" fill="#94a3b8">معاملة</text>
-      </svg>
-      <div className="flex flex-col gap-2 flex-1 w-full">
-        {arcs.map((arc, i) => {
-          const pct = Math.round((arc.count / total) * 100);
-          return (
-            <div key={i} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: arc.color }} />
-              <span className="text-xs text-slate-600 flex-1 truncate">{TX_LABELS[arc.type]}</span>
-              <span className="text-xs font-bold text-slate-700">{arc.count}</span>
-              <span className="text-[10px] text-slate-400 w-8 text-left">{pct}%</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Bar Chart (larger) ─── */
-function BarChart({ trends }: { trends: AnalyticsData['trends'] }) {
-  const maxR = Math.max(...trends.map(t => t.requests), 1);
-  const days: Record<string, string> = { Mon: 'الإثنين', Tue: 'الثلاثاء', Wed: 'الأربعاء', Thu: 'الخميس', Fri: 'الجمعة', Sat: 'السبت', Sun: 'الأحد' };
-  return (
-    <div className="flex items-end gap-3 h-44 justify-between" dir="ltr">
-      {trends.map((t, i) => {
-        const pct = (t.requests / maxR) * 100;
-        const isLast = i === trends.length - 1;
-        return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2">
-            <span className="text-xs text-slate-500 font-semibold">{t.requests}</span>
-            <div className="w-full rounded-t-lg transition-all" style={{
-              height: `${Math.max(pct, 5)}%`,
-              background: isLast ? '#f97316' : '#e2e8f0',
-            }} />
-            <span className="text-[10px] text-slate-400 text-center leading-tight">{days[t.day] ?? t.day}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─── Counter Tile ─── */
-function CounterTile({ label, value, icon, iconColor, iconBg }: {
-  label: string; value: string | number;
-  icon: React.ReactNode; iconColor: string; iconBg: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl border border-slate-200/80 text-center gap-2">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${iconBg}`}>
-        {icon}
-      </div>
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-xs text-slate-500 font-medium">{label}</p>
-    </div>
-  );
-}
-
-/* ─── Main Page ─── */
 export default function AnalyticsPage() {
-  const { data: analytics, loading: aL } = useAsyncData<AnalyticsData>(
-    () => apiFetch('/api/admin/analytics/overview', 'ADMIN'), []
+  const [dateRange, setDateRange] = useState<(typeof RANGE_OPTIONS)[number]["key"]>("7d");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  const { data: analytics, loading: loadingAnalytics, refresh: refreshAnalytics } = useAsyncData<AnalyticsData>(
+    () => apiFetch("/api/admin/analytics/overview", "ADMIN"),
+    []
   );
-  const { data: txsRaw, loading: tL } = useAsyncData<Transaction[]>(
-    () => apiFetch('/api/admin/finance/transactions?limit=200', 'ADMIN'), []
+  const { data: transactions, loading: loadingTx, refresh: refreshTx } = useAsyncData<Transaction[]>(
+    () => apiFetch("/api/admin/finance/transactions?limit=500", "ADMIN"),
+    []
   );
-  const { data: vendorsRaw, loading: vL } = useAsyncData<Vendor[]>(
-    () => apiFetch('/api/admin/vendors?limit=200', 'ADMIN'), []
+  const { data: vendors, loading: loadingVendors, refresh: refreshVendors } = useAsyncData<Vendor[]>(
+    () => apiFetch("/api/admin/vendors?limit=500", "ADMIN"),
+    []
   );
 
-  const txSegments = useMemo(() => {
-    const txs: Transaction[] = Array.isArray(txsRaw) ? txsRaw : [];
-    const counts: Record<DonutType, number> = {
-      WALLET_TOPUP: 0, ESCROW_DEPOSIT: 0, WITHDRAWAL: 0, REFUND: 0, PLATFORM_FEE: 0,
-    };
-    txs.forEach(tx => {
-      const key = normalizeToDonutType(tx.type);
-      counts[key] = (counts[key] ?? 0) + 1;
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await Promise.all([refreshAnalytics(), refreshTx(), refreshVendors()]);
+    setLastUpdated(new Date());
+    setIsRefreshing(false);
+  }, [refreshAnalytics, refreshTx, refreshVendors]);
+
+  const selectedRange = useMemo(
+    () => RANGE_OPTIONS.find((opt) => opt.key === dateRange) ?? RANGE_OPTIONS[0],
+    [dateRange]
+  );
+
+  const filteredTransactions = useMemo(() => {
+    const list = transactions ?? [];
+    const minDate = lastUpdated.getTime() - selectedRange.days * 24 * 60 * 60 * 1000;
+    return list.filter((tx) => new Date(tx.createdAt).getTime() >= minDate);
+  }, [transactions, selectedRange.days, lastUpdated]);
+
+  const txTypeCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredTransactions.forEach((tx) => {
+      const key = tx.type === "ADMIN_COMMISSION" ? "PLATFORM_FEE" : tx.type;
+      map.set(key, (map.get(key) ?? 0) + 1);
     });
-    return DONUT_TYPES
-      .map(type => ({ type, count: counts[type] }))
-      .filter(s => s.count > 0)
-      .sort((a, b) => b.count - a.count);
-  }, [txsRaw]);
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [filteredTransactions]);
 
   const topVendors = useMemo(() => {
-    const list: Vendor[] = vendorsRaw ?? [];
-    return [...list].sort((a, b) => Number(b.walletBalance) - Number(a.walletBalance)).slice(0, 5);
-  }, [vendorsRaw]);
+    return [...(vendors ?? [])]
+      .sort((a, b) => Number(b.walletBalance) - Number(a.walletBalance))
+      .slice(0, 5);
+  }, [vendors]);
 
-  const maxBal = topVendors.length > 0 ? Number(topVendors[0].walletBalance) : 1;
+  const trends = analytics?.trends ?? [];
+  const maxTrendRequests = Math.max(...trends.map((t) => t.requests), 1);
 
-  const BAR_COLORS = ['#f97316', '#60a5fa', '#a78bfa', '#34d399', '#fbbf24'];
+  const handleExportCsv = useCallback(() => {
+    const rows = [
+      ["metric", "value"],
+      ["total_gmv", String(analytics?.overview.totalGMV ?? 0)],
+      ["platform_commission", String(analytics?.overview.totalAdminCommission ?? 0)],
+      ["fulfillment_rate", String(analytics?.overview.fulfillmentRate ?? 0)],
+      ["avg_platform_rating", String(analytics?.overview.avgPlatformRating ?? 0)],
+      ["range_days", String(selectedRange.days)],
+      ["transactions_in_range", String(filteredTransactions.length)],
+    ];
+
+    const csv = rows.map((row) => row.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `admin-analytics-${dateRange}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [analytics, dateRange, filteredTransactions.length, selectedRange.days]);
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">التحليلات</h1>
-          <p className="text-sm text-slate-400 mt-0.5">نظرة شاملة على أداء المنصة</p>
-        </div>
-        <Link href="/admin/finance"
-          className="flex items-center gap-1.5 text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary/20 transition-colors">
-          التقارير المالية <FiArrowUpRight size={15} />
-        </Link>
-      </div>
-
-      {/* Row 1: Bar Chart + Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* 7-Day Bar Chart */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2">
-              <FiBarChart2 size={16} className="text-primary" /> طلبات آخر 7 أيام
-            </h3>
-            <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-lg">عدد الطلبات</span>
+    <div className="admin-page" dir="rtl">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BarChart3 size={20} />
           </div>
-          {aL ? (
-            <div className="h-44 flex items-center justify-center text-slate-300">
-              <FiRefreshCw size={22} className="animate-spin" />
-            </div>
-          ) : analytics?.trends ? (
-            <BarChart trends={analytics.trends} />
-          ) : (
-            <div className="h-44 flex items-center justify-center text-slate-400 text-sm">لا توجد بيانات</div>
-          )}
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">التحليلات</h1>
+            <p className="text-sm text-slate-500">آخر تحديث: {lastUpdated.toLocaleString("ar-EG")}</p>
+          </div>
         </div>
 
-        {/* Transaction Donut */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-5">
-            <FiDollarSign size={16} className="text-primary" /> توزيع أنواع المعاملات
-          </h3>
-          {tL ? (
-            <div className="h-44 flex items-center justify-center text-slate-300">
-              <FiRefreshCw size={22} className="animate-spin" />
-            </div>
-          ) : txSegments.length > 0 ? (
-            <DonutChart segments={txSegments} />
-          ) : (
-            <div className="h-44 flex items-center justify-center text-slate-400 text-sm">لا توجد معاملات</div>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+            {RANGE_OPTIONS.map((range) => (
+              <button
+                key={range.key}
+                onClick={() => setDateRange(range.key)}
+                className={`rounded-lg px-4 py-1.5 text-sm font-bold transition-colors ${
+                  dateRange === range.key ? "bg-white text-slate-900" : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleRefresh}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-primary"
+            aria-label="تحديث البيانات"
+          >
+            <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+          </button>
+
+          <button
+            onClick={handleExportCsv}
+            className="flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white hover:bg-slate-800"
+          >
+            <Download size={14} />
+            تصدير CSV
+          </button>
         </div>
       </div>
 
-      {/* Row 2: Top Vendors + Counters */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard
+          title="إجمالي المعاملات"
+          value={loadingAnalytics ? "—" : formatCurrency(analytics?.overview.totalGMV ?? 0)}
+          icon={ShoppingBag}
+        />
+        <MetricCard
+          title="أرباح المنصة"
+          value={loadingAnalytics ? "—" : formatCurrency(analytics?.overview.totalAdminCommission ?? 0)}
+          icon={DollarSign}
+        />
+        <MetricCard
+          title="معدل التنفيذ"
+          value={loadingAnalytics ? "—" : `${Math.round(analytics?.overview.fulfillmentRate ?? 0)}%`}
+          icon={Target}
+        />
+        <MetricCard
+          title="متوسط التقييم"
+          value={loadingAnalytics ? "—" : `${(analytics?.overview.avgPlatformRating ?? 0).toFixed(1)}`}
+          icon={Star}
+        />
+      </section>
 
-        {/* Top 5 Vendors */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2">
-              <FiTrendingUp size={16} className="text-primary" /> أعلى التجار رصيداً
-            </h3>
-            <Link href="/admin/vendors" className="text-xs font-semibold text-primary hover:text-orange-600 flex items-center gap-1">
-              عرض الكل <FiArrowUpRight size={12} />
-            </Link>
-          </div>
-          {vL ? (
-            <div className="py-10 flex items-center justify-center text-slate-300">
-              <FiRefreshCw size={22} className="animate-spin" />
-            </div>
-          ) : topVendors.length === 0 ? (
-            <div className="py-10 text-center text-slate-400 text-sm">لا توجد بيانات</div>
-          ) : (
-            <div className="space-y-4">
-              {topVendors.map((v, i) => {
-                const pct = Math.round((Number(v.walletBalance) / maxBal) * 100);
-                return (
-                  <div key={v.id}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 w-4">{i + 1}</span>
-                        <span className="text-sm font-semibold text-slate-800 truncate max-w-[160px]">{v.fullName}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700" dir="ltr">{formatCurrency(Number(v.walletBalance))}</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: BAR_COLORS[i], transition: 'width 0.8s ease' }}
-                      />
-                    </div>
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="glass-card p-5">
+          <h3 className="text-base font-bold text-slate-900 mb-4">اتجاه الطلبات الأسبوعي</h3>
+          <div className="h-64 flex items-end gap-3" dir="ltr">
+            {trends.map((item) => {
+              const pct = Math.max((item.requests / maxTrendRequests) * 100, 8);
+              return (
+                <div key={item.day} className="flex-1 flex flex-col items-center gap-2">
+                  <div className="w-full h-52 flex items-end">
+                    <div className="w-full rounded-t-lg bg-primary/80" style={{ height: `${pct}%` }} />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <span className="text-xs text-slate-500 font-jakarta">{item.day}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Platform Counters */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-5">
-            <FiPackage size={16} className="text-primary" /> ملخص المنصة
-          </h3>
-          {aL ? (
-            <div className="py-10 flex items-center justify-center text-slate-300">
-              <FiRefreshCw size={22} className="animate-spin" />
-            </div>
+        <div className="glass-card p-5">
+          <h3 className="text-base font-bold text-slate-900 mb-4">توزيع أنواع المعاملات</h3>
+          {loadingTx ? (
+            <div className="h-64 rounded-xl bg-slate-50 animate-pulse" />
+          ) : txTypeCounts.length === 0 ? (
+            <div className="h-64 flex items-center justify-center text-slate-500 font-bold">لا توجد بيانات</div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <CounterTile
-                label="إجمالي الطلبات"
-                value={analytics?.counters.totalRequests ?? '—'}
-                icon={<FiPackage size={18} className="text-orange-600" />}
-                iconColor="text-orange-600"
-                iconBg="bg-orange-50"
-              />
-              <CounterTile
-                label="إجمالي المستخدمين"
-                value={analytics?.counters.totalUsers ?? '—'}
-                icon={<FiUsers size={18} className="text-blue-600" />}
-                iconColor="text-blue-600"
-                iconBg="bg-blue-50"
-              />
-              <CounterTile
-                label="معدل الإتمام"
-                value={analytics?.overview.fulfillmentRate != null
-                  ? `${Math.round(analytics.overview.fulfillmentRate)}%`
-                  : '—'}
-                icon={<FiCheckCircle size={18} className="text-emerald-600" />}
-                iconColor="text-emerald-600"
-                iconBg="bg-emerald-50"
-              />
-              <CounterTile
-                label="متوسط التقييم"
-                value={analytics?.overview.avgPlatformRating
-                  ? `${Number(analytics.overview.avgPlatformRating).toFixed(1)} / 5`
-                  : '—'}
-                icon={<FiStar size={18} className="text-amber-500" />}
-                iconColor="text-amber-500"
-                iconBg="bg-amber-50"
-              />
+            <div className="space-y-3">
+              {txTypeCounts.map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                  <span className="text-sm text-slate-600 font-jakarta">{type}</span>
+                  <span className="text-sm font-black text-slate-900 font-jakarta">{count}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="glass-card overflow-hidden">
+          <div className="border-b border-slate-100 p-4">
+            <h3 className="text-base font-bold text-slate-900">أفضل التجار حسب الرصيد</h3>
+          </div>
+          <div className="p-4 space-y-2">
+            {loadingVendors ? (
+              Array(5)
+                .fill(0)
+                .map((_, i) => <div key={i} className="h-12 rounded-lg bg-slate-50 animate-pulse" />)
+            ) : (
+              topVendors.map((vendor) => (
+                <div key={vendor.id} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-800">{vendor.fullName}</span>
+                    {vendor.isVerified && <CheckCircle size={14} className="text-emerald-600" />}
+                  </div>
+                  <span className="font-jakarta text-sm font-black text-slate-900">
+                    {formatCurrency(vendor.walletBalance)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="glass-card overflow-hidden">
+          <div className="border-b border-slate-100 p-4">
+            <h3 className="text-base font-bold text-slate-900">أفضل الفئات</h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {(analytics?.topCategories ?? []).slice(0, 5).map((category) => {
+              const max = analytics?.topCategories?.[0]?.requestCount || 1;
+              const pct = Math.round((category.requestCount / max) * 100);
+              return (
+                <div key={category.name} className="rounded-lg border border-slate-100 p-3">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-bold text-slate-900">{category.name}</span>
+                    <span className="font-jakarta text-slate-500">{category.requestCount}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-100">
+                    <div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  icon: Icon,
+}: {
+  title: string;
+  value: string;
+  icon: ElementType;
+}) {
+  return (
+    <div className="glass-card p-5">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon size={18} />
       </div>
+      <p className="text-sm text-slate-500">{title}</p>
+      <p className="mt-1 text-xl font-black text-slate-900 font-jakarta">{value}</p>
     </div>
   );
 }

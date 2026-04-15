@@ -1,28 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { reviewAdminWithdrawal } from "@/lib/api/transactions";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  FiSearch, FiX, FiUser, FiCalendar, FiHash, FiLoader,
-  FiCheckCircle, FiXCircle, FiAlertCircle,
-  FiMessageSquare
-} from "react-icons/fi";
+  Search, X, User, Calendar, Hash, Loader2,
+  CheckCircle, XCircle, Landmark, Activity, History, ChevronLeft,
+  Clock, DollarSign, RefreshCw, ShieldCheck
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { motion, AnimatePresence } from "framer-motion";
 
-const STATUS_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:  { label: "معلق",    color: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200" },
-  APPROVED: { label: "مُعتمَد",  color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
-  REJECTED: { label: "مرفوض",   color: "text-rose-700",    bg: "bg-rose-50",    border: "border-rose-200" },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING:  { label: "قيد الفحص", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+  APPROVED: { label: "تم الصرف",  color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+  REJECTED: { label: "تم الرفض",    color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
 };
-
-function StatusPill({ status }: { status: string }) {
-  const m = STATUS_META[status] ?? { label: status, color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200" };
-  return <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${m.bg} ${m.border} ${m.color}`}>{m.label}</span>;
-}
 
 export default function AdminWithdrawalsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -31,10 +27,17 @@ export default function AdminWithdrawalsPage() {
   const [rejectNote, setRejectNote] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: withdrawals, loading, error, setData } = useAsyncData<any[]>(
+  const { data: withdrawals, loading, setData, refresh } = useAsyncData<any[]>(
     () => apiFetch("/api/admin/withdrawals", "ADMIN"), []
   );
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, [refresh]);
 
   const filtered = useMemo(() => {
     let list = withdrawals ?? [];
@@ -43,7 +46,6 @@ export default function AdminWithdrawalsPage() {
       const q = search.toLowerCase();
       list = list.filter((w: any) =>
         w.vendor?.fullName?.toLowerCase().includes(q) ||
-        w.vendor?.email?.toLowerCase().includes(q) ||
         String(w.id).includes(q)
       );
     }
@@ -56,244 +58,235 @@ export default function AdminWithdrawalsPage() {
       total: all.length,
       pending: all.filter((w: any) => w.status === "PENDING").length,
       approved: all.filter((w: any) => w.status === "APPROVED").length,
-      rejected: all.filter((w: any) => w.status === "REJECTED").length,
-      totalAmount: all.filter((w: any) => w.status === "APPROVED").reduce((s: number, w: any) => s + Number(w.amount), 0),
       pendingAmount: all.filter((w: any) => w.status === "PENDING").reduce((s: number, w: any) => s + Number(w.amount), 0),
     };
   }, [withdrawals]);
 
-  async function doApprove(id: number) {
-    setActionLoading("approve");
+  async function handleReview(id: number, action: "APPROVE" | "REJECT") {
+    setActionLoading(action === "APPROVE" ? "approve" : "reject");
     setActionMsg(null);
     try {
-      await reviewAdminWithdrawal(id, "APPROVE");
-      setData((prev: any[]) => (prev ?? []).map((w) => w.id === id ? { ...w, status: "APPROVED" } : w));
-      setSelected((prev: any) => prev?.id === id ? { ...prev, status: "APPROVED" } : prev);
-      setActionMsg({ text: "تم الاعتماد بنجاح ✓", ok: true });
+      const note = action === "REJECT" ? (rejectNote || "تم الرفض من قبل الإدارة") : undefined;
+      await reviewAdminWithdrawal(id, action, note);
+      const newStatus = action === "APPROVE" ? "APPROVED" : "REJECTED";
+      setData((prev: any[] | null) => (prev ?? []).map((w) => w.id === id ? { ...w, status: newStatus, reviewNote: note } : w));
+      setSelected((prev: any) => prev?.id === id ? { ...prev, status: newStatus, reviewNote: note } : prev);
+      setActionMsg({ text: action === "APPROVE" ? "تم اعتماد الطلب وصرف المبلغ بنجاح ✓" : "تم تنفيذ إجراء الرفض", ok: true });
+      if (action === "REJECT") setRejectNote("");
     } catch (e: any) {
-      setActionMsg({ text: e.message ?? "فشل الاعتماد", ok: false });
-    } finally {
-      setActionLoading(null);
-    }
-  }
-
-  async function doReject(id: number) {
-    setActionLoading("reject");
-    setActionMsg(null);
-    try {
-      await reviewAdminWithdrawal(id, "REJECT", rejectNote || "رفض من قِبَل الإدارة");
-      setData((prev: any[]) => (prev ?? []).map((w) => w.id === id ? { ...w, status: "REJECTED", reviewNote: rejectNote } : w));
-      setSelected((prev: any) => prev?.id === id ? { ...prev, status: "REJECTED", reviewNote: rejectNote } : prev);
-      setActionMsg({ text: "تم الرفض ✓", ok: true });
-      setRejectNote("");
-    } catch (e: any) {
-      setActionMsg({ text: e.message ?? "فشل الرفض", ok: false });
+      setActionMsg({ text: e.message || "فشلت العملية", ok: false });
     } finally {
       setActionLoading(null);
     }
   }
 
   return (
-    <div className="space-y-5 text-right" dir="rtl">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">طلبات السحب</h1>
-        <p className="text-sm text-slate-400 mt-0.5">مراجعة واعتماد طلبات سحب أرباح التجار</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "معلق", val: stats.pending, sub: formatCurrency(stats.pendingAmount), filter: "PENDING", color: "text-amber-700" },
-          { label: "مُعتمَد", val: stats.approved, sub: formatCurrency(stats.totalAmount), filter: "APPROVED", color: "text-emerald-700" },
-          { label: "مرفوض", val: stats.rejected, filter: "REJECTED", color: "text-rose-700" },
-          { label: "الكل", val: stats.total, filter: "ALL", color: "text-slate-700" },
-        ].map((s) => (
-          <button
-            key={s.label}
-            onClick={() => setStatusFilter(s.filter)}
-            className={`bg-white rounded-xl border p-4 text-right transition-all hover:shadow-md ${statusFilter === s.filter ? "border-primary ring-1 ring-primary/20 shadow" : "border-slate-200"}`}
-          >
-            <p className={`text-2xl font-black ${s.color}`}>{loading ? "—" : s.val}</p>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">{s.label}</p>
-            {s.sub && <p className="text-xs text-slate-300">{s.sub}</p>}
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="ابحث بالتاجر أو البريد..."
-          className="w-full pr-9 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary"
-        />
-      </div>
-
-      {/* Table + Detail */}
-      <div className="flex gap-4 items-start">
-        <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 min-w-0 ${selected ? "hidden lg:block" : ""}`}>
-          {error && <div className="p-4 m-4 bg-rose-50 text-rose-600 rounded-xl text-sm border border-rose-200">خطأ في التحميل</div>}
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">التاجر</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">المبلغ</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">الحالة</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden md:table-cell">التاريخ</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden lg:table-cell">مراجعة بواسطة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>{[0,1,2,3,4].map((j) => <td key={j} className="py-4 px-4"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>)}</tr>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="py-12 text-center text-slate-400">لا توجد طلبات سحب</td></tr>
-                ) : filtered.map((w: any) => (
-                  <tr
-                    key={w.id}
-                    onClick={() => { setSelected(w); setActionMsg(null); setRejectNote(""); }}
-                    className={`hover:bg-primary/5 cursor-pointer transition-colors ${selected?.id === w.id ? "bg-primary/5 border-r-[3px] border-primary" : ""} ${w.status === "PENDING" ? "border-r-[3px] border-amber-400" : ""}`}
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xs shrink-0">
-                          {w.vendor?.fullName?.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 leading-none">{w.vendor?.fullName}</p>
-                          <p className="text-[11px] text-slate-400">{w.vendor?.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-black text-slate-900">{formatCurrency(Number(w.amount))}</td>
-                    <td className="py-3 px-4"><StatusPill status={w.status} /></td>
-                    <td className="py-3 px-4 hidden md:table-cell text-xs text-slate-400">
-                      {formatDistanceToNow(new Date(w.createdAt), { addSuffix: true, locale: ar })}
-                    </td>
-                    <td className="py-3 px-4 hidden lg:table-cell text-xs text-slate-500">
-                      {w.reviewedBy?.fullName ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!loading && (
-            <div className="px-4 py-3 border-t border-slate-100 text-xs text-slate-400">
-              {filtered.length} طلب سحب
-            </div>
-          )}
+    <div className="admin-page" dir="rtl">
+      
+      {/* 🚀 Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-2xl font-bold text-slate-900 leading-tight">سحوبات الأموال</h1>
+           <p className="text-slate-500 font-medium mt-1">مراجعة واعتماد طلبات تحويل الأرصدة للبنوك والمحافظ</p>
         </div>
+        
+        <div className="flex items-center gap-3">
+           <button onClick={handleRefresh} className="h-11 px-6 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 shadow-sm hover:border-primary transition-all flex items-center gap-2">
+              <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+              تحديث البيانات
+           </button>
+        </div>
+      </div>
 
-        {/* Detail Panel */}
-        {selected && (
-          <div className="w-full lg:w-[380px] shrink-0 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 200px)" }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 shrink-0">
-              <h3 className="font-bold text-slate-800 text-sm">تفاصيل طلب السحب</h3>
-              <button onClick={() => setSelected(null)} className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400">
-                <FiX size={16} />
-              </button>
+      {/* 📊 Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+         <StatItem label="بانتظار الفحص" val={stats.pending} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
+         <StatItem label="قيمة المعلق" val={formatCurrency(stats.pendingAmount)} icon={DollarSign} color="text-slate-900" bg="bg-slate-50" />
+         <StatItem label="طلبات مكتملة" val={stats.approved} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
+         <StatItem label="إجمالي الحركات" val={stats.total} icon={Activity} color="text-orange-600" bg="bg-orange-50" />
+      </div>
+
+      {/* 🛠 Toolbar */}
+      <div className="flex flex-col md:flex-row gap-4">
+         <div className="relative flex-1 group">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث باسم المستفيد أو رقم الطلب..."
+              className="w-full pr-11 pl-4 h-11 bg-white border border-slate-200 rounded-xl text-sm focus:border-primary outline-none transition-all shadow-sm"
+            />
+         </div>
+         <select
+           value={statusFilter}
+           onChange={(e) => setStatusFilter(e.target.value)}
+           className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none transition-all shadow-sm min-w-[200px]"
+         >
+           <option value="ALL">كل الحالات</option>
+           <option value="PENDING">بانتظار الفحص</option>
+           <option value="APPROVED">تم الصرف</option>
+           <option value="REJECTED">مرفوض</option>
+         </select>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+         <div className="flex-1 w-full glass-card overflow-hidden">
+            <div className="overflow-x-auto">
+               <table className="data-table">
+                  <thead>
+                     <tr>
+                        <th>المستفيد / التاريخ</th>
+                        <th className="text-center">المبلغ</th>
+                        <th>الحالة</th>
+                        <th className="text-center">إجراء</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {loading ? (
+                        [1,2,3,4,5,6].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-16 bg-slate-50/50" /></tr>)
+                     ) : filtered.length === 0 ? (
+                        <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-bold italic">لا توجد طلبات سحب حالياً</td></tr>
+                     ) : (
+                        filtered.map((w: any) => (
+                           <tr key={w.id} className={`group cursor-pointer ${selected?.id === w.id ? 'bg-orange-50/50' : ''}`} onClick={() => setSelected(w)}>
+                              <td>
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                       {w.vendor?.fullName?.charAt(0)}
+                                    </div>
+                                    <div>
+                                       <p className="text-xs font-bold text-slate-900">{w.vendor?.fullName}</p>
+                                       <p className="text-xs text-slate-400">{formatDistanceToNow(new Date(w.createdAt), { addSuffix: true, locale: ar })}</p>
+                                    </div>
+                                 </div>
+                              </td>
+                              <td className="text-center">
+                                 <span className="text-sm font-black text-slate-900 tabular-nums">{formatCurrency(Number(w.amount))}</span>
+                              </td>
+                              <td><StatusBadge status={w.status} /></td>
+                              <td className="text-center">
+                                 <button className="p-2 text-slate-400 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                                    <ChevronLeft size={16} />
+                                 </button>
+                              </td>
+                           </tr>
+                        ))
+                     )}
+                  </tbody>
+               </table>
             </div>
+         </div>
 
-            <div className="overflow-y-auto p-4 space-y-4">
-              {/* Amount Hero */}
-              <div className={`p-5 rounded-xl text-center border ${STATUS_META[selected.status]?.bg ?? "bg-slate-50"} ${STATUS_META[selected.status]?.border ?? "border-slate-200"}`}>
-                <p className="text-xs text-slate-500 mb-1">مبلغ السحب</p>
-                <p className={`text-4xl font-black ${STATUS_META[selected.status]?.color ?? "text-slate-900"}`}>
-                  {formatCurrency(Number(selected.amount))}
-                </p>
-                <div className="mt-2"><StatusPill status={selected.status} /></div>
-              </div>
-
-              {/* Vendor Info */}
-              <div className="p-4 bg-orange-50/50 rounded-xl border border-orange-100">
-                <p className="text-xs text-slate-400 mb-2 font-semibold">معلومات التاجر</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-700 font-black shrink-0">
-                    {selected.vendor?.fullName?.charAt(0)}
+         {/* Details Sidebar */}
+         <AnimatePresence>
+            {selected && (
+               <motion.aside
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 20, opacity: 0 }}
+                  className="w-full lg:w-96 glass-card p-8 sticky top-24 space-y-8"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Landmark size={20} /></div>
+                        <h2 className="text-lg font-bold text-slate-900">تفاصيل السحب</h2>
+                     </div>
+                     <button onClick={() => setSelected(null)} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400"><X size={18} /></button>
                   </div>
-                  <div>
-                    <p className="font-bold text-slate-900">{selected.vendor?.fullName}</p>
-                    <p className="text-xs text-slate-500">{selected.vendor?.email}</p>
+
+                  <div className="p-6 bg-slate-900 rounded-2xl text-white">
+                     <p className="text-xs text-slate-400 font-bold tracking-wider mb-2">القيمة المطلوب صرفها</p>
+                     <p className="text-3xl font-black tabular-nums">{formatCurrency(Number(selected.amount))}</p>
+                     <div className="mt-4"><StatusBadge status={selected.status} /></div>
                   </div>
-                </div>
-              </div>
 
-              {/* Info Rows */}
-              <div className="space-y-2">
-                <InfoRow icon={<FiHash size={13} />} label="رقم الطلب" value={`#${selected.id}`} mono />
-                <InfoRow icon={<FiCalendar size={13} />} label="تاريخ الطلب" value={selected.createdAt ? formatDate(selected.createdAt) : "—"} />
-                {selected.reviewedBy && (
-                  <InfoRow icon={<FiUser size={13} />} label="راجعه" value={selected.reviewedBy.fullName} />
-                )}
-                {selected.reviewNote && (
-                  <div className="p-3 bg-rose-50 rounded-xl border border-rose-100">
-                    <p className="text-xs text-rose-500 flex items-center gap-1 mb-1"><FiMessageSquare size={11} />ملاحظة المراجعة</p>
-                    <p className="text-sm font-medium text-rose-800">{selected.reviewNote}</p>
+                  <div className="space-y-4">
+                     <InfoRow icon={<User size={14} />} label="المستفيد" val={selected.vendor?.fullName} />
+                     <InfoRow icon={<Hash size={14} />} label="رقم الطلب" val={`#WTH-${selected.id}`} />
+                     <InfoRow icon={<Calendar size={14} />} label="تاريخ الطلب" val={formatDate(selected.createdAt)} />
                   </div>
-                )}
-              </div>
 
-              {/* Action Feedback */}
-              {actionMsg && (
-                <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${actionMsg.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}>
-                  {actionMsg.ok ? <FiCheckCircle size={13} /> : <FiAlertCircle size={13} />}
-                  {actionMsg.text}
-                </div>
-              )}
+                  {actionMsg && (
+                     <div className={`p-4 rounded-xl text-xs font-bold border ${actionMsg.ok ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+                        {actionMsg.text}
+                     </div>
+                  )}
 
-              {/* Actions for PENDING */}
-              {selected.status === "PENDING" && (
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">الإجراءات</p>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => doApprove(selected.id)}
-                      disabled={!!actionLoading}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-500 text-white border border-emerald-500 hover:bg-emerald-600 rounded-xl font-semibold text-sm transition-all disabled:opacity-60"
-                    >
-                      {actionLoading === "approve" ? <FiLoader size={14} className="animate-spin" /> : <FiCheckCircle size={15} />}
-                      اعتماد وصرف المبلغ
-                    </button>
-
-                    <div className="space-y-1.5">
-                      <textarea
-                        value={rejectNote}
-                        onChange={(e) => setRejectNote(e.target.value)}
-                        placeholder="سبب الرفض (اختياري)..."
-                        rows={2}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs resize-none outline-none focus:border-rose-300 focus:bg-white transition-all"
-                      />
-                      <button
-                        onClick={() => doReject(selected.id)}
-                        disabled={!!actionLoading}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 rounded-xl font-semibold text-sm transition-all disabled:opacity-60"
-                      >
-                        {actionLoading === "reject" ? <FiLoader size={14} className="animate-spin" /> : <FiXCircle size={15} />}
-                        رفض الطلب
-                      </button>
-                    </div>
+                  <div className="pt-6 border-t border-slate-100 space-y-3">
+                     {selected.status === "PENDING" && (
+                        <>
+                           <button 
+                             onClick={() => handleReview(selected.id, "APPROVE")}
+                             disabled={!!actionLoading}
+                             className="w-full h-11 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                           >
+                              {actionLoading === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                              اعتماد وصرف المبلغ
+                           </button>
+                           
+                           <div className="space-y-2">
+                              <textarea
+                                value={rejectNote}
+                                onChange={(e) => setRejectNote(e.target.value)}
+                                placeholder="اكتب سبب الرفض هنا..."
+                                rows={2}
+                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-1 focus:ring-rose-500 outline-none transition-all resize-none"
+                              />
+                              <button 
+                                onClick={() => handleReview(selected.id, "REJECT")}
+                                disabled={!!actionLoading}
+                                className="w-full h-11 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                              >
+                                 {actionLoading === "reject" ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+                                 رفض هذا الطلب
+                              </button>
+                           </div>
+                        </>
+                     )}
+                     <button className="w-full h-11 bg-slate-50 text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                        <History size={16} /> سجل التدقيق المالي
+                     </button>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+               </motion.aside>
+            )}
+         </AnimatePresence>
       </div>
     </div>
   );
 }
 
-function InfoRow({ icon, label, value, mono }: { icon: React.ReactNode; label: string; value: string; mono?: boolean }) {
+function StatItem({ label, val, icon: Icon, color, bg }: { label: string; val: any; icon: any; color: string; bg: string }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-      <span className="text-xs text-slate-400 flex items-center gap-1">{icon}{label}</span>
-      <span className={`text-sm font-bold text-slate-800 ${mono ? "font-mono" : ""}`}>{value}</span>
+    <div className="glass-card p-6 flex flex-col gap-4 group">
+       <div className={`w-11 h-11 ${bg} ${color} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}>
+          <Icon size={20} />
+       </div>
+       <div>
+          <p className="text-xs font-bold text-slate-400 tracking-wide mb-1">{label}</p>
+          <p className="text-lg font-black text-slate-900 tracking-tight">{val}</p>
+       </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-100" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
+       <div className={`w-1.5 h-1.5 rounded-full ${cfg.color.replace('text-', 'bg-')}`} />
+       {cfg.label}
+    </span>
+  );
+}
+
+function InfoRow({ icon, label, val }: { icon: any; label: string; val: string }) {
+  return (
+    <div className="p-3 bg-slate-50 rounded-xl border border-slate-50 space-y-1">
+       <div className="flex items-center gap-2 text-slate-400">
+          {icon}
+          <span className="text-xs font-bold tracking-wider">{label}</span>
+       </div>
+       <p className="text-xs font-bold text-slate-700 truncate">{val}</p>
     </div>
   );
 }

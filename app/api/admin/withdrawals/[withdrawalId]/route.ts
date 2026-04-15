@@ -3,6 +3,7 @@ import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
 import { reviewWithdrawal } from '@/lib/services/withdrawals';
 import { ReviewWithdrawalBodySchema, WithdrawalRouteParamSchema } from '@/lib/validations/withdrawal';
 import { fail, ok } from '@/lib/utils/http-response';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 export async function PATCH(
   req: NextRequest,
@@ -24,7 +25,9 @@ export async function PATCH(
     });
 
     return ok(result);
-  } catch (error) {
-    return fail(error);
+  } catch (error: unknown) {
+    logError('WITHDRAWAL_REVIEW', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return fail(response);
   }
 }

@@ -7,10 +7,22 @@ export async function getAdminStats() {
   const todayEnd = endOfDay(now);
 
   // 1. Financial Metrics
+  // Calculate gross commission
   const totalFinancials = await prisma.transaction.aggregate({
     _sum: { amount: true },
     where: { type: 'ADMIN_COMMISSION' }
   });
+  
+  // Calculate total refunds to subtract
+  const totalRefunds = await prisma.transaction.aggregate({
+    _sum: { amount: true },
+    where: { type: 'REFUND' }
+  });
+  
+  // Net commission = Gross - Refunds
+  const grossCommission = Number(totalFinancials._sum.amount || 0);
+  const refundsAmount = Number(totalRefunds._sum.amount || 0);
+  const netCommission = Math.max(0, grossCommission - refundsAmount);
 
   const gmv = await prisma.transaction.aggregate({
     _sum: { amount: true },
@@ -48,6 +60,14 @@ export async function getAdminStats() {
           createdAt: { gte: todayStart, lte: todayEnd }
       }
   });
+  
+  const todayRefunds = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { 
+          type: 'REFUND',
+          createdAt: { gte: todayStart, lte: todayEnd }
+      }
+  });
 
   // 6. Top Categories
   const topCategories = await prisma.category.findMany({
@@ -82,16 +102,29 @@ export async function getAdminStats() {
               createdAt: { gte: day.start, lte: day.end }
           }
       });
+      
+      const dayRefunds = await prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: { 
+              type: 'REFUND',
+              createdAt: { gte: day.start, lte: day.end }
+          }
+      });
+      
+      const netRevenue = Math.max(0, Number(revenue._sum.amount || 0) - Number(dayRefunds._sum.amount || 0));
+      
       return {
           day: day.label,
           requests: count,
-          revenue: Number(revenue._sum.amount || 0)
+          revenue: netRevenue
       };
   }));
 
   return {
     overview: {
-      totalAdminCommission: Number(totalFinancials._sum.amount || 0),
+      totalAdminCommission: netCommission,
+      grossCommission: grossCommission,
+      totalRefunds: refundsAmount,
       totalGMV: Number(gmv._sum.amount || 0),
       fulfillmentRate: Number(fulfillmentRate.toFixed(2)),
       avgPlatformRating: Number(avgRating._avg.rating?.toFixed(1) || 0),
@@ -106,7 +139,8 @@ export async function getAdminStats() {
     },
     today: {
       requests: todayRequests,
-      commission: Number(todayRevenue._sum.amount || 0)
+      commission: Math.max(0, Number(todayRevenue._sum.amount || 0) - Number(todayRefunds._sum.amount || 0)),
+      refunds: Number(todayRefunds._sum.amount || 0)
     },
     topCategories: topCategories.map(c => ({
         name: c.name,

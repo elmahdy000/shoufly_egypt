@@ -1,20 +1,30 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { refundAdminRequest } from "@/lib/api/transactions";
-import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  FiRefreshCw, FiAlertTriangle, FiFileText, FiHash,
-  FiCheckCircle, FiXCircle, FiLoader, FiSearch, FiPackage
-} from "react-icons/fi";
+  AlertTriangle, CheckCircle, FileText, Hash,
+  Loader2, Package, RefreshCw, Search, XCircle,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
-const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  DELIVERED:  { label: "مُسلَّم",       color: "text-emerald-700", bg: "bg-emerald-50" },
-  REJECTED:   { label: "مرفوض",        color: "text-rose-700",    bg: "bg-rose-50"    },
-  REFUNDED:   { label: "مُسترَد مسبقاً", color: "text-slate-600",  bg: "bg-slate-100"  },
-  IN_TRANSIT: { label: "قيد التوصيل",  color: "text-indigo-700",  bg: "bg-indigo-50"  },
+type RequestStatus =
+  | "PENDING_ADMIN_REVISION"
+  | "OPEN_FOR_BIDDING"
+  | "BIDS_RECEIVED"
+  | "OFFERS_FORWARDED"
+  | "ORDER_PAID_PENDING_DELIVERY"
+  | "CLOSED_SUCCESS"
+  | "CLOSED_CANCELLED"
+  | "REJECTED";
+
+type AdminRequest = {
+  id: number;
+  title: string;
+  status: RequestStatus;
+  client?: { fullName?: string | null } | null;
 };
 
 export default function AdminRefundsPage() {
@@ -25,18 +35,22 @@ export default function AdminRefundsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const { data: allRequests, loading: loadingReq } = useAsyncData<any[]>(
-    () => apiFetch("/api/admin/requests", "ADMIN"), []
+  const { data: allRequests, loading: loadingReq } = useAsyncData<AdminRequest[]>(
+    () => apiFetch("/api/admin/requests", "ADMIN"),
+    []
   );
 
-  const refundable = (allRequests ?? []).filter((r: any) =>
-    ["DELIVERED", "REJECTED", "IN_TRANSIT"].includes(r.status) &&
-    r.status !== "REFUNDED"
-  ).filter((r: any) => {
-    if (!search.trim()) return true;
+  const refundable = useMemo(() => {
+    const list = allRequests ?? [];
+    const base = list.filter((r) => r.status === "ORDER_PAID_PENDING_DELIVERY");
+    if (!search.trim()) return base;
     const q = search.toLowerCase();
-    return r.title?.toLowerCase().includes(q) || String(r.id).includes(q) || r.client?.fullName?.toLowerCase().includes(q);
-  });
+    return base.filter((r) =>
+      r.title?.toLowerCase().includes(q) ||
+      String(r.id).includes(q) ||
+      r.client?.fullName?.toLowerCase().includes(q)
+    );
+  }, [allRequests, search]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -44,172 +58,187 @@ export default function AdminRefundsPage() {
     setError(null);
     setMessage(null);
     try {
-      const result = await refundAdminRequest(Number(requestId), reason || "Delivery failed");
-      setMessage(`تم إصدار المسترد بنجاح للطلب رقم #${result.request?.id ?? requestId}`);
+      const result = await refundAdminRequest(Number(requestId), reason || "استرداد يدوي من لوحة الإدارة");
+      setMessage(`تم إصدار استرداد بنجاح للطلب #${result.request?.id ?? requestId} ✓`);
       setRequestId("");
       setReason("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل إصدار المسترد");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "فشلت عملية الاسترداد");
     } finally {
       setIsLoading(false);
     }
   }
 
-  function fillForm(r: any) {
-    setRequestId(String(r.id));
-    setMessage(null);
-    setError(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
   return (
-    <div className="space-y-6 text-right max-w-5xl mx-auto" dir="rtl">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">إصدار المستردات</h1>
-        <p className="text-sm text-slate-400 mt-0.5">اختر طلباً من القائمة أدناه أو أدخل رقمه يدوياً</p>
+    <div className="admin-page" dir="rtl">
+      
+      {/* 🚀 Simple Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-2xl font-bold text-slate-900 leading-tight">رد الأموال</h1>
+           <p className="text-slate-500 font-medium mt-1">إدارة وتسوية طلبات استرجاع المبالغ للعملاء</p>
+        </div>
       </div>
 
-      {/* Manual Form */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
-        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-          <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
-            <FiRefreshCw size={18} />
-          </div>
-          <div>
-            <h2 className="font-bold text-slate-900">إصدار مسترد يدوي</h2>
-            <p className="text-xs text-slate-400">يخصم المبلغ من محفظة التاجر ويعيده للعميل</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+         
+         <div className="lg:col-span-2 space-y-8">
+            {/* Refund Center Form */}
+            <div className="glass-card overflow-hidden">
+               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600"><RefreshCw size={20} /></div>
+                     <h2 className="text-lg font-bold text-slate-900">إصدار استرداد جديد</h2>
+                  </div>
+               </div>
+               
+               <div className="p-8 space-y-6">
+                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-4">
+                     <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                     <p className="text-sm font-bold text-amber-800 leading-relaxed">
+                        تنبيه: هذا الإجراء غير قابل للتراجع. سيتم تحويل حالة الطلب إلى ملغى فوراً بعد معالجة عملية الاسترداد المالي للعميل.
+                     </p>
+                  </div>
 
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 text-amber-800 text-sm">
-          <FiAlertTriangle className="shrink-0 mt-0.5" size={16} />
-          <p>هذا الإجراء غير قابل للتراجع. تأكد من صحة رقم الطلب قبل التأكيد.</p>
-        </div>
+                  {message && (
+                     <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-bold text-emerald-600 flex items-center gap-2">
+                        <CheckCircle size={16} /> {message}
+                     </div>
+                  )}
+                  {error && (
+                     <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-600 flex items-center gap-2">
+                        <XCircle size={16} /> {error}
+                     </div>
+                  )}
 
-        {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm flex items-center gap-2">
-            <FiXCircle size={15} />{error}
-          </div>
-        )}
-        {message && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm flex items-center gap-2">
-            <FiCheckCircle size={15} />{message}
-          </div>
-        )}
-
-        <form onSubmit={onSubmit} className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-              <FiHash size={13} />رقم الطلب
-            </label>
-            <input
-              type="number"
-              value={requestId}
-              onChange={(e) => setRequestId(e.target.value)}
-              placeholder="مثال: 9012"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-lg font-bold outline-none focus:border-primary focus:bg-white transition-all"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-              <FiFileText size={13} />سبب الاسترداد
-            </label>
-            <input
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="تفاصيل سبب الاسترداد"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-all"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <button
-              type="submit"
-              disabled={isLoading || !requestId}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? <FiLoader className="animate-spin" size={16} /> : <FiRefreshCw size={16} />}
-              تأكيد وإصدار المسترد
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Refundable Requests List */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h2 className="font-bold text-slate-900">الطلبات القابلة للاسترداد</h2>
-              <p className="text-xs text-slate-400 mt-0.5">اضغط "استرداد" لملء الرقم تلقائياً</p>
+                  <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">رقم الطلب</label>
+                        <div className="relative">
+                           <Hash className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                           <input
+                             type="number"
+                             value={requestId}
+                             onChange={(e) => setRequestId(e.target.value)}
+                             placeholder="مثال: 4509"
+                             className="w-full pr-11 pl-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all"
+                             required
+                           />
+                        </div>
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 tracking-wide mr-2">سبب الاسترداد</label>
+                        <div className="relative">
+                           <FileText className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                           <input
+                             value={reason}
+                             onChange={(e) => setReason(e.target.value)}
+                             placeholder="اكتب السبب هنا..."
+                             className="w-full pr-11 pl-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all"
+                           />
+                        </div>
+                     </div>
+                     <div className="md:col-span-2 pt-2">
+                        <button
+                          type="submit"
+                          disabled={isLoading || !requestId}
+                          className="w-full h-12 bg-rose-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+                        >
+                           {isLoading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+                           تأكيد وإتمام عملية الاسترداد
+                        </button>
+                     </div>
+                  </form>
+               </div>
             </div>
-            <div className="relative">
-              <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث..."
-                className="pr-8 pl-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-primary w-48"
-              />
-            </div>
-          </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-400">الطلب</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden sm:table-cell">العميل</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-400">الحالة</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden md:table-cell">الميزانية</th>
-                <th className="py-3 px-4 text-xs font-semibold text-slate-400"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {loadingReq ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}>{[0,1,2,3,4].map((j) => <td key={j} className="py-4 px-4"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>)}</tr>
-                ))
-              ) : refundable.length === 0 ? (
-                <tr><td colSpan={5} className="py-10 text-center text-slate-400">لا توجد طلبات قابلة للاسترداد</td></tr>
-              ) : refundable.map((r: any) => (
-                <tr key={r.id} className="hover:bg-slate-50/50">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                        <FiPackage size={14} />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900 leading-none line-clamp-1">{r.title}</p>
-                        <p className="text-[11px] text-slate-400">#{r.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 hidden sm:table-cell text-sm text-slate-600">{r.client?.fullName ?? "—"}</td>
-                  <td className="py-3 px-4">
-                    {(() => {
-                      const m = STATUS_META[r.status] ?? { label: r.status, color: "text-slate-600", bg: "bg-slate-100" };
-                      return <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${m.bg} ${m.color}`}>{m.label}</span>;
-                    })()}
-                  </td>
-                  <td className="py-3 px-4 hidden md:table-cell font-bold text-slate-900 text-xs">
-                    {r.budget ? formatCurrency(Number(r.budget)) : "—"}
-                  </td>
-                  <td className="py-3 px-4 text-left">
-                    <button
-                      onClick={() => fillForm(r)}
-                      className="text-xs font-bold px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 rounded-lg transition-all"
-                    >
-                      استرداد
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            {/* 📋 Refundable Requests List */}
+            <div className="glass-card overflow-hidden">
+               <div className="p-6 border-b border-slate-100 flex items-center justify-between gap-4">
+                  <div>
+                     <h2 className="text-lg font-bold text-slate-900">الطلبات المتاحة للاسترداد</h2>
+                     <p className="text-xs text-slate-500 mt-1">قائمة الطلبات المدفوعة التي لا تزال قيد التنفيذ</p>
+                  </div>
+                  <div className="relative">
+                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                     <input
+                       value={search}
+                       onChange={(e) => setSearch(e.target.value)}
+                       placeholder="ابحث..."
+                       className="pr-10 pl-4 h-10 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-primary w-56"
+                     />
+                  </div>
+               </div>
+               
+               <div className="overflow-x-auto">
+                  <table className="data-table">
+                     <thead>
+                        <tr>
+                           <th>الطلب</th>
+                           <th className="hidden md:table-cell">العميل</th>
+                           <th className="text-center">إجراء</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {loadingReq ? (
+                           [1,2,3].map(i => <tr key={i} className="animate-pulse"><td colSpan={3} className="h-16 bg-slate-50/50" /></tr>)
+                        ) : refundable.length === 0 ? (
+                           <tr><td colSpan={3} className="py-16 text-center text-slate-400 italic font-bold">لا توجد طلبات قابلة للاسترداد</td></tr>
+                        ) : (
+                           refundable.map(r => (
+                              <tr key={r.id}>
+                                 <td>
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400"><Package size={14} /></div>
+                                       <div>
+                                          <p className="text-xs font-bold text-slate-900 truncate max-w-[200px]">{r.title}</p>
+                                          <p className="text-xs text-slate-400">#{r.id}</p>
+                                       </div>
+                                    </div>
+                                 </td>
+                                 <td className="hidden md:table-cell text-xs text-slate-600 font-medium">{r.client?.fullName}</td>
+                                 <td className="text-center">
+                                    <button
+                                      onClick={() => { setRequestId(String(r.id)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                      className="px-4 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100 hover:bg-rose-600 hover:text-white transition-all"
+                                    >
+                                       معالجة الاسترداد
+                                    </button>
+                                 </td>
+                              </tr>
+                           ))
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
+
+         {/* ⚖️ Guidelines */}
+         <div className="space-y-6">
+            <div className="glass-card p-6 space-y-6 sticky top-24">
+               <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">سياسات وإرشادات الاسترداد</h3>
+               <div className="space-y-4">
+                  <Guideline color="bg-orange-500" label="الطلبات المدفوعة فقط" text="يمكنك رد الأموال للطلبات التي قام العميل بسداد قيمتها مسبقاً بنجاح." />
+                  <Guideline color="bg-orange-500" label="تحويل الحالة تلقائياً" text="بعد الاسترداد، سيتم تحويل حالة الطلب إلى 'ملغى' ولن يتمكن المندوب من متابعته." />
+                  <Guideline color="bg-emerald-500" label="سرعة التحويل" text="تتم عملية رد الأموال لمحفظة العميل أو حسابه في النظام بشكل فوري." />
+               </div>
+            </div>
+         </div>
+
       </div>
+    </div>
+  );
+}
+
+function Guideline({ color, label, text }: { color: string; label: string; text: string }) {
+  return (
+    <div className="space-y-1">
+       <div className="flex items-center gap-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${color}`} />
+          <span className="text-sm font-bold text-slate-900">{label}</span>
+       </div>
+       <p className="text-xs text-slate-500 tracking-tight leading-relaxed lg:mr-3">{text}</p>
     </div>
   );
 }

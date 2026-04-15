@@ -1,0 +1,2 @@
+{"ts":"2026-04-15T00:11:07.080Z","level":"error","event":"payment.paymob.initiate_error","error":"Failed to get Paymob auth token"}
+{"ts":"2026-04-15T00:11:24.405Z","level":"error","event":"payment.paymob.initiate_error","error":"Failed to get Paymob auth token"}

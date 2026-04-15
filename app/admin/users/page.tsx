@@ -1,56 +1,40 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  FiSearch, FiX, FiPhone, FiCalendar,
-  FiDollarSign, FiTruck, FiStar, FiSlash, FiCheckCircle,
-  FiAlertCircle, FiLoader, FiBriefcase, FiUser
+  FiSearch, FiX, FiLoader, FiUser, FiShield, FiSlash, 
+  FiChevronLeft, FiRefreshCw, FiMail, FiPhone, FiCalendar,
+  FiUsers, FiBriefcase, FiTruck, FiActivity, FiKey
 } from "react-icons/fi";
-import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
+import { motion, AnimatePresence } from "framer-motion";
 
-type Role = "ALL" | "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN";
-
-const ROLE_META: Record<string, { label: string; color: string; bg: string }> = {
-  ADMIN:    { label: "أدمن",   color: "text-violet-700", bg: "bg-violet-50 border-violet-200" },
-  CLIENT:   { label: "عميل",   color: "text-blue-700",   bg: "bg-blue-50 border-blue-200" },
-  VENDOR:   { label: "تاجر",   color: "text-orange-700", bg: "bg-orange-50 border-orange-200" },
-  DELIVERY: { label: "مندوب",  color: "text-emerald-700",bg: "bg-emerald-50 border-emerald-200" },
+const ROLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+  ADMIN:    { label: "مدير تقني",   color: "text-orange-600", bg: "bg-orange-50", icon: FiShield },
+  CLIENT:   { label: "عميل نشط",   color: "text-amber-600",    bg: "bg-amber-50",    icon: FiUser },
+  VENDOR:   { label: "شريك مورد",   color: "text-amber-600",  bg: "bg-amber-50",  icon: FiBriefcase },
+  DELIVERY: { label: "كابتن شحن",   color: "text-emerald-600",bg: "bg-emerald-50",icon: FiTruck },
 };
 
-function RolePill({ role }: { role: string }) {
-  const m = ROLE_META[role] ?? { label: role, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" };
-  return <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-bold border ${m.bg} ${m.color}`}>{m.label}</span>;
-}
-
-function ActionBtn({ icon, label, color, loading, onClick }: {
-  icon: React.ReactNode; label: string; color: string; loading: boolean; onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border font-semibold text-sm transition-all disabled:opacity-60 ${color}`}
-    >
-      {loading ? <FiLoader size={14} className="animate-spin" /> : icon}
-      {label}
-    </button>
-  );
-}
-
 export default function AdminUsersPage() {
-  const [roleFilter, setRoleFilter] = useState<Role>("ALL");
+  const [roleFilter, setRoleFilter] = useState<"ALL" | "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN">("ALL");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: users, loading, error, setData } = useAsyncData<any[]>(
+  const { data: users, loading, setData, refresh } = useAsyncData<any[]>(
     () => apiFetch("/api/admin/users", "ADMIN"), []
   );
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, [refresh]);
 
   const filtered = useMemo(() => {
     let list = users ?? [];
@@ -58,7 +42,9 @@ export default function AdminUsersPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((u: any) =>
-        u.fullName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || String(u.id) === q
+        u.fullName?.toLowerCase().includes(q) || 
+        u.email?.toLowerCase().includes(q) || 
+        u.phone?.includes(q)
       );
     }
     return list;
@@ -81,227 +67,233 @@ export default function AdminUsersPage() {
       await apiFetch<any>(`/api/admin/users/${userId}/moderation`, "ADMIN", {
         method: "PATCH", body: { action },
       });
-      const patch: any = {};
-      if (action === "BLOCK") patch.isActive = false;
-      if (action === "UNBLOCK") patch.isActive = true;
-      setData((prev: any[]) => (prev ?? []).map((u) => u.id === userId ? { ...u, ...patch } : u));
+      const patch: any = { isActive: action === "UNBLOCK" };
+      setData((prev: any[] | null) => (prev ?? []).map((u) => u.id === userId ? { ...u, ...patch } : u));
       setSelected((prev: any) => prev?.id === userId ? { ...prev, ...patch } : prev);
-      setActionMsg({ text: "تم تنفيذ الإجراء بنجاح ✓", ok: true });
+      setActionMsg({ text: "تم تحديث حالة المستخدم بنجاح ✓", ok: true });
     } catch (e: any) {
-      setActionMsg({ text: e.message ?? "فشل تنفيذ الإجراء", ok: false });
+      setActionMsg({ text: e.message || "فشلت العملية", ok: false });
     } finally {
       setActionLoading(null);
     }
   }
 
   return (
-    <div className="space-y-5 text-right" dir="rtl">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">إدارة المستخدمين</h1>
-        <p className="text-sm text-slate-400 mt-0.5">اضغط على أي مستخدم لعرض التفاصيل والإجراءات</p>
-      </div>
-
-      {/* Role Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {([
-          { label: "الكل", val: stats.total, filter: "ALL" as Role },
-          { label: "عملاء", val: stats.clients, filter: "CLIENT" as Role },
-          { label: "تجار", val: stats.vendors, filter: "VENDOR" as Role },
-          { label: "مندوبون", val: stats.delivery, filter: "DELIVERY" as Role },
-        ]).map((s) => (
-          <button
-            key={s.label}
-            onClick={() => setRoleFilter(s.filter)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
-              roleFilter === s.filter
-                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            {s.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${roleFilter === s.filter ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
-              {loading ? "…" : s.val}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="ابحث بالاسم أو البريد الإلكتروني..."
-          className="w-full pr-9 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all"
-        />
-      </div>
-
-      {/* Table + Detail */}
-      <div className="flex gap-4 items-start">
-        {/* Table */}
-        <div className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 min-w-0 ${selected ? "hidden lg:block" : ""}`}>
-          {error && <div className="p-4 m-4 bg-rose-50 text-rose-600 rounded-xl text-sm border border-rose-200">خطأ في تحميل البيانات</div>}
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">المستخدم</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400">الدور</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden sm:table-cell">المحفظة</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden md:table-cell">الحالة</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-400 hidden lg:table-cell">التسجيل</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {loading ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
-                      {[0,1,2,3,4].map((j) => (
-                        <td key={j} className="py-4 px-4">
-                          <div className="h-4 bg-slate-100 rounded animate-pulse" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="py-12 text-center text-slate-400">لا يوجد مستخدمون</td></tr>
-                ) : filtered.map((u: any) => (
-                  <tr
-                    key={u.id}
-                    onClick={() => { setSelected(u); setActionMsg(null); }}
-                    className={`hover:bg-primary/5 cursor-pointer transition-colors ${selected?.id === u.id ? "bg-primary/5 border-r-[3px] border-primary" : ""}`}
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-700 font-bold shrink-0">
-                          {u.fullName?.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 leading-none">{u.fullName}</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4"><RolePill role={u.role} /></td>
-                    <td className="py-3 px-4 hidden sm:table-cell font-bold text-slate-900 text-xs">
-                      {formatCurrency(Number(u.walletBalance))}
-                    </td>
-                    <td className="py-3 px-4 hidden md:table-cell">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${u.isActive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"}`}>
-                        {u.isActive ? "نشط" : "محظور"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 hidden lg:table-cell text-xs text-slate-400">
-                      {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true, locale: ar })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!loading && (
-            <div className="px-4 py-3 border-t border-slate-100 text-xs text-slate-400">
-              {filtered.length} من أصل {users?.length ?? 0} مستخدم
-            </div>
-          )}
+    <div className="admin-page admin-page--spacious" dir="rtl">
+      
+      {/* Architectural Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 border-b border-slate-100 pb-10">
+        <div>
+           <div className="flex items-center gap-2 mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="text-xs font-black text-slate-400 tracking-wide">إدارة هويات المستخدمين</span>
+           </div>
+           <h1 className="text-4xl font-black text-slate-900 tracking-tight">إدارة <span className="text-slate-300 font-light">/</span> كافة المستخدمين</h1>
         </div>
+        
+        <div className="flex items-center gap-3">
+           <div className="relative group">
+              <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="ابحث بالاسم، البريد أو الهاتف..."
+                className="w-full sm:w-80 pr-11 pl-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:bg-white focus:border-primary outline-none transition-all"
+              />
+           </div>
+           <button onClick={handleRefresh} className="h-11 px-6 bg-white border border-slate-200 rounded-xl text-xs font-black tracking-wide text-slate-900 shadow-sm hover:border-primary transition-all flex items-center gap-2">
+              <FiRefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              تزامن البيانات
+           </button>
+        </div>
+      </div>
 
-        {/* Detail Panel */}
-        {selected && (
-          <div className="w-full lg:w-[380px] shrink-0 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 200px)" }}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 shrink-0">
-              <h3 className="font-bold text-slate-800 text-sm">تفاصيل المستخدم</h3>
-              <button onClick={() => setSelected(null)} className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors">
-                <FiX size={16} />
-              </button>
+      {/* 📊 Metrics Infrastructure */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <EliteMetric label="إجمالي الحسابات" val={stats.total} icon={FiUsers} />
+         <EliteMetric label="العملاء النشطون" val={stats.clients} icon={FiUser} />
+         <EliteMetric label="الموردون" val={stats.vendors} icon={FiBriefcase} />
+         <EliteMetric label="أساطيل الشحن" val={stats.delivery} icon={FiTruck} />
+      </div>
+
+      <div className="flex flex-col xl:flex-row gap-10 items-start">
+         <div className="flex-1 w-full space-y-8">
+            {/* Context Switcher */}
+            <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100 w-fit">
+               {[
+                 { id: 'ALL', label: 'كافة الأدوار' },
+                 { id: 'CLIENT', label: 'العملاء' },
+                 { id: 'VENDOR', label: 'الموردون' },
+                 { id: 'DELIVERY', label: 'المناديب' },
+                 { id: 'ADMIN', label: 'المدراء' }
+               ].map(t => (
+                 <button
+                   key={t.id}
+                   onClick={() => setRoleFilter(t.id as any)}
+                   className={`px-6 py-2 rounded-lg text-sm font-black transition-all ${
+                     roleFilter === t.id ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'text-slate-400 hover:text-slate-600'
+                   }`}
+                 >
+                   {t.label}
+                 </button>
+               ))}
             </div>
 
-            <div className="overflow-y-auto p-4 space-y-4">
-              {/* Avatar Hero */}
-              <div className="p-4 bg-gradient-to-l from-slate-50 to-orange-50/40 rounded-xl border border-slate-100 flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center text-white font-black text-xl shadow-md shrink-0">
-                  {selected.fullName?.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900 truncate">{selected.fullName}</h4>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">{selected.email}</p>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    <RolePill role={selected.role} />
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${selected.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-600 border-rose-200"}`}>
-                      {selected.isActive ? "✓ نشط" : "✗ محظور"}
-                    </span>
+            {/* Precision Data Table */}
+            <div className="bg-white border border-slate-100 rounded-xl shadow-xl shadow-slate-200/20 overflow-hidden">
+               <div className="overflow-x-auto">
+                  <table className="w-full text-right">
+                     <thead>
+                        <tr className="border-b border-slate-50 bg-slate-50/50">
+                           <th className="px-8 py-5 text-xs font-black text-slate-400 tracking-wide leading-none">المستخدم</th>
+                           <th className="px-8 py-5 text-xs font-black text-slate-400 tracking-wide text-center leading-none">الدور</th>
+                           <th className="px-8 py-5 text-xs font-black text-slate-400 tracking-wide leading-none">المحفظة</th>
+                           <th className="px-8 py-5 text-xs font-black text-slate-400 tracking-wide leading-none">الحالة</th>
+                           <th className="px-8 py-5 text-xs font-black text-slate-400 tracking-wide text-left leading-none">تفتيش</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-50">
+                        {loading ? (
+                           Array(6).fill(0).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={5} className="h-16 bg-slate-50/20" /></tr>)
+                        ) : filtered.length === 0 ? (
+                           <tr><td colSpan={5} className="py-20 text-center"><p className="text-slate-300 font-black italic tracking-wide text-xs">لا توجد نتائج</p></td></tr>
+                        ) : (
+                           filtered.map((u: any) => (
+                              <tr key={u.id} className={`group cursor-pointer transition-all ${selected?.id === u.id ? 'bg-primary/5' : 'hover:bg-slate-50/50'}`} onClick={() => setSelected(u)}>
+                                 <td className="px-8 py-5">
+                                    <div className="flex items-center gap-4">
+                                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-all ${selected?.id === u.id ? 'bg-primary text-white' : 'bg-slate-50 text-slate-300 group-hover:bg-slate-900 group-hover:text-white'}`}>
+                                          {u.fullName?.charAt(0)}
+                                       </div>
+                                       <div>
+                                          <p className="text-sm font-black text-slate-900 leading-none mb-1.5">{u.fullName}</p>
+                                          <p className="text-xs font-bold text-slate-400 italic font-mono">{u.email}</p>
+                                       </div>
+                                    </div>
+                                 </td>
+                                 <td className="px-8 py-5 text-center">
+                                    <EliteRoleBadge role={u.role} />
+                                 </td>
+                                 <td className="px-8 py-5"><span className="text-sm font-black text-slate-900 font-mono tracking-tighter">{formatCurrency(u.walletBalance)}</span></td>
+                                 <td className="px-8 py-5">
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border tracking-wide ${u.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                                       {u.isActive ? 'نشط' : 'موقوف'}
+                                    </span>
+                                 </td>
+                                 <td className="px-8 py-5 text-left text-slate-200 group-hover:text-primary transition-colors">
+                                    <FiChevronLeft size={18} />
+                                 </td>
+                              </tr>
+                           ))
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
+
+         {/* Elite Inspection Panel */}
+         <AnimatePresence>
+            {selected && (
+               <motion.aside
+                  initial={{ x: 30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 30, opacity: 0 }}
+                  className="w-full xl:w-[450px] bg-slate-900 rounded-2xl p-10 sticky top-24 shadow-2xl text-white space-y-10"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-primary"><FiKey size={24} /></div>
+                        <div>
+                           <h2 className="text-base font-black tracking-tight">ملف الهوية</h2>
+                           <p className="text-xs font-bold text-slate-500 tracking-wide mt-1">بيانات الهوية</p>
+                        </div>
+                     </div>
+                     <button onClick={() => setSelected(null)} className="p-2 hover:bg-white/10 rounded-xl text-slate-500 transition-all"><FiX size={20} /></button>
                   </div>
-                </div>
-              </div>
 
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 bg-primary/5 border border-primary/15 rounded-xl col-span-2">
-                  <p className="text-xs text-primary/70 flex items-center gap-1 mb-1"><FiDollarSign size={11} />رصيد المحفظة</p>
-                  <p className="font-black text-primary text-lg">{formatCurrency(Number(selected.walletBalance))}</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mb-1"><FiCalendar size={11} />تاريخ التسجيل</p>
-                  <p className="font-bold text-slate-800 text-xs">{new Date(selected.createdAt).toLocaleDateString("ar-EG")}</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-xs text-slate-400 mb-1">رقم المستخدم</p>
-                  <p className="font-mono font-black text-slate-900">#{selected.id}</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mb-1"><FiPhone size={11} />رقم الهاتف</p>
-                  <p className="font-bold text-slate-800 text-sm" dir="ltr">{selected.phone ?? "—"}</p>
-                </div>
-              </div>
+                  <div className="flex flex-col items-center gap-6 py-10 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden">
+                     <div className="w-24 h-24 bg-primary rounded-xl flex items-center justify-center text-4xl font-black text-white shadow-2xl shadow-primary/40 relative z-10">
+                        {selected.fullName?.charAt(0)}
+                     </div>
+                     <div className="text-center relative z-10">
+                        <h3 className="text-2xl font-black tracking-tight">{selected.fullName}</h3>
+                        <div className="mt-3 flex justify-center"><EliteRoleBadge role={selected.role} dark /></div>
+                     </div>
+                     <div className="absolute top-0 left-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+                  </div>
 
-              {/* Feedback */}
-              {actionMsg && (
-                <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${actionMsg.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}>
-                  {actionMsg.ok ? <FiCheckCircle size={13} /> : <FiAlertCircle size={13} />}
-                  {actionMsg.text}
-                </div>
-              )}
+                  <div className="space-y-3">
+                     <AuditDetail icon={<FiMail size={14} />} label="البريد المعتمد" val={selected.email} />
+                     <AuditDetail icon={<FiPhone size={14} />} label="قناة التواصل" val={selected.phone || '—'} />
+                     <AuditDetail icon={<FiCalendar size={14} />} label="تاريخ الانضمام" val={formatDate(selected.createdAt)} />
+                  </div>
 
-              {/* Actions */}
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">إجراءات الإشراف</p>
-                <div className="space-y-2">
-                  {selected.role === "VENDOR" && (
-                    <ActionBtn
-                      icon={<FiStar size={15} />}
-                      label={selected.isVerified ? "إلغاء توثيق الحساب" : "توثيق حساب التاجر"}
-                      color={selected.isVerified
-                        ? "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                        : "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600"
-                      }
-                      loading={actionLoading === (selected.isVerified ? "UNVERIFY" : "VERIFY")}
-                      onClick={() => doAction(selected.id, selected.isVerified ? "UNVERIFY" : "VERIFY")}
-                    />
+                  {actionMsg && (
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={`p-4 rounded-2xl text-xs font-black border tracking-wider text-center ${actionMsg.ok ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                       {actionMsg.text}
+                    </motion.div>
                   )}
-                  {selected.isActive ? (
-                    <ActionBtn
-                      icon={<FiSlash size={15} />}
-                      label="حظر الحساب"
-                      color="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
-                      loading={actionLoading === "BLOCK"}
-                      onClick={() => doAction(selected.id, "BLOCK")}
-                    />
-                  ) : (
-                    <ActionBtn
-                      icon={<FiCheckCircle size={15} />}
-                      label="رفع الحظر وإعادة التفعيل"
-                      color="bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
-                      loading={actionLoading === "UNBLOCK"}
-                      onClick={() => doAction(selected.id, "UNBLOCK")}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
+                  <div className="pt-8 border-t border-white/5 space-y-4">
+                     <button 
+                        disabled={!!actionLoading}
+                        onClick={() => doAction(selected.id, selected.isActive ? "BLOCK" : "UNBLOCK")}
+                        className={`w-full h-14 rounded-2xl text-sm font-black tracking-wide transition-all flex items-center justify-center gap-3 ${
+                           selected.isActive 
+                           ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20' 
+                           : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                        }`}
+                     >
+                        {actionLoading ? <FiLoader size={16} className="animate-spin" /> : (selected.isActive ? <FiSlash size={16} /> : <FiActivity size={16} />)}
+                        {selected.isActive ? "إيقاف الحساب" : "إعادة تفعيل الحساب"}
+                     </button>
+                     <button className="w-full h-14 bg-white text-slate-900 rounded-2xl text-sm font-black tracking-wide hover:bg-slate-200 transition-all shadow-lg">
+                        مراجعة سجلات الحركات
+                     </button>
+                  </div>
+               </motion.aside>
+            )}
+         </AnimatePresence>
       </div>
     </div>
   );
 }
+
+function EliteMetric({ label, val, icon: Icon }: any) {
+  return (
+    <div className="bg-white border border-slate-100 p-8 rounded-xl space-y-5 hover:border-primary/20 transition-all duration-500 group shadow-sm">
+       <div className="w-14 h-14 bg-slate-50 text-slate-300 group-hover:bg-slate-900 group-hover:text-white rounded-2xl flex items-center justify-center transition-all duration-500">
+          <Icon size={24} />
+       </div>
+       <div>
+          <p className="text-xs font-black text-slate-400 tracking-wide mb-1.5">{label}</p>
+          <p className="text-2xl font-black text-slate-900 font-mono tracking-tighter">{val}</p>
+       </div>
+    </div>
+  );
+}
+
+function EliteRoleBadge({ role, dark }: { role: string; dark?: boolean }) {
+  const cfg = ROLE_CONFIG[role] || { label: role, color: "text-slate-500", bg: "bg-slate-50", icon: FiUser };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black border tracking-wide ${dark ? 'bg-white/10 text-white border-white/10' : `${cfg.bg} ${cfg.color} border-current/10`}`}>
+      <Icon size={12} strokeWidth={3} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function AuditDetail({ icon, label, val }: any) {
+  return (
+    <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+       <div className="flex items-center gap-3">
+          <span className="text-slate-500">{icon}</span>
+          <span className="text-xs font-black text-slate-500 tracking-wide">{label}</span>
+       </div>
+       <span className="text-xs font-bold text-slate-200 font-mono">{val}</span>
+    </div>
+  );
+}
+

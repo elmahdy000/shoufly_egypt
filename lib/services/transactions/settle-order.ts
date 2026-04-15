@@ -1,9 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
-
-function toTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+import { d, toTwo, sub, mul, min, toNumber } from '@/lib/utils/decimal';
+import Decimal from 'decimal.js';
 
 export async function settleOrder(requestId: number) {
   logger.info('qr.confirm.settlement.started', { requestId });
@@ -21,7 +19,7 @@ export async function settleOrder(requestId: number) {
           select: { status: true },
         },
         transactions: {
-          where: { type: { in: ['VENDOR_PAYOUT', 'ADMIN_COMMISSION'] } },
+          where: { type: { in: ['VENDOR_PAYOUT', 'ADMIN_COMMISSION', 'REFUND'] } },
           select: { id: true, type: true },
         },
       },
@@ -35,6 +33,17 @@ export async function settleOrder(requestId: number) {
       throw new Error('Request already settled');
     }
 
+    // SECURITY: Prevent settlement if request was cancelled or refunded
+    if (request.status === 'CLOSED_CANCELLED') {
+      throw new Error('Cannot settle cancelled request');
+    }
+
+    // Check for any REFUND transactions
+    const refundTransaction = request.transactions.find((t) => t.type === 'REFUND');
+    if (refundTransaction) {
+      throw new Error('Cannot settle request - refund was already issued');
+    }
+
     if (!request.selectedBidId) {
       throw new Error('Request has no selected bid');
     }
@@ -46,6 +55,7 @@ export async function settleOrder(requestId: number) {
 
     const existingPayout = request.transactions.find((t) => t.type === 'VENDOR_PAYOUT');
     const existingCommission = request.transactions.find((t) => t.type === 'ADMIN_COMMISSION');
+
     if (existingPayout || existingCommission) {
       throw new Error('Settlement already recorded for this request');
     }
@@ -67,44 +77,46 @@ export async function settleOrder(requestId: number) {
       throw new Error('Admin user not found');
     }
 
-    const netPrice = toTwo(Number(selectedBid.netPrice));
-    const clientPrice = toTwo(Number(selectedBid.clientPrice));
-    const totalSpread = toTwo(clientPrice - netPrice);
+    // Use precise Decimal arithmetic for financial calculations
+    const netPrice = toTwo(selectedBid.netPrice);
+    const clientPrice = toTwo(selectedBid.clientPrice);
+    const totalSpread = toTwo(sub(clientPrice, netPrice));
     
     // Calculate Delivery Agent Pay if exists
-    let riderPayout = 0;
+    let riderPayout = d(0);
     if (request.assignedDeliveryAgentId) {
-       // Mock fixed delivery fee of 20 EGP or 50% of spread if spread is too low
-       riderPayout = Math.min(20, toTwo(totalSpread * 0.5));
+       // Fixed delivery fee of 20 EGP or 50% of spread if spread is too low
+       const calculatedFee = toTwo(mul(totalSpread, 0.5));
+       riderPayout = min(20, calculatedFee);
     }
     
-    const finalCommission = toTwo(totalSpread - riderPayout);
+    const finalCommission = toTwo(sub(totalSpread, riderPayout));
     const vendorPayout = netPrice;
 
     // 1. Pay Vendor
     await tx.user.update({
       where: { id: selectedBid.vendorId },
-      data: { walletBalance: { increment: vendorPayout } },
+      data: { walletBalance: { increment: toNumber(vendorPayout) } },
     });
 
     // 2. Pay Admin
     await tx.user.update({
       where: { id: admin.id },
-      data: { walletBalance: { increment: finalCommission } },
+      data: { walletBalance: { increment: toNumber(finalCommission) } },
     });
 
     // 3. Pay Rider (New!)
-    if (request.assignedDeliveryAgentId && riderPayout > 0) {
+    if (request.assignedDeliveryAgentId && riderPayout.greaterThan(0)) {
         await tx.user.update({
             where: { id: request.assignedDeliveryAgentId },
-            data: { walletBalance: { increment: riderPayout } }
+            data: { walletBalance: { increment: toNumber(riderPayout) } }
         });
 
         await tx.transaction.create({
             data: {
               userId: request.assignedDeliveryAgentId,
               requestId,
-              amount: riderPayout,
+              amount: toNumber(riderPayout),
               type: 'DELIVERY_PAYOUT',
               description: `أجرة توصيل الطلب رقم #${requestId}`,
             },
@@ -125,7 +137,7 @@ export async function settleOrder(requestId: number) {
       data: {
         userId: selectedBid.vendorId,
         requestId,
-        amount: vendorPayout,
+        amount: toNumber(vendorPayout),
         type: 'VENDOR_PAYOUT',
         description: `Vendor payout for request #${requestId}`,
       },
@@ -135,7 +147,7 @@ export async function settleOrder(requestId: number) {
       data: {
         userId: admin.id,
         requestId,
-        amount: finalCommission,
+        amount: toNumber(finalCommission),
         type: 'ADMIN_COMMISSION',
         description: `Admin commission for request #${requestId}`,
       },
@@ -183,15 +195,15 @@ export async function settleOrder(requestId: number) {
 
     logger.info('qr.confirm.settlement.completed', {
       requestId,
-      vendorPayout,
-      adminCommission: finalCommission,
+      vendorPayout: toNumber(vendorPayout),
+      adminCommission: toNumber(finalCommission),
     });
 
     return {
       requestId,
       finalRequestStatus: 'CLOSED_SUCCESS' as const,
-      vendorPayout,
-      adminCommission: finalCommission,
+      vendorPayout: toNumber(vendorPayout),
+      adminCommission: toNumber(finalCommission),
       deliveryFinalStatus: 'DELIVERED' as const,
     };
   });

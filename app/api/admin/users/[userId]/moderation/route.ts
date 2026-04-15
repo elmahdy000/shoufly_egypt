@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
 import { verifyUser, blockUser } from '@/lib/services/admin/moderation';
 import { z } from 'zod';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 const ModerationSchema = z.object({
   action: z.enum(['VERIFY', 'UNVERIFY', 'BLOCK', 'UNBLOCK']),
@@ -33,7 +34,8 @@ export async function PATCH(
 
     return NextResponse.json(result);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('USER_MODERATION', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }

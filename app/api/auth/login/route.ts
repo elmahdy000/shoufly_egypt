@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { LoginSchema } from "@/lib/validations/auth";
 import { createSessionToken } from "@/lib/session";
 import { checkRateLimit, getClientIP } from "@/lib/utils/rate-limiter";
+import { createErrorResponse, logError } from "@/lib/utils/error-handler";
 
 // Rate limit: 5 login attempts per minute per IP
 const LOGIN_RATE_LIMIT = 5;
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Check rate limit
     const clientIP = getClientIP(req.headers);
     const rateLimitKey = `login:${clientIP}`;
-    const rateLimitResult = checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT, LOGIN_WINDOW_MS);
+    const rateLimitResult = await checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT, LOGIN_WINDOW_MS);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -97,7 +98,8 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Server error";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    logError('LOGIN', e);
+    const { response, status } = createErrorResponse(e, 400);
+    return NextResponse.json(response, { status });
   }
 }

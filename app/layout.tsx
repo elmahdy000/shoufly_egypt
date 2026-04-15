@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal, Plus_Jakarta_Sans, Cairo } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -32,7 +33,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#0052FF",
 };
 
@@ -48,8 +48,12 @@ export default function RootLayout({
       className={`h-full antialiased ${tajawal.variable} ${cairo.variable} ${plusJakartaSans.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full font-tajawal bg-background text-foreground tracking-tight selection:bg-primary/20">
-        {children}
+      <body className="min-h-full font-tajawal bg-slate-50 text-foreground selection:bg-primary/20">
+        <ThemeProvider>
+          <div className="min-h-screen">
+            {children}
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,9 +1,20 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { getPaymentRedirectUrl } from '@/lib/payments/config';
+import crypto from 'crypto';
 
 function toTwo(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+/**
+ * Generate secure QR code with random token
+ * Prevents guessing attacks by using cryptographically secure random bytes
+ */
+function generateSecureQRCode(requestId: number): string {
+  const timestamp = Date.now();
+  const randomBytes = crypto.randomBytes(16).toString('hex');
+  return `REQ-${requestId}-${timestamp}-${randomBytes}`;
 }
 
 export async function payRequest(requestId: number, clientId: number) {
@@ -103,7 +114,8 @@ export async function payRequest(requestId: number, clientId: number) {
       },
     });
 
-    const qrCode = request.qrCode || `REQ-${request.id}-${Date.now()}`;
+    // SECURITY: Use secure QR code generation with random token
+    const qrCode = request.qrCode || generateSecureQRCode(request.id);
 
     const updatedRequest = await tx.request.update({
       where: { id: request.id },

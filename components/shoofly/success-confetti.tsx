@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+const CONFETTI_COLORS = ['#FF6B00', '#000000', '#E5E7EB', '#3B82F6'] as const;
+
+function seededUnit(index: number, salt: number): number {
+  const x = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export function SuccessConfetti() {
   const [active, setActive] = useState(true);
 
@@ -19,12 +26,12 @@ export function SuccessConfetti() {
           key={i}
           className="absolute w-2 h-2 rounded-full"
           style={{
-            backgroundColor: ['#FF6B00', '#000000', '#E5E7EB', '#3B82F6'][Math.floor(Math.random() * 4)],
+            backgroundColor: CONFETTI_COLORS[Math.floor(seededUnit(i, 1) * CONFETTI_COLORS.length)],
             top: '-10%',
-            left: `${Math.random() * 100}%`,
-            transform: `rotate(${Math.random() * 360}deg)`,
-            animation: `confetti-fall ${2 + Math.random() * 3}s linear forwards`,
-            animationDelay: `${Math.random() * 2}s`
+            left: `${seededUnit(i, 2) * 100}%`,
+            transform: `rotate(${seededUnit(i, 3) * 360}deg)`,
+            animation: `confetti-fall ${2 + seededUnit(i, 4) * 3}s linear forwards`,
+            animationDelay: `${seededUnit(i, 5) * 2}s`
           }}
         />
       ))}

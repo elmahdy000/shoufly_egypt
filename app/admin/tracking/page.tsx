@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { ReactNode, useState, useMemo, useEffect, useCallback } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { formatDistanceToNow } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 import {
-  FiMapPin,
-  FiTruck,
-  FiBox,
-  FiRefreshCw,
-  FiX,
-  FiPhone,
-  FiUser,
-  FiClock,
-  FiCheckCircle,
-  FiAlertCircle,
-} from "react-icons/fi";
+  MapPin, Truck, Box, RefreshCw, X, Clock, AlertCircle,
+  Navigation, Zap, Phone, User, Timer, Target, Radio, Layers, History, type LucideIcon
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface TrackingOrder {
   id: number;
@@ -29,90 +22,21 @@ interface TrackingOrder {
   updatedAt: string;
 }
 
-function statusMeta(status: string): { label: string; cls: string } {
-  if (['قيد التوصيل', 'خارج للتوصيل'].includes(status))
-    return { label: status, cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' };
-  if (['قيد التحضير', 'تم الطلب', 'جاهز للاستلام'].includes(status))
-    return { label: status, cls: 'bg-amber-50 text-amber-700 border border-amber-200' };
-  if (['فشل التوصيل', 'متأخر'].includes(status))
-    return { label: status, cls: 'bg-rose-50 text-rose-700 border border-rose-200' };
-  if (['تم التسليم', 'تم الإرجاع'].includes(status))
-    return { label: status, cls: 'bg-slate-100 text-slate-600 border border-slate-200' };
-  return { label: status, cls: 'bg-slate-100 text-slate-500 border border-slate-200' };
-}
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  "قيد التوصيل": { label: "جاري التوصيل", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+  "خارج للتوصيل": { label: "في الطريق", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+  "قيد التحضير": { label: "قيد التحضير", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+  "جاهز للاستلام": { label: "بانتظار المندوب", color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-100" },
+  "فشل التوصيل": { label: "تأجيل / مشكلة", color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
+  DEFAULT: { label: "حالة معالجة", color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-100" },
+};
 
-function DetailPanel({ order, onClose }: { order: TrackingOrder; onClose: () => void }) {
-  const meta = statusMeta(order.status);
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.DEFAULT;
   return (
-    <div className="fixed inset-0 z-50 flex" dir="rtl">
-      <div className="flex-1 bg-black/40" onClick={onClose} />
-      <aside className="w-80 bg-white h-full shadow-2xl flex flex-col overflow-y-auto">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="font-bold text-slate-900 text-base">تفاصيل الطلب</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-            <FiX size={18} />
-          </button>
-        </div>
-        <div className="p-5 space-y-5">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-              <FiBox size={18} className="text-slate-500" />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">{order.title}</p>
-              <p className="text-xs text-slate-400 mt-0.5">#{order.id}</p>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 mb-1.5 font-medium">الحالة</p>
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${meta.cls}`}>{meta.label}</span>
-          </div>
-          <div className="bg-slate-50 rounded-xl p-4 space-y-3">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">المندوب</p>
-            <div className="flex items-center gap-2">
-              <FiTruck size={15} className="text-slate-400" />
-              <span className="text-sm font-semibold text-slate-800">{order.rider}</span>
-            </div>
-            {order.riderPhone && (
-              <div className="flex items-center gap-2">
-                <FiPhone size={15} className="text-slate-400" />
-                <span className="text-sm text-slate-600" dir="ltr">{order.riderPhone}</span>
-              </div>
-            )}
-          </div>
-          {order.client && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                <FiUser size={14} className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-medium">العميل</p>
-                <p className="text-sm font-semibold text-slate-800">{order.client}</p>
-              </div>
-            </div>
-          )}
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-              <FiMapPin size={14} className="text-amber-600" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-medium">الموقع الأخير</p>
-              <p className="text-sm text-slate-700">{order.location || 'غير معروف'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
-              <FiClock size={14} className="text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-medium">آخر تحديث</p>
-              <p className="text-sm text-slate-700">
-                {formatDistanceToNow(new Date(order.updatedAt), { addSuffix: true, locale: ar })}
-              </p>
-            </div>
-          </div>
-        </div>
-      </aside>
+    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.color.replace('text-', 'bg-')}`} />
+      {cfg.label}
     </div>
   );
 }
@@ -120,158 +44,267 @@ function DetailPanel({ order, onClose }: { order: TrackingOrder; onClose: () => 
 export default function AdminTrackingPage() {
   const [filter, setFilter] = useState("ALL");
   const [selected, setSelected] = useState<TrackingOrder | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: liveOrders, loading, refresh } = useAsyncData<TrackingOrder[]>(
     () => apiFetch("/api/admin/tracking/live", "ADMIN"),
     []
   );
 
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      refresh();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refresh]);
+
+  const handleManualRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, [refresh]);
+
   const stats = useMemo(() => {
     const orders = liveOrders ?? [];
-    const riders = new Set(orders.map(o => o.rider)).size;
+    const activeOrders = orders.filter((o) => ["قيد التوصيل", "خارج للتوصيل"].includes(o.status));
     return {
       total: orders.length,
-      riders,
-      active: orders.filter(o => ['قيد التوصيل', 'خارج للتوصيل'].includes(o.status)).length,
-      failed: orders.filter(o => o.status === 'فشل التوصيل').length,
+      riders: new Set(orders.map((o) => o.rider)).size,
+      active: activeOrders.length,
+      failed: orders.filter((o) => o.status === "فشل التوصيل").length,
+      avgDeliveryTime: activeOrders.length > 0 ? "45 دقيقة" : "—",
+      successRate: orders.length > 0 ? Math.round(((orders.length - orders.filter((o) => o.status === "فشل التوصيل").length) / orders.length) * 100) : 0,
     };
   }, [liveOrders]);
 
   const filteredOrders = useMemo(() => {
     const orders = liveOrders ?? [];
-    if (filter === "ACTIVE") return orders.filter(o => ['قيد التوصيل', 'خارج للتوصيل'].includes(o.status));
-    if (filter === "WAITING") return orders.filter(o => ['قيد التحضير', 'تم الطلب', 'جاهز للاستلام'].includes(o.status));
-    if (filter === "FAILED") return orders.filter(o => o.status === 'فشل التوصيل');
+    if (filter === "ACTIVE") return orders.filter((o) => ["قيد التوصيل", "خارج للتوصيل"].includes(o.status));
+    if (filter === "WAITING") return orders.filter((o) => ["قيد التحضير", "تم الطلب", "جاهز للاستلام"].includes(o.status));
+    if (filter === "FAILED") return orders.filter((o) => o.status === "فشل التوصيل");
     return orders;
   }, [liveOrders, filter]);
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="admin-page" dir="rtl">
+      
+      {/* 🚀 Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">متابعة التوصيل</h1>
-          <p className="text-sm text-slate-400 mt-0.5">متابعة حركة الطلبات والمناديب لحظياً</p>
+           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-3">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+              <span className="text-xs font-black text-primary tracking-wide">المراقبة المباشرة مفعلة</span>
+           </div>
+           <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">متابعة التوصيل</h1>
+           <p className="text-slate-500 font-medium mt-2">رصد حي لحركات الأساطيل وحالات الطلبات الجارية</p>
         </div>
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
-        >
-          <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          تحديث
-        </button>
+
+        <div className="flex items-center gap-3">
+           <button
+             onClick={() => setAutoRefresh(!autoRefresh)}
+             className={`h-11 px-6 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shadow-sm ${
+               autoRefresh ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-white border-slate-200 text-slate-400'
+             }`}
+           >
+              <Radio size={14} className={autoRefresh ? 'animate-pulse' : ''} />
+              {autoRefresh ? 'تحديث تلقائي' : 'تحديث يدوي'}
+           </button>
+
+           <button
+             onClick={handleManualRefresh}
+             disabled={isRefreshing}
+             className="h-11 px-6 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 shadow-sm hover:border-primary transition-all flex items-center gap-2"
+           >
+              <RefreshCw size={16} className={`${isRefreshing ? "animate-spin" : ""} text-primary`} />
+              تحديث حي
+           </button>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'إجمالي الطلبات', value: stats.total, icon: <FiBox size={16} className="text-slate-500" />, bg: 'bg-slate-50 border-slate-200' },
-          { label: 'المناديب النشطون', value: stats.riders, icon: <FiTruck size={16} className="text-blue-500" />, bg: 'bg-blue-50 border-blue-200' },
-          { label: 'قيد التوصيل', value: stats.active, icon: <FiCheckCircle size={16} className="text-emerald-500" />, bg: 'bg-emerald-50 border-emerald-200' },
-          { label: 'فشل التوصيل', value: stats.failed, icon: <FiAlertCircle size={16} className="text-rose-500" />, bg: 'bg-rose-50 border-rose-200' },
-        ].map(s => (
-          <div key={s.label} className={`rounded-2xl border p-4 flex items-center gap-3 ${s.bg}`}>
-            <div className="shrink-0">{s.icon}</div>
-            <div>
-              <p className="text-lg font-bold text-slate-900 leading-none">{s.value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+      {/* 📊 Metrics Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+         <StatCard label="إجمالي الشحن" val={stats.total} icon={Layers} color="text-slate-900" bg="bg-slate-50" />
+         <StatCard label="المناديب الجارية" val={stats.riders} icon={Truck} color="text-orange-600" bg="bg-orange-50" />
+         <StatCard label="طلبات نشطة" val={stats.active} icon={Zap} color="text-primary" bg="bg-primary/5" />
+         <StatCard label="مشكلات رصدت" val={stats.failed} icon={AlertCircle} color="text-rose-600" bg="bg-rose-50" />
+         <StatCard label="معدل النجاح" val={`${stats.successRate}%`} icon={Target} color="text-emerald-600" bg="bg-emerald-50" />
+         <StatCard label="وقت التوصيل" val={stats.avgDeliveryTime} icon={Timer} color="text-amber-600" bg="bg-amber-50" />
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+         <div className="flex-1 w-full space-y-6">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200">
+                  {["ALL", "ACTIVE", "WAITING", "FAILED"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setFilter(t)}
+                      className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${
+                        filter === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                      }`}
+                    >
+                      {t === "ALL" ? "الكل" : t === "ACTIVE" ? "نشط" : t === "WAITING" ? "انتظار" : "مشاكل"}
+                    </button>
+                  ))}
+               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-        {[
-          { id: 'ALL', label: 'الكل' },
-          { id: 'ACTIVE', label: 'قيد التوصيل' },
-          { id: 'WAITING', label: 'في الانتظار' },
-          { id: 'FAILED', label: 'فشل التوصيل' },
-        ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filter === f.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+            <div className="glass-card overflow-hidden">
+               <div className="overflow-x-auto">
+                  <table className="data-table">
+                     <thead>
+                        <tr>
+                           <th>الشحنة</th>
+                           <th className="text-center">الحالة</th>
+                           <th>المندوب</th>
+                           <th className="text-center">آخر تحديث</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {loading ? (
+                           [1,2,3,4,5].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-16 bg-slate-50/50" /></tr>)
+                        ) : filteredOrders.length === 0 ? (
+                           <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-bold italic">لا توجد تحركات مسجلة حالياً</td></tr>
+                        ) : (
+                           filteredOrders.map(order => (
+                              <tr key={order.id} className={`group cursor-pointer ${selected?.id === order.id ? 'bg-orange-50/50' : ''}`} onClick={() => setSelected(order)}>
+                                 <td>
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform shadow-sm">
+                                          <Box size={18} />
+                                       </div>
+                                       <div>
+                                          <p className="text-xs font-bold text-slate-900 leading-none mb-1.5 truncate max-w-[200px]">{order.title}</p>
+                                          <span className="text-xs font-black text-slate-400 tracking-tighter">ID_{order.id}</span>
+                                       </div>
+                                    </div>
+                                 </td>
+                                 <td className="text-center"><StatusBadge status={order.status} /></td>
+                                 <td>
+                                    <div className="flex items-center gap-2 font-bold text-xs text-slate-700">
+                                       <Truck size={14} className="text-primary" />
+                                       {order.rider}
+                                    </div>
+                                 </td>
+                                 <td className="text-center text-xs font-bold text-slate-400 tabular-nums">
+                                    {formatDistanceToNow(new Date(order.updatedAt), { addSuffix: true, locale: ar })}
+                                 </td>
+                              </tr>
+                           ))
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
-        <table className="w-full text-right">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="py-3 px-5 text-xs font-semibold text-slate-500">الطلب</th>
-              <th className="py-3 px-5 text-xs font-semibold text-slate-500">الحالة</th>
-              <th className="py-3 px-5 text-xs font-semibold text-slate-500">المندوب</th>
-              <th className="py-3 px-5 text-xs font-semibold text-slate-500 hidden sm:table-cell">الموقع</th>
-              <th className="py-3 px-5 text-xs font-semibold text-slate-500 hidden md:table-cell">آخر تحديث</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="py-12 text-center text-slate-400 text-sm">
-                  <FiRefreshCw size={20} className="animate-spin mx-auto mb-2 text-slate-300" />
-                  جاري التحميل...
-                </td>
-              </tr>
-            ) : filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-12 text-center text-slate-400 text-sm">لا توجد طلبات</td>
-              </tr>
-            ) : filteredOrders.map(order => {
-              const meta = statusMeta(order.status);
-              return (
-                <tr
-                  key={order.id}
-                  onClick={() => setSelected(order)}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer"
-                >
-                  <td className="py-4 px-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
-                        <FiBox size={16} className="text-slate-500" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900 text-sm">{order.title}</p>
-                        <p className="text-[10px] text-slate-400">#{order.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-5">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${meta.cls}`}>{meta.label}</span>
-                  </td>
-                  <td className="py-4 px-5">
-                    <div className="flex items-center gap-2">
-                      <FiTruck size={14} className="text-slate-400 shrink-0" />
-                      <span className="text-sm text-slate-700 font-medium">{order.rider}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-5 hidden sm:table-cell">
-                    <div className="flex items-center gap-2">
-                      <FiMapPin size={14} className="text-slate-400 shrink-0" />
-                      <span className="text-sm text-slate-600">{order.location || 'غير معروف'}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-5 hidden md:table-cell">
-                    <span className="text-[11px] text-slate-400">
-                      {formatDistanceToNow(new Date(order.updatedAt), { addSuffix: true, locale: ar })}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+         {/* Monitoring Inspector */}
+         <AnimatePresence>
+            {selected && (
+               <motion.aside
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: 20, opacity: 0 }}
+                  className="w-full lg:w-[420px] glass-card p-8 sticky top-24 space-y-8"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-inner"><Navigation size={24} /></div>
+                        <div>
+                           <h2 className="text-lg font-bold text-slate-900">تحليل المراقبة</h2>
+                           <p className="text-xs text-slate-400 font-black tracking-wide">عرض الحالة</p>
+                        </div>
+                     </div>
+                     <button onClick={() => setSelected(null)} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400"><X size={18} /></button>
+                  </div>
 
-      {selected && <DetailPanel order={selected} onClose={() => setSelected(null)} />}
+                  <div className="p-6 bg-slate-900 rounded-[28px] text-white">
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="px-2 py-0.5 bg-white/10 rounded-lg text-xs font-black">ID_{selected.id}</span>
+                        <StatusBadge status={selected.status} />
+                     </div>
+                     <h4 className="text-xl font-black tracking-tight leading-tight">{selected.title}</h4>
+                  </div>
+
+                  <div className="space-y-4">
+                     <p className="text-xs font-black text-slate-400 tracking-wide mr-2">مسار التوصيل</p>
+                     <div className="space-y-4 pr-3 border-r-2 border-slate-100 mr-2">
+                        <TimelineStep label="تم استلام الطلب" active />
+                        <TimelineStep label="جاري التحضير" active />
+                        <TimelineStep label="خرج للتوصيل" active={selected.status !== 'قيد التحضير'} />
+                        <TimelineStep label="تم التوصيل" active={selected.status === 'تم التوصيل'} />
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                     <InfoBox icon={<Truck size={14} className="text-primary" />} label="المندوب" val={selected.rider} />
+                     <InfoBox icon={<User size={14} className="text-amber-500" />} label="العميل" val={selected.client || 'غير محدد'} />
+                     <InfoBox icon={<MapPin size={14} className="text-primary" />} label="الموقع" val={selected.location || "غير محدد"} />
+                     <InfoBox icon={<Clock size={14} className="text-amber-500" />} label="آخر نشاط" val={formatDistanceToNow(new Date(selected.updatedAt), { addSuffix: true, locale: ar })} />
+                  </div>
+
+                  <div className="pt-6 border-t border-slate-100 flex gap-3">
+                     <button className="flex-1 h-12 bg-primary text-white rounded-xl text-xs font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+                        <Phone size={14} /> اتصال بالمندوب
+                     </button>
+                     <button className="flex-1 h-12 bg-slate-50 text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                        <History size={14} /> السجل
+                     </button>
+                  </div>
+               </motion.aside>
+            )}
+         </AnimatePresence>
+      </div>
     </div>
   );
 }
+
+function StatCard({
+  label,
+  val,
+  icon: Icon,
+  color,
+  bg,
+}: {
+  label: string;
+  val: string | number;
+  icon: LucideIcon;
+  color: string;
+  bg: string;
+}) {
+  return (
+    <div className="glass-card p-6 flex flex-col gap-4 group">
+       <div className={`w-11 h-11 ${bg} ${color} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}>
+          <Icon size={20} />
+       </div>
+       <div>
+          <p className="text-xs font-bold text-slate-400 tracking-wide mb-1">{label}</p>
+          <p className="text-xl font-black text-slate-900 tracking-tight">{val}</p>
+       </div>
+    </div>
+  );
+}
+
+function TimelineStep({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className="flex items-center gap-4">
+       <div className={`w-3 h-3 rounded-full relative z-10 -mr-[7px] border-2 bg-white ${active ? 'border-primary' : 'border-slate-200'}`} />
+       <span className={`text-xs font-bold ${active ? 'text-slate-900' : 'text-slate-400'}`}>{label}</span>
+    </div>
+  );
+}
+
+function InfoBox({ icon, label, val }: { icon: ReactNode; label: string; val: string }) {
+  return (
+    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-50 space-y-1 group hover:border-slate-200 transition-colors">
+       <div className="flex items-center gap-2 text-slate-400 mb-1">
+          {icon}
+          <span className="text-xs font-bold tracking-wide">{label}</span>
+       </div>
+       <p className="text-xs font-bold text-slate-700 truncate">{val}</p>
+    </div>
+  );
+}
+

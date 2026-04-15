@@ -1,7 +1,9 @@
 /**
- * Simple in-memory rate limiter for API routes
- * In production, use Redis for distributed rate limiting
+ * Hybrid Rate Limiter - Redis + In-Memory Fallback
+ * Uses Redis in production, falls back to in-memory if Redis is unavailable
  */
+
+import { checkRateLimitRedis, isRedisAvailable } from './rate-limiter-redis';
 
 interface RateLimitEntry {
   count: number;
@@ -18,15 +20,12 @@ export interface RateLimitResult {
 }
 
 /**
- * Check if request is within rate limit
- * @param key - Unique identifier (IP + route or userId)
- * @param maxRequests - Max requests allowed in window
- * @param windowMs - Time window in milliseconds
+ * In-memory rate limit check (fallback when Redis is unavailable)
  */
-export function checkRateLimit(
+function checkRateLimitInMemory(
   key: string,
   maxRequests: number = 5,
-  windowMs: number = 60000 // 1 minute default
+  windowMs: number = 60000
 ): RateLimitResult {
   const now = Date.now();
   const entry = rateLimitMap.get(key);
@@ -74,6 +73,29 @@ export function checkRateLimit(
     remaining: maxRequests - entry.count,
     resetTime: entry.resetTime,
   };
+}
+
+/**
+ * Check if request is within rate limit
+ * Uses Redis in production, falls back to in-memory if unavailable
+ * @param key - Unique identifier (IP + route or userId)
+ * @param maxRequests - Max requests allowed in window
+ * @param windowMs - Time window in milliseconds
+ */
+export async function checkRateLimit(
+  key: string,
+  maxRequests: number = 5,
+  windowMs: number = 60000 // 1 minute default
+): Promise<RateLimitResult> {
+  // Check if Redis is available
+  const redisAvailable = await isRedisAvailable();
+  
+  if (redisAvailable) {
+    return checkRateLimitRedis(key, maxRequests, windowMs);
+  }
+  
+  // Fallback to in-memory
+  return checkRateLimitInMemory(key, maxRequests, windowMs);
 }
 
 /**

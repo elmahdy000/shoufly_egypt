@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useRef, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/shoofly/button";
@@ -9,18 +9,22 @@ import { createVendorBid } from "@/lib/api/bids";
 import { getRequestDetails } from "@/lib/api/requests";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { 
-  FiFileText, 
-  FiMapPin, 
-  FiCheckCircle, 
-  FiArrowLeft,
-  FiBriefcase,
-  FiInfo,
-  FiSend,
-  FiAlertTriangle,
-  FiCamera,
-  FiX,
-  FiPackage
-} from "react-icons/fi";
+  FileText, 
+  MapPin, 
+  CheckCircle, 
+  ArrowLeft,
+  Briefcase,
+  Info,
+  Send,
+  AlertTriangle,
+  Camera,
+  X,
+  Package,
+  ArrowRight,
+  ShieldCheck,
+  CircleDollarSign
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function VendorRequestDetails({ requestId }: { requestId: number }) {
   const router = useRouter();
@@ -36,55 +40,38 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Platform standard commission (e.g., 10%)
+  const COMMISSION_RATE = 0.10;
+  
+  const financialBreakdown = useMemo(() => {
+    const price = Number(netPrice) || 0;
+    const commission = price * COMMISSION_RATE;
+    const clientPays = price + commission;
+    return { price, commission, clientPays };
+  }, [netPrice]);
+
   async function uploadImage(file: File): Promise<string | null> {
     const formData = new FormData();
     formData.append('file', file);
-    
     try {
-      console.log('Uploading file:', file.name, file.size);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // Important: send cookies for auth
-      });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData, credentials: 'include' });
       const data = await res.json();
-      console.log('Upload response:', data);
-      if (data.success) {
-        return data.fileUrl;
-      }
-      console.error('Upload failed:', data.error);
-      return null;
+      return data.success ? data.fileUrl : null;
     } catch (err) {
-      console.error('Upload failed:', err);
       return null;
     }
   }
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    console.log('Files selected:', files?.length);
     if (!files || files.length === 0) return;
-    
     setUploadingImages(true);
-    const uploadedUrls: string[] = [];
-    
     for (const file of Array.from(files)) {
       const url = await uploadImage(file);
-      if (url) {
-        console.log('Image uploaded, URL:', url);
-        uploadedUrls.push(url);
-      }
+      if (url) setImages(prev => [...prev, url]);
     }
-    
-    console.log('Total uploaded URLs:', uploadedUrls);
-    setImages(prev => [...prev, ...uploadedUrls]);
-    console.log('Images state updated');
     setUploadingImages(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }
-
-  function removeImage(index: number) {
-    setImages(prev => prev.filter((_, i) => i !== index));
   }
 
   async function submitBid(e: FormEvent) {
@@ -94,7 +81,6 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
       setFeedback({ type: 'error', text: 'يرجى وضع تسعير صحيح وواقعي.' });
       return;
     }
-    
     if (includesProduct && images.length === 0) {
       setFeedback({ type: 'error', text: 'يرجى رفع صور للمنتجات المقدمة.' });
       return;
@@ -105,10 +91,6 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
       setFeedback(null);
       await createVendorBid({ requestId, description, netPrice: priceNum, images });
       setFeedback({ type: 'success', text: 'تم إرسال تسعيرتك للعميل بنجاح!' });
-      setDescription("");
-      setNetPrice("");
-      setImages([]);
-      setIncludesProduct(false);
       setTimeout(() => router.push("/vendor/bids"), 2000);
     } catch (err) {
       setFeedback({ type: 'error', text: err instanceof Error ? err.message : "حدث خطأ أثناء رفع العرض" });
@@ -118,277 +100,253 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-      <div className="flex flex-col items-center text-[#767684]">
-        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">جاري تحميل التفاصيل...</p>
+    <div className="min-h-[80vh] flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center">
+        <div className="w-12 h-12 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+        <p className="text-muted text-sm font-medium">جاري تحضير تفاصيل الطلب...</p>
       </div>
     </div>
   );
   
-  if (error) return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6">
-      <ErrorState message={error} />
-    </div>
-  );
-  
-  if (!data) return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6">
-      <ErrorState message="الطلب غير متوفر حالياً أو تم حذفه" />
+  if (error || !data) return (
+    <div className="p-6">
+      <ErrorState message={error || "الطلب غير متوفر"} />
     </div>
   );
 
   const isOpen = data.status === 'OPEN_FOR_BIDDING';
 
-  return (
-    <div className="font-sans dir-rtl text-right">
-      <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 space-y-4">
-        {feedback && (
-          <div className={`p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-              : 'bg-rose-50 text-rose-700 border border-rose-200'
-          }`}>
-            {feedback.type === 'success' ? <FiCheckCircle size={18} /> : <FiAlertTriangle size={18} />}
-            {feedback.text}
-          </div>
-        )}
-
-        {/* Request Details Card */}
-        <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-[#E7E7E7]">
-            <h2 className="font-semibold text-sm text-[#0F1111] flex items-center gap-2">
-              <FiFileText size={16} className="text-[#565959]" /> تفاصيل الطلب
-            </h2>
-          </div>
-          <div className="p-4 space-y-3">
-            <div>
-              <p className="text-xs text-[#565959] font-medium mb-2">وصف المشكلة</p>
-              <p className="text-sm text-[#0F1111] bg-slate-50 p-3 rounded-lg leading-relaxed">
-                {data.description.includes(']') 
-                  ? data.description.substring(data.description.indexOf(']') + 1).trim() 
-                  : data.description}
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                <FiMapPin size={16} />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#565959] font-medium mb-0.5">العنوان</p>
-                <p className="text-sm font-semibold text-[#0F1111]">{data.address}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                <FiBriefcase size={16} />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#565959] font-medium mb-0.5">الفئة</p>
-                <p className="text-sm font-semibold text-[#0F1111]">خدمات عامة</p>
-              </div>
-            </div>
-          </div>
+  if (feedback?.type === 'success') {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/20">
+          <CheckCircle size={48} className="text-emerald-600" />
         </div>
+        <h2 className="text-2xl font-black text-slate-900 mb-2">تم إرسال عرضك بنجاح!</h2>
+        <p className="text-slate-500 max-w-xs mx-auto mb-8">سيتم إخطار العميل فوراً. يمكنك تتبع حالة عرضك من قائمة "عروضي".</p>
+        <Button onClick={() => router.push("/vendor/bids")} className="px-8 h-12 rounded-2xl">
+          الذهاب لعروضي <ArrowLeft className="mr-2" size={18} />
+        </Button>
+      </div>
+    );
+  }
 
-        {/* Bid Form */}
-        {isOpen ? (
-          <form onSubmit={submitBid} className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <FiSend size={16} />
-              </div>
-              <h2 className="font-semibold text-sm text-[#0F1111]">تقديم عرض</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {/* Product/Service Toggle */}
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-[#E7E7E7]">
-                <input
-                  type="checkbox"
-                  id="includesProduct"
-                  checked={includesProduct}
-                  onChange={(e) => setIncludesProduct(e.target.checked)}
-                  className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
-                />
-                <label htmlFor="includesProduct" className="flex-1 text-xs text-[#0F1111] cursor-pointer">
-                  <span className="font-medium">هل هذا العرض يتضمن منتج؟</span>
-                  <p className="text-[10px] text-[#565959] mt-0.5">مثل: قطع غيار، أجهزة، مستلزمات...</p>
+  return (
+    <div className="pb-32 lg:pb-12 text-right" dir="rtl">
+      {/* Header Bar */}
+      <header className="sticky top-0 z-40 glass border-b border-slate-200 px-4 py-4 flex items-center justify-between">
+        <button onClick={() => router.back()} className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors">
+          <ArrowRight size={20} />
+        </button>
+        <h1 className="font-black text-slate-900">تفاصيل الطلب #{requestId}</h1>
+        <div className="w-10 invisible" />
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        {/* Step 1: Request Info */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-widest">
+            <span className="w-6 h-[2px] bg-primary" />
+            بيانات العميل
+          </div>
+          
+          <div className="shoofly-card p-6 space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="space-y-2">
+                <label className="text-muted text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText size={14} /> المشكلة المطلوبة
                 </label>
-                <FiPackage size={18} className={includesProduct ? "text-primary" : "text-slate-400"} />
+                <div className="bg-slate-50 p-4 rounded-2xl text-slate-900 text-base leading-relaxed font-medium">
+                  {data.description.includes(']') 
+                    ? data.description.substring(data.description.indexOf(']') + 1).trim() 
+                    : data.description}
+                </div>
               </div>
 
-              <div>
-                <label className="text-[10px] text-[#565959] font-medium block mb-1.5">وصف العرض</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                    <MapPin size={22} />
+                  </div>
+                  <div>
+                    <label className="text-muted text-xs font-bold">الموقع</label>
+                    <p className="text-slate-900 font-bold">{data.address}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                    <Briefcase size={22} />
+                  </div>
+                  <div>
+                    <label className="text-muted text-xs font-bold">نوع الخدمة</label>
+                    <p className="text-slate-900 font-bold">خدمات عامة</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Step 2: Your Bid */}
+        {isOpen ? (
+          <form onSubmit={submitBid} className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-widest">
+              <span className="w-6 h-[2px] bg-primary" />
+              عرض السعر والخدمة
+            </div>
+
+            <div className="shoofly-card p-6 space-y-8">
+              {/* Product Toggle */}
+              <div 
+                onClick={() => setIncludesProduct(!includesProduct)}
+                className={`flex items-center gap-4 p-5 rounded-3xl border-2 transition-all cursor-pointer ${
+                  includesProduct ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10' : 'bg-white border-slate-100'
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                  includesProduct ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'
+                }`}>
+                  <Package size={24} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-slate-900 font-black">هل يشمل العرض "منتج"؟</p>
+                  <p className="text-muted text-xs">مثل قطع غيار أو أجهزة مطلوبة للمهمة</p>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  includesProduct ? 'bg-primary border-primary' : 'border-slate-300'
+                }`}>
+                  {includesProduct && <div className="w-2.5 h-2.5 bg-white rounded-full shadow-inner" />}
+                </div>
+              </div>
+
+              {/* Description Box */}
+              <div className="space-y-3">
+                <label className="text-slate-800 font-black text-sm flex items-center gap-2">
+                  <Send size={16} className="text-primary" /> تفاصيل عرضك للعميل
+                </label>
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
-                  rows={3}
-                  placeholder="اشرح للعميل كيف ستنفذ المهمة..."
-                  className="w-full bg-slate-50 border border-[#E7E7E7] px-3 py-2.5 rounded-lg outline-none focus:border-primary text-xs resize-none transition-all"
+                  rows={4}
+                  placeholder="اشرح للعميل خبرتك وكيف ستحل مشكلته بوضوح..."
+                  className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-3xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 text-base transition-all resize-none"
                 />
               </div>
-              
-              <div>
-                <label className="text-[10px] text-[#565959] font-medium block mb-1.5">السعر (ج.م)</label>
-                <div className="relative">
-                  <input 
-                    type="number"
-                    value={netPrice}
-                    onChange={(e) => setNetPrice(e.target.value)}
-                    required
-                    placeholder="0.00"
-                    className="w-full bg-slate-50 border border-[#E7E7E7] px-3 py-2.5 rounded-lg outline-none focus:border-primary text-base font-bold text-center transition-all"
-                    dir="ltr"
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#767684] text-xs">ج.م</span>
+
+              {/* Price Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="space-y-3">
+                  <label className="text-slate-800 font-black text-sm flex items-center gap-2">
+                    <CircleDollarSign size={16} className="text-primary" /> ما ستتقاضاه (ج.م)
+                  </label>
+                  <div className="relative group">
+                    <input 
+                      type="number"
+                      value={netPrice}
+                      onChange={(e) => setNetPrice(e.target.value)}
+                      required
+                      placeholder="0.00"
+                      className="w-full bg-slate-50 border-2 border-slate-100 px-6 py-6 rounded-[32px] outline-none focus:border-primary focus:bg-white text-3xl font-black text-center transition-all"
+                      dir="ltr"
+                    />
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xl">ج.م</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900 rounded-[32px] p-6 text-white space-y-4 shadow-xl shadow-slate-900/20">
+                  <div className="flex items-center gap-2 text-primary font-black text-xs uppercase">
+                    <ShieldCheck size={14} /> فاتورة العميل التقديرية (شفافة)
+                  </div>
+                  <div className="space-y-2 text-sm font-medium">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">سعرك الصافي</span>
+                      <span className="font-bold">{financialBreakdown.price.toFixed(2)} ج.م</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">عمولة المنصة ({COMMISSION_RATE*100}%)</span>
+                      <span className="text-rose-400">+{financialBreakdown.commission.toFixed(2)} ج.م</span>
+                    </div>
+                    <div className="h-px bg-white/10 my-1" />
+                    <div className="flex justify-between items-center text-lg">
+                      <span className="font-bold">المبلغ المطلوب من العميل</span>
+                      <span className="text-primary font-black">{financialBreakdown.clientPays.toFixed(2)} ج.م</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Image Upload Section - Only show if includesProduct */}
+              {/* Images Block */}
               {includesProduct && (
-                <div className="bg-white rounded-xl border border-[#E7E7E7] p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FiCamera size={14} className="text-primary" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-[#0F1111] block">صور المنتجات</label>
-                      <p className="text-[10px] text-[#565959]">مطلوب عند تقديم منتج</p>
-                    </div>
-                    {images.length > 0 && (
-                      <span className="mr-auto bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-1 rounded-full">
-                        {images.length} صورة
-                      </span>
-                    )}
+                <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                  <label className="text-slate-800 font-black text-sm flex items-center gap-2">
+                    <Camera size={16} className="text-primary" /> صور المنتجات / قطع الغيار
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {images.map((url, index) => (
+                      <div key={index} className="relative aspect-square rounded-3xl overflow-hidden border-2 border-slate-100 group">
+                        <img src={url} alt="Product" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <button 
+                          type="button" 
+                          onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                          className="absolute top-2 left-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImages}
+                      className="aspect-square rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-primary hover:text-primary transition-all"
+                    >
+                      {uploadingImages ? <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" /> : <Camera size={24} />}
+                      <span className="text-[10px] font-bold">إضافة صورة</span>
+                    </button>
                   </div>
-                  
-                  {/* Image Grid - Thumbnails */}
-                  {images.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mb-3">
-                      {images.map((url, index) => (
-                        <div key={index} className="relative group cursor-pointer">
-                          {/* Thumbnail */}
-                          <div 
-                            className="aspect-square rounded-xl overflow-hidden border-2 border-[#E7E7E7] bg-slate-100"
-                            onClick={() => setSelectedImage(url)}
-                          >
-                            <img 
-                              src={url} 
-                              alt={`Product ${index + 1}`} 
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            {/* Click to view overlay */}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl flex items-center justify-center">
-                              <span className="text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded-full">
-                                عرض
-                              </span>
-                            </div>
-                          </div>
-                          {/* Delete button - positioned outside to avoid conflict */}
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                            className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110 z-10"
-                          >
-                            <FiX size={14} />
-                          </button>
-                          {/* Image number badge */}
-                          <span className="absolute top-2 left-2 w-5 h-5 bg-primary/80 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                            {index + 1}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Upload Button - Enhanced */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImages}
-                    className="w-full py-4 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:bg-primary/5 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2 text-sm font-medium"
-                  >
-                    {uploadingImages ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                        جاري رفع الصور...
-                      </>
-                    ) : (
-                      <>
-                        <FiCamera size={18} />
-                        {images.length === 0 ? 'إضافة صور للمنتجات' : 'إضافة المزيد من الصور'}
-                      </>
-                    )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelect}
-                    className="hidden"
-                  />
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageSelect} className="hidden" />
                 </div>
               )}
+            </div>
 
-              {/* Lightbox Modal - Outside includesProduct block */}
-              {selectedImage && (
-                <div 
-                  className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-                  onClick={() => setSelectedImage(null)}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImage(null)}
-                    className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors"
-                  >
-                    <FiX size={24} />
-                  </button>
-                  <img 
-                    src={selectedImage} 
-                    alt="Full size" 
-                    className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
+            {/* ERROR Feedback */}
+            {feedback?.type === 'error' && (
+              <div className="bg-rose-50 border-2 border-rose-100 p-5 rounded-3xl text-rose-700 font-bold flex items-center gap-3">
+                <AlertTriangle /> {feedback.text}
+              </div>
+            )}
 
+            {/* Sticky Submit Button for Mobile */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 lg:static lg:bg-transparent lg:border-0 lg:p-0 z-50">
               <Button 
                 type="submit" 
                 isLoading={isSubmitting} 
-                className="w-full h-10 text-sm font-semibold gap-1.5"
+                className="w-full h-14 rounded-3xl text-lg font-black shadow-xl shadow-primary/20"
               >
-                <FiSend size={14} /> إرسال العرض
+                إرسال العرض الآن <Send className="mr-2" size={20} />
               </Button>
             </div>
           </form>
         ) : (
-          <div className="bg-slate-50 rounded-xl border border-[#E7E7E7] p-6 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 text-slate-400">
-              <FiInfo size={20} />
+          <div className="shoofly-card p-12 text-center space-y-4">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+              <Info size={40} />
             </div>
-            <h3 className="text-sm font-semibold text-[#0F1111] mb-1">الطلب مغلق</h3>
-            <p className="text-xs text-[#565959]">لم يعد يقبل عروض جديدة</p>
+            <h3 className="text-xl font-black text-slate-900">نعتذر، هذا الطلب مغلق تماماً</h3>
+            <p className="text-slate-500">العميل لم يعد يستقبل عروضاً جديدة لهذا الطلب حالياً.</p>
+            <Button variant="outline" onClick={() => router.push("/vendor")} className="mt-4 rounded-2xl">العودة للرئيسية</Button>
           </div>
         )}
-
-        {/* Tips Card */}
-        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-          <div className="flex items-start gap-2">
-            <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-              <FiInfo size={14} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-amber-900 mb-0.5">نصيحة</p>
-              <p className="text-[10px] text-amber-700">
-                قدم وصفاً واضحاً مع ذكر الضمان. العملاء يفضلون العروض التفصيلية.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Lightbox */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 overflow-hidden" onClick={() => setSelectedImage(null)}>
+          <button className="absolute top-6 right-6 text-white/50 hover:text-white"><X size={32} /></button>
+          <img src={selectedImage} className="max-w-full max-h-full object-contain rounded-2xl" />
+        </div>
+      )}
     </div>
   );
 }
@@ -396,10 +354,6 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
 export default function VendorRequestDetailsPage() {
   const params = useParams<{ requestId: string }>();
   const parsed = Number(params.requestId);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return <ErrorState message="معرف الطلب غير صحيح، يرجى المحاولة لاحقاً." />;
-  }
-
+  if (!Number.isFinite(parsed) || parsed <= 0) return <ErrorState message="معرف الطلب غير صحيح" />;
   return <VendorRequestDetails requestId={parsed} />;
 }

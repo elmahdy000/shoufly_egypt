@@ -3,18 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { CurrentUser, UserRole } from "@/lib/validations/auth";
 import { verifySessionToken } from "@/lib/session";
 
-function allowHeaderAuth() {
-  if (process.env.ALLOW_HEADER_AUTH === "true") {
-    return true;
-  }
-  return process.env.NODE_ENV !== "production";
-}
-
 async function resolveUserById(id: number) {
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, role: true, fullName: true },
+    select: { id: true, email: true, role: true, fullName: true, isBlocked: true },
   });
+  
+  // SECURITY: Block access if user is blocked
+  if (user?.isBlocked) {
+    throw new Error('Account blocked - Unauthorized');
+  }
+  
+  return user;
 }
 
 async function resolveUserBySessionToken(
@@ -56,51 +56,13 @@ async function resolveUserBySessionToken(
 
 /**
  * Get current user from request headers
- * Level 7 auth resolution order:
- * - signed session token (`Authorization: Bearer ...` or `x-session-token`)
- * - header auth fallback (`x-user-id` / `x-user-email`) when allowed
- *
- * Header auth fallback is disabled by default in production unless:
- * - `ALLOW_HEADER_AUTH=true`
- *
- * Level 3 temporary auth fallback:
- * - `x-user-id`: numeric user id from DB
- * - `x-user-email`: fallback for convenience with seeded users
+ * Uses signed JWT session token only (Authorization: Bearer ... or session cookie)
+ * Header auth fallback has been removed for security reasons
  */
 export async function getCurrentUser(
   headers: Headers,
 ): Promise<CurrentUser | null> {
-  const sessionUser = await resolveUserBySessionToken(headers);
-  if (sessionUser) {
-    return sessionUser;
-  }
-
-  if (!allowHeaderAuth()) {
-    return null;
-  }
-
-  const rawUserId = headers.get("x-user-id");
-  if (rawUserId) {
-    const parsedId = Number(rawUserId);
-    if (Number.isInteger(parsedId) && parsedId > 0) {
-      const userById = await resolveUserById(parsedId);
-      if (userById) {
-        return userById;
-      }
-    }
-  }
-
-  const userEmail = headers.get("x-user-email");
-  if (!userEmail) {
-    return null;
-  }
-
-  const userByEmail = await prisma.user.findUnique({
-    where: { email: userEmail },
-    select: { id: true, email: true, role: true, fullName: true },
-  });
-
-  return userByEmail;
+  return resolveUserBySessionToken(headers);
 }
 
 /**
@@ -143,9 +105,9 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, role: true, fullName: true },
+    select: { id: true, email: true, role: true, fullName: true, isBlocked: true },
   });
 
-  if (!user || user.role !== payload.role) return null;
+  if (!user || user.role !== payload.role || user.isBlocked) return null;
   return user;
 }

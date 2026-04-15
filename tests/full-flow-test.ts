@@ -77,9 +77,9 @@ async function runFullFlow() {
   } catch (error: any) {
     console.error('\n❌ FLOW BROKEN AT STEP:');
     console.error(error.message);
+    process.exitCode = 1;
   } finally {
     await prisma.$disconnect();
-    process.exit(0);
   }
 }
 

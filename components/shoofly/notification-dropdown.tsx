@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FiBell, FiCheckCircle, FiInfo, FiAlertCircle, FiSettings, FiTrash2, FiExternalLink } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -20,6 +20,15 @@ type Notification = {
 };
 
 type UserRole = "CLIENT" | "VENDOR" | "ADMIN" | "DELIVERY";
+
+function detectUserRoleFromPath(): UserRole {
+  if (typeof window === "undefined") return "CLIENT";
+  const path = window.location.pathname;
+  if (path.startsWith("/admin")) return "ADMIN";
+  if (path.startsWith("/delivery")) return "DELIVERY";
+  if (path.startsWith("/vendor")) return "VENDOR";
+  return "CLIENT";
+}
 
 function getRequestLink(role: UserRole | null, requestId: number): string {
   if (!role) return `/client/requests/${requestId}`;
@@ -43,7 +52,7 @@ function getNotificationsLink(role: UserRole | null): string {
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<"CLIENT" | "VENDOR" | "ADMIN" | "DELIVERY" | null>(null);
+  const [userRole] = useState<UserRole>(detectUserRoleFromPath);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { data: notifications, refresh, loading } = useAsyncData<Notification[]>(
     () => apiFetch("/api/notifications", userRole || "CLIENT"), 
@@ -51,15 +60,6 @@ export function NotificationDropdown() {
   );
 
   const unreadCount = (notifications ?? []).filter(n => !n.isRead).length;
-
-  // Detect user role from URL path
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path.startsWith("/admin")) setUserRole("ADMIN");
-    else if (path.startsWith("/delivery")) setUserRole("DELIVERY");
-    else if (path.startsWith("/vendor")) setUserRole("VENDOR");
-    else setUserRole("CLIENT");
-  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -119,7 +119,7 @@ export function NotificationDropdown() {
       {isOpen && (
         <div className="absolute left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl shadow-slate-900/10 border border-slate-100 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
           {/* Header */}
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                 <FiBell size={16} className="text-primary" />
@@ -168,7 +168,7 @@ export function NotificationDropdown() {
                       n.type === 'SUCCESS' ? 'bg-emerald-100 text-emerald-600' :
                       n.type === 'WARNING' ? 'bg-amber-100 text-amber-600' :
                       n.type === 'ERROR' ? 'bg-rose-100 text-rose-600' :
-                      'bg-blue-100 text-blue-600'
+                      'bg-orange-100 text-orange-600'
                     }`}>
                       {n.type === 'SUCCESS' ? <FiCheckCircle size={16} /> : 
                        n.type === 'WARNING' ? <FiAlertCircle size={16} /> :

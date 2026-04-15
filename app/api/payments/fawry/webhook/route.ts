@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { FAWRY_CONFIG, verifyWebhookSignature } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
 import { depositFunds } from '@/lib/services/transactions';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 /**
  * Fawry Webhook Handler
@@ -156,12 +157,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, received: true });
 
-  } catch (error: any) {
-    logger.error('payment.fawry.webhook.error', { error: error.message, stack: error.stack });
-    return NextResponse.json(
-      { error: 'Webhook processing failed', details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    logError('FAWRY_WEBHOOK', error);
+    logger.error('payment.fawry.webhook.error', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined 
+    });
+    const { response, status } = createErrorResponse(error, 500);
+    return NextResponse.json(response, { status });
   }
 }
 

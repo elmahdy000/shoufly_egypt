@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { RegisterSchema } from "@/lib/validations/auth";
 import { checkRateLimit, getClientIP } from "@/lib/utils/rate-limiter";
+import { createErrorResponse, logError } from "@/lib/utils/error-handler";
 
 // Rate limit: 3 registration attempts per hour per IP
 const REGISTER_RATE_LIMIT = 3;
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Check rate limit
     const clientIP = getClientIP(req.headers);
     const rateLimitKey = `register:${clientIP}`;
-    const rateLimitResult = checkRateLimit(rateLimitKey, REGISTER_RATE_LIMIT, REGISTER_WINDOW_MS);
+    const rateLimitResult = await checkRateLimit(rateLimitKey, REGISTER_RATE_LIMIT, REGISTER_WINDOW_MS);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -43,6 +44,18 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(data.password, 10);
+    
+    // SECURITY: Prevent ADMIN registration via public API
+    // Only CLIENT, VENDOR, and DELIVERY roles can register through public endpoint
+    // ADMIN accounts must be created manually or through a secure admin-only endpoint
+    const allowedRoles = ['CLIENT', 'VENDOR', 'DELIVERY'];
+    if (!allowedRoles.includes(data.role)) {
+      return NextResponse.json(
+        { error: "Invalid role specified" },
+        { status: 400 },
+      );
+    }
+    
     const isProvider = data.role === 'VENDOR' || data.role === 'DELIVERY';
 
     const user = await prisma.user.create({
@@ -80,7 +93,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(user, { status: 201 });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Server error";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    logError('REGISTER', e);
+    const { response, status } = createErrorResponse(e, 400);
+    return NextResponse.json(response, { status });
   }
 }

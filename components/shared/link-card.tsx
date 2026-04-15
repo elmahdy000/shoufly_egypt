@@ -4,10 +4,10 @@ export function LinkCard({ href, title, description }: { href: string; title: st
   return (
     <Link
       href={href}
-      className="block rounded-2xl border border-amber-100 bg-white p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+      className="block rounded-2xl border border-amber-100 dark:border-amber-800 bg-white dark:bg-slate-900 p-5 shadow-sm transition hover:border-amber-400 dark:hover:border-amber-600 hover:shadow-md"
     >
-      <h3 className="text-base font-bold text-stone-900">{title}</h3>
-      <p className="mt-1 text-sm leading-relaxed text-stone-500">{description}</p>
+      <h3 className="text-base font-bold text-stone-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-sm leading-relaxed text-stone-500 dark:text-slate-400">{description}</p>
     </Link>
   );
 }

@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 
+const MIN_WITHDRAWAL_AMOUNT = 50; // Minimum 50 EGP to prevent micro-transactions
+
 function toTwo(value: number): number {
   return Math.round(value * 100) / 100;
 }
@@ -19,6 +21,11 @@ export async function requestWithdrawal(vendorId: number, amount: number) {
 
     const wallet = toTwo(Number(vendor.walletBalance));
     const requested = toTwo(amount);
+
+    // Validate minimum withdrawal amount
+    if (requested < MIN_WITHDRAWAL_AMOUNT) {
+      throw new Error(`Minimum withdrawal amount is ${MIN_WITHDRAWAL_AMOUNT} EGP`);
+    }
 
     if (requested > wallet) {
       throw new Error('Requested withdrawal exceeds available balance');

@@ -1,18 +1,30 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  FiSearch, FiX, FiPhone, FiCalendar, FiDollarSign,
-  FiStar, FiSlash, FiCheckCircle, FiAlertCircle, FiLoader,
-  FiBriefcase, FiTag, FiUsers, FiTrendingUp, FiShield
+  FiSearch,
+  FiRefreshCw,
+  FiUsers,
+  FiShield,
+  FiCheckCircle,
+  FiBarChart2,
+  FiTrendingUp,
+  FiMail,
+  FiPhone,
+  FiClock,
+  FiSlash,
+  FiLoader,
+  FiX,
+  FiExternalLink,
+  FiUser,
 } from "react-icons/fi";
 
-interface VendorCategory {
-  category: { name: string };
-}
+type VendorFilter = "ALL" | "ACTIVE" | "BLOCKED" | "VERIFIED";
+type VendorAction = "block" | "unblock" | "verify" | "unverify";
 
 interface Vendor {
   id: number;
@@ -23,412 +35,443 @@ interface Vendor {
   isVerified: boolean;
   walletBalance: string | number;
   createdAt: string;
-  vendorCategories: VendorCategory[];
 }
 
-function ActionBtn({ icon, label, color, loading, onClick }: {
-  icon: React.ReactNode; label: string; color: string; loading: boolean; onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border font-semibold text-sm transition-all disabled:opacity-60 ${color}`}
-    >
-      {loading ? <FiLoader size={14} className="animate-spin" /> : icon}
-      {label}
-    </button>
-  );
-}
-
-function CategoryTag({ name }: { name: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-semibold rounded-lg border border-slate-200">
-      <FiTag size={9} />
-      {name}
-    </span>
-  );
-}
-
-function VendorInitial({ name }: { name: string }) {
-  const colors = [
-    "bg-amber-100 text-amber-700",
-    "bg-blue-100 text-blue-700",
-    "bg-emerald-100 text-emerald-700",
-    "bg-violet-100 text-violet-700",
-    "bg-rose-100 text-rose-700",
-    "bg-indigo-100 text-indigo-700",
-  ];
-  const idx = (name.charCodeAt(0) ?? 0) % colors.length;
-  return (
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-base shrink-0 ${colors[idx]}`}>
-      {name.charAt(0)}
-    </div>
-  );
+interface ActionMsg {
+  text: string;
+  ok: boolean;
 }
 
 export default function AdminVendorsPage() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<VendorFilter>("ALL");
   const [selected, setSelected] = useState<Vendor | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [actionMsg, setActionMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [actionLoading, setActionLoading] = useState<VendorAction | null>(null);
+  const [actionMsg, setActionMsg] = useState<ActionMsg | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState(new Date());
 
-  const { data: vendors, loading, error, setData } = useAsyncData<Vendor[]>(
-    async () => {
-      const PAGE = 100;
-      const results: Vendor[] = [];
-      let offset = 0;
-      while (true) {
-        const page = await apiFetch<Vendor[]>(
-          `/api/admin/vendors?limit=${PAGE}&offset=${offset}`,
-          "ADMIN"
-        );
-        results.push(...page);
-        if (page.length < PAGE) break;
-        offset += PAGE;
-      }
-      return results;
-    },
+  const { data: vendors, loading, setData, refresh } = useAsyncData<Vendor[]>(
+    async () => apiFetch<Vendor[]>("/api/admin/vendors?limit=100", "ADMIN"),
     []
   );
 
-  const filtered = useMemo(() => {
-    const list = vendors ?? [];
-    if (!search.trim()) return list;
-    const q = search.toLowerCase();
-    return list.filter((v) =>
-      v.fullName?.toLowerCase().includes(q) ||
-      v.email?.toLowerCase().includes(q)
-    );
-  }, [vendors, search]);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setLastSyncedAt(new Date());
+    setTimeout(() => setIsRefreshing(false), 450);
+  }, [refresh]);
 
   const stats = useMemo(() => {
     const all = vendors ?? [];
-    const active = all.filter((v) => v.isActive).length;
-    const totalWallet = all.reduce((sum, v) => sum + Number(v.walletBalance), 0);
-    return { total: all.length, active, totalWallet };
+    const totalWallet = all.reduce((sum, vendor) => sum + Number(vendor.walletBalance), 0);
+    return {
+      total: all.length,
+      active: all.filter((vendor) => vendor.isActive).length,
+      blocked: all.filter((vendor) => !vendor.isActive).length,
+      verified: all.filter((vendor) => vendor.isVerified).length,
+      totalWallet,
+      avgWallet: all.length ? totalWallet / all.length : 0,
+    };
   }, [vendors]);
 
-  async function doAction(vendorId: number, action: string) {
+  const topVendor = useMemo(() => {
+    const all = vendors ?? [];
+    if (!all.length) return null;
+    return [...all].sort((a, b) => Number(b.walletBalance) - Number(a.walletBalance))[0];
+  }, [vendors]);
+
+  const filtered = useMemo(() => {
+    let list = vendors ?? [];
+    if (statusFilter === "ACTIVE") list = list.filter((vendor) => vendor.isActive);
+    if (statusFilter === "BLOCKED") list = list.filter((vendor) => !vendor.isActive);
+    if (statusFilter === "VERIFIED") list = list.filter((vendor) => vendor.isVerified);
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (vendor) =>
+          vendor.fullName.toLowerCase().includes(q) ||
+          vendor.email.toLowerCase().includes(q) ||
+          (vendor.phone ?? "").includes(q)
+      );
+    }
+
+    return list;
+  }, [vendors, statusFilter, search]);
+
+  const filterTabs = useMemo(
+    () => [
+      { id: "ALL" as const, label: "كل التجار", count: stats.total },
+      { id: "ACTIVE" as const, label: "نشط", count: stats.active },
+      { id: "VERIFIED" as const, label: "موثق", count: stats.verified },
+      { id: "BLOCKED" as const, label: "موقوف", count: stats.blocked },
+    ],
+    [stats]
+  );
+
+  async function doAction(vendorId: number, action: VendorAction) {
     setActionLoading(action);
     setActionMsg(null);
     try {
-      await apiFetch<any>(`/api/admin/users/${vendorId}/moderation`, "ADMIN", {
-        method: "PATCH", body: { action },
+      await apiFetch(`/api/admin/users/${vendorId}/moderation`, "ADMIN", {
+        method: "PATCH",
+        body: { action },
       });
+
       const patch: Partial<Vendor> = {};
-      if (action === "BLOCK") patch.isActive = false;
-      if (action === "UNBLOCK") patch.isActive = true;
-      if (action === "VERIFY") patch.isVerified = true;
-      if (action === "UNVERIFY") patch.isVerified = false;
-      setData((prev: Vendor[]) =>
-        (prev ?? []).map((v) => v.id === vendorId ? { ...v, ...patch } : v)
-      );
-      setSelected((prev) => prev?.id === vendorId ? { ...prev, ...patch } as Vendor : prev);
-      setActionMsg({ text: "تم تنفيذ الإجراء بنجاح ✓", ok: true });
-    } catch (e: any) {
-      setActionMsg({ text: e.message ?? "فشل تنفيذ الإجراء", ok: false });
+      if (action === "block") patch.isActive = false;
+      if (action === "unblock") patch.isActive = true;
+      if (action === "verify") patch.isVerified = true;
+      if (action === "unverify") patch.isVerified = false;
+
+      setData((prev) => (prev ?? []).map((vendor) => (vendor.id === vendorId ? { ...vendor, ...patch } : vendor)));
+      setSelected((prev) => (prev?.id === vendorId ? { ...prev, ...patch } : prev));
+      setActionMsg({ text: "تم تحديث حالة التاجر بنجاح", ok: true });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "فشل تنفيذ الإجراء";
+      setActionMsg({ text: message, ok: false });
     } finally {
       setActionLoading(null);
     }
   }
 
   return (
-    <div className="space-y-5 text-right" dir="rtl">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">إدارة التجار</h1>
-        <p className="text-sm text-slate-400 mt-0.5">اضغط على بطاقة التاجر لعرض التفاصيل وتنفيذ الإجراءات</p>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-            <FiUsers size={18} className="text-slate-600" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">إجمالي التجار</p>
-            <p className="text-2xl font-black text-slate-900 leading-none mt-0.5">
-              {loading ? <span className="text-slate-300">—</span> : stats.total}
+    <div className="admin-page admin-page--spacious" dir="rtl">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 lg:p-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-3 py-1 text-xs font-black text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Vendor Command Center
+            </span>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              إدارة <span className="text-primary">التجار</span> باحترافية
+            </h1>
+            <p className="max-w-2xl text-sm font-medium text-slate-600">
+              شاشة موحدة لمتابعة الحسابات، فحص التوثيق، مراقبة المحافظ، وتنفيذ الإجراءات الحرجة بسرعة ومن مكان واحد.
             </p>
           </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
-            <FiTrendingUp size={18} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">التجار النشطون</p>
-            <p className="text-2xl font-black text-amber-600 leading-none mt-0.5">
-              {loading ? <span className="text-slate-300">—</span> : stats.active}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-            <FiDollarSign size={18} className="text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-medium">إجمالي المحافظ</p>
-            <p className="text-xl font-black text-emerald-600 leading-none mt-0.5">
-              {loading ? <span className="text-slate-300">—</span> : formatCurrency(stats.totalWallet)}
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Search */}
-      <div className="relative">
-        <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="ابحث بالاسم أو البريد الإلكتروني..."
-          className="w-full pr-9 pl-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch("")}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-          >
-            <FiX size={14} />
-          </button>
-        )}
-      </div>
-
-      {error && (
-        <div className="p-4 bg-rose-50 text-rose-600 rounded-xl text-sm border border-rose-200">
-          خطأ في تحميل البيانات
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-80 group">
+              <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="ابحث بالاسم، البريد أو رقم الهاتف..."
+                className="h-11 w-full rounded-xl border border-white/70 bg-white/80 pr-11 pl-4 text-sm outline-none transition-all focus:border-primary"
+              />
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/80 bg-white/85 px-4 text-sm font-bold text-slate-700 transition-all hover:border-primary hover:text-primary"
+            >
+              <FiRefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+              تحديث
+            </button>
+          </div>
         </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard label="إجمالي التجار" value={stats.total} icon={FiUsers} />
+          <KpiCard label="نشط حاليًا" value={stats.active} icon={FiTrendingUp} highlight />
+          <KpiCard label="حسابات موثقة" value={stats.verified} icon={FiShield} />
+          <KpiCard label="إجمالي المحافظ" value={formatCurrency(stats.totalWallet)} icon={FiBarChart2} />
+          <KpiCard label="متوسط المحفظة" value={formatCurrency(stats.avgWallet)} icon={FiCheckCircle} />
+        </div>
+      </section>
+
+      {topVendor && (
+        <section className="glass-card p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-black tracking-wide text-slate-400">أعلى رصيد حالي</p>
+              <p className="text-lg font-black text-slate-900">{topVendor.fullName}</p>
+              <p className="text-xs font-bold text-slate-500">{topVendor.email}</p>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-2">
+              <FiBarChart2 className="text-primary" size={16} />
+              <span className="font-jakarta text-sm font-black text-primary">
+                {formatCurrency(Number(topVendor.walletBalance))}
+              </span>
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* Grid + Detail Panel */}
-      <div className="flex gap-5 items-start">
-        {/* Card Grid */}
-        <div className={`flex-1 min-w-0 ${selected ? "hidden lg:block" : ""}`}>
+      <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-100 bg-white p-2 shadow-sm">
+        {filterTabs.map((tab) => {
+          const isActive = statusFilter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id)}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition-all ${
+                isActive
+                  ? "bg-primary text-white"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              {tab.label}
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
+                  isActive ? "bg-white/25 text-white" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+        <span className="mr-auto text-xs font-bold text-slate-400">
+          آخر تحديث: {lastSyncedAt.toLocaleTimeString("ar-EG")}
+        </span>
+      </section>
+
+      <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
+        <div className="flex-1">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-slate-100 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3.5 bg-slate-100 rounded w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2" />
-                    </div>
-                  </div>
-                  <div className="h-3 bg-slate-100 rounded w-2/3" />
-                  <div className="h-8 bg-slate-100 rounded-xl" />
-                </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="h-56 animate-pulse rounded-2xl border border-slate-100 bg-slate-50" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-2xl border border-slate-200">
-              <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
-                <FiBriefcase size={24} className="text-slate-300" />
-              </div>
-              <p className="text-slate-500 font-semibold text-sm">لا يوجد تجار</p>
-              {search && <p className="text-slate-400 text-xs">جرّب تغيير كلمة البحث</p>}
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-20 text-center">
+              <FiUsers size={48} className="mx-auto mb-4 text-slate-300" />
+              <p className="text-sm font-black text-slate-400">لا يوجد تجار مطابقون لخيارات البحث الحالية.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((v) => {
-                const cats = v.vendorCategories?.map((vc) => vc.category.name) ?? [];
-                const isSelected = selected?.id === v.id;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => { setSelected(v); setActionMsg(null); }}
-                    className={`w-full text-right bg-white rounded-2xl border p-5 flex flex-col gap-3 transition-all hover:border-slate-300 hover:bg-stone-50 ${
-                      isSelected ? "border-primary ring-1 ring-primary/20" : "border-slate-200"
-                    }`}
-                  >
-                    {/* Top Row */}
-                    <div className="flex items-start gap-3">
-                      <VendorInitial name={v.fullName} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-bold text-slate-900 text-sm leading-tight truncate">{v.fullName}</p>
-                          {v.isVerified && (
-                            <FiShield size={12} className="text-emerald-500 shrink-0" title="موثّق" />
-                          )}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+              {filtered.map((vendor) => (
+                <motion.button
+                  key={vendor.id}
+                  whileHover={{ y: -4 }}
+                  onClick={() => {
+                    setSelected(vendor);
+                    setActionMsg(null);
+                  }}
+                  className={`glass-card p-5 text-right transition-all ${
+                    selected?.id === vendor.id ? "ring-2 ring-primary/35 border-primary/40" : ""
+                  }`}
+                >
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-black transition-all ${
+                          selected?.id === vendor.id
+                            ? "bg-primary text-white"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {vendor.fullName.charAt(0)}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-slate-900">{vendor.fullName}</p>
+                        <div className="flex items-center gap-2">
+                          <StatusPill
+                            text={vendor.isActive ? "نشط" : "موقوف"}
+                            tone={vendor.isActive ? "success" : "danger"}
+                          />
+                          {vendor.isVerified && <StatusPill text="موثق" tone="brand" />}
                         </div>
-                        <p className="text-[11px] text-slate-400 truncate mt-0.5">{v.email}</p>
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg shrink-0 mt-0.5 ${
-                        v.isActive ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-rose-50 text-rose-600 border border-rose-200"
-                      }`}>
-                        {v.isActive ? "نشط" : "موقوف"}
-                      </span>
                     </div>
+                  </div>
 
-                    {/* Wallet */}
-                    <div className="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-xs text-slate-400">رصيد المحفظة</span>
-                      <span className="font-black text-slate-900 text-sm">{formatCurrency(Number(v.walletBalance))}</span>
+                  <div className="space-y-2 border-t border-slate-100 pt-3 text-xs font-bold text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <FiMail size={13} className="text-slate-400" />
+                      <span className="truncate">{vendor.email}</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <FiPhone size={13} className="text-slate-400" />
+                      <span>{vendor.phone || "غير متوفر"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FiClock size={13} className="text-slate-400" />
+                      <span>{formatDate(vendor.createdAt)}</span>
+                    </div>
+                  </div>
 
-                    {/* Categories */}
-                    {cats.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {cats.slice(0, 3).map((c) => <CategoryTag key={c} name={c} />)}
-                        {cats.length > 3 && (
-                          <span className="text-[10px] text-slate-400 font-semibold px-1.5 self-center">+{cats.length - 3}</span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-slate-300 italic">لا توجد تصنيفات</p>
-                    )}
-                  </button>
-                );
-              })}
+                  <div className="mt-4 flex items-center justify-between rounded-xl border border-primary/15 bg-primary/5 px-3 py-2">
+                    <span className="text-xs font-black text-slate-500">الرصيد الحالي</span>
+                    <span className="font-jakarta text-sm font-black text-primary">
+                      {formatCurrency(Number(vendor.walletBalance))}
+                    </span>
+                  </div>
+                </motion.button>
+              ))}
             </div>
-          )}
-          {!loading && vendors && (
-            <p className="text-xs text-slate-400 mt-3 text-center">
-              {filtered.length} من أصل {vendors.length} تاجر
-            </p>
           )}
         </div>
 
-        {/* Detail Panel */}
-        {selected && (
-          <div
-            className="w-full lg:w-[380px] shrink-0 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col"
-            style={{ maxHeight: "calc(100vh - 200px)" }}
-          >
-            {/* Panel Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 shrink-0">
-              <h3 className="font-bold text-slate-800 text-sm">ملف التاجر</h3>
-              <button
-                onClick={() => setSelected(null)}
-                className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors"
-              >
-                <FiX size={16} />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto p-4 space-y-4 flex-1">
-              {/* Profile Hero */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
-                <VendorInitial name={selected.fullName} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="font-bold text-slate-900 truncate">{selected.fullName}</h4>
-                    {selected.isVerified && (
-                      <FiShield size={13} className="text-emerald-500 shrink-0" />
-                    )}
+        <AnimatePresence>
+          {selected && (
+            <motion.aside
+              initial={{ x: 28, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 28, opacity: 0 }}
+              className="w-full xl:sticky xl:top-24 xl:w-[430px]"
+            >
+              <div className="glass-card p-6 sm:p-7 space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <FiUser size={22} />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-slate-900">لوحة فحص التاجر</h2>
+                      <p className="text-xs font-bold text-slate-500">Vendor Profile Inspector</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 truncate mt-0.5">{selected.email}</p>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${
-                      selected.isActive
-                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : "bg-rose-50 text-rose-600 border-rose-200"
-                    }`}>
-                      {selected.isActive ? "✓ نشط" : "✗ موقوف"}
-                    </span>
-                    {selected.isVerified && (
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200">
-                        ✓ موثّق
-                      </span>
-                    )}
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <FiX size={18} />
+                  </button>
+                </div>
+
+                <div className="rounded-2xl border border-primary/25 bg-primary p-5 text-white">
+                  <p className="text-xs font-black text-white/80">إجمالي محفظة التاجر</p>
+                  <p className="mt-2 font-jakarta text-3xl font-black">
+                    {formatCurrency(Number(selected.walletBalance))}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <StatusPill
+                      text={selected.isActive ? "نشط تشغيليًا" : "متوقف تشغيليًا"}
+                      tone={selected.isActive ? "soft-success" : "soft-danger"}
+                    />
+                    <StatusPill text={selected.isVerified ? "موثق" : "غير موثق"} tone="soft-light" />
                   </div>
                 </div>
-              </div>
 
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl col-span-2">
-                  <p className="text-xs text-amber-600/70 flex items-center gap-1 mb-1">
-                    <FiDollarSign size={11} />رصيد المحفظة
-                  </p>
-                  <p className="font-black text-amber-700 text-xl">{formatCurrency(Number(selected.walletBalance))}</p>
+                <div className="space-y-3">
+                  <DetailRow label="الاسم" value={selected.fullName} />
+                  <DetailRow label="البريد" value={selected.email} />
+                  <DetailRow label="الهاتف" value={selected.phone || "غير متوفر"} />
+                  <DetailRow label="تاريخ الانضمام" value={formatDate(selected.createdAt)} />
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mb-1">
-                    <FiCalendar size={11} />تاريخ الانضمام
-                  </p>
-                  <p className="font-bold text-slate-800 text-xs">
-                    {new Date(selected.createdAt).toLocaleDateString("ar-EG")}
-                  </p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <p className="text-xs text-slate-400 mb-1">رقم التاجر</p>
-                  <p className="font-mono font-black text-slate-900">#{selected.id}</p>
-                </div>
-                {selected.phone && (
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
-                    <p className="text-xs text-slate-400 flex items-center gap-1 mb-1">
-                      <FiPhone size={11} />رقم الهاتف
-                    </p>
-                    <p className="font-bold text-slate-800 text-sm" dir="ltr">{selected.phone}</p>
+
+                {actionMsg && (
+                  <div
+                    className={`rounded-xl border px-4 py-3 text-xs font-black ${
+                      actionMsg.ok
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-rose-200 bg-rose-50 text-rose-700"
+                    }`}
+                  >
+                    {actionMsg.text}
                   </div>
                 )}
-              </div>
 
-              {/* Categories */}
-              {selected.vendorCategories?.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">التصنيفات</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selected.vendorCategories.map((vc) => (
-                      <CategoryTag key={vc.category.name} name={vc.category.name} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Feedback */}
-              {actionMsg && (
-                <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                  actionMsg.ok
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border border-rose-200"
-                }`}>
-                  {actionMsg.ok ? <FiCheckCircle size={13} /> : <FiAlertCircle size={13} />}
-                  {actionMsg.text}
-                </div>
-              )}
-
-              {/* Moderation Actions */}
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">إجراءات الإشراف</p>
-                <div className="space-y-2">
-                  <ActionBtn
-                    icon={<FiStar size={15} />}
-                    label={selected.isVerified ? "إلغاء توثيق الحساب" : "توثيق حساب التاجر"}
-                    color={selected.isVerified
-                      ? "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                      : "bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600"
-                    }
-                    loading={actionLoading === (selected.isVerified ? "UNVERIFY" : "VERIFY")}
-                    onClick={() => doAction(selected.id, selected.isVerified ? "UNVERIFY" : "VERIFY")}
+                <div className="grid grid-cols-2 gap-3">
+                  <ActionButton
+                    label={selected.isVerified ? "إلغاء التوثيق" : "توثيق الحساب"}
+                    icon={FiShield}
+                    loading={actionLoading === "verify" || actionLoading === "unverify"}
+                    onClick={() => doAction(selected.id, selected.isVerified ? "unverify" : "verify")}
                   />
-                  {selected.isActive ? (
-                    <ActionBtn
-                      icon={<FiSlash size={15} />}
-                      label="تعليق الحساب"
-                      color="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
-                      loading={actionLoading === "BLOCK"}
-                      onClick={() => doAction(selected.id, "BLOCK")}
-                    />
-                  ) : (
-                    <ActionBtn
-                      icon={<FiCheckCircle size={15} />}
-                      label="إعادة تفعيل الحساب"
-                      color="bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
-                      loading={actionLoading === "UNBLOCK"}
-                      onClick={() => doAction(selected.id, "UNBLOCK")}
-                    />
-                  )}
+                  <ActionButton
+                    label={selected.isActive ? "إيقاف الحساب" : "إعادة التنشيط"}
+                    icon={FiSlash}
+                    loading={actionLoading === "block" || actionLoading === "unblock"}
+                    danger={selected.isActive}
+                    onClick={() => doAction(selected.id, selected.isActive ? "block" : "unblock")}
+                  />
                 </div>
+
+                <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition-all hover:border-primary hover:text-primary">
+                  عرض السجل المالي <FiExternalLink size={15} />
+                </button>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.aside>
+          )}
+        </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+type KpiCardProps = {
+  label: string;
+  value: string | number;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  highlight?: boolean;
+};
+
+function KpiCard({ label, value, icon: Icon, highlight }: KpiCardProps) {
+  return (
+    <div
+      className={`rounded-2xl border px-4 py-4 sm:px-5 ${
+        highlight ? "border-primary/30 bg-white shadow-md" : "border-white/70 bg-white/75"
+      }`}
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-black text-slate-500">{label}</p>
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+            highlight ? "bg-primary text-white" : "bg-primary/10 text-primary"
+          }`}
+        >
+          <Icon size={16} />
+        </div>
+      </div>
+      <p className={`font-jakarta text-xl font-black ${highlight ? "text-primary" : "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
+type StatusPillTone = "success" | "danger" | "brand" | "soft-success" | "soft-danger" | "soft-light";
+
+function StatusPill({ text, tone }: { text: string; tone: StatusPillTone }) {
+  const toneClass: Record<StatusPillTone, string> = {
+    success: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    danger: "bg-rose-50 text-rose-700 border-rose-100",
+    brand: "bg-primary/10 text-primary border-primary/20",
+    "soft-success": "bg-white/20 text-white border-white/25",
+    "soft-danger": "bg-white/20 text-white border-white/25",
+    "soft-light": "bg-white/20 text-white border-white/30",
+  };
+
+  return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${toneClass[tone]}`}>{text}</span>;
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+      <span className="text-xs font-black text-slate-500">{label}</span>
+      <span className="text-xs font-bold text-slate-800">{value}</span>
+    </div>
+  );
+}
+
+type ActionButtonProps = {
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  loading: boolean;
+  onClick: () => void;
+  danger?: boolean;
+};
+
+function ActionButton({ label, icon: Icon, loading, onClick, danger }: ActionButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      className={`rounded-xl border px-3 py-4 text-center transition-all ${
+        danger
+          ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+          : "border-slate-200 bg-white text-slate-700 hover:border-primary hover:text-primary"
+      }`}
+    >
+      <div className="mb-2 flex justify-center">
+        {loading ? <FiLoader className="animate-spin" size={16} /> : <Icon size={16} />}
+      </div>
+      <p className="text-xs font-black">{label}</p>
+    </button>
   );
 }
