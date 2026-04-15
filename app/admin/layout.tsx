@@ -200,8 +200,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-background font-tajawal flex" dir="rtl">
-      <aside className="hidden lg:flex w-72 shrink-0 sticky top-0 h-screen">
-        <SidebarContent />
+      <aside className="hidden lg:flex lg:w-[max(18rem,calc(100vw-1400px))] shrink-0 sticky top-0 h-screen justify-end bg-white">
+        <div className="w-72 h-full">
+          <SidebarContent />
+        </div>
       </aside>
 
       {sidebarOpen && (
