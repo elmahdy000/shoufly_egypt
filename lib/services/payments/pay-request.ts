@@ -69,20 +69,14 @@ export async function payRequest(requestId: number, clientId: number) {
       logger.info('payment.request.insufficient_redirecting', { requestId, amountToPay });
       
       // In a real scenario, we create a specialized transaction for this request
-      const pendingTx = await tx.transaction.create({
-        data: {
-          userId: clientId,
-          requestId: request.id,
-          amount: amountToPay,
-          type: 'WALLET_TOPUP', 
-          description: `دفع مباشر للأوردر #${request.id} (انتظار التأكيد)`
-        }
-      });
+      // Pass a pending session ID formatted properly for the payment gateway.
+      // The actual transaction record will be created in the webhook upon successful payment confirmation.
+      const pendingSessionId = `pending-${crypto.randomUUID()}`;
 
       return {
         insufficientBalance: true,
         redirectUrl: getPaymentRedirectUrl(
-          String(pendingTx.id), 
+          pendingSessionId, 
           amountToPay, 
           String(request.id)
         ),

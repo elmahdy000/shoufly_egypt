@@ -12,8 +12,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "200", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const status = searchParams.get("status") || undefined;
 
-    const requests = await listAdminRequests(limit, offset);
+    const requests = await listAdminRequests(limit, offset, status);
     return NextResponse.json(requests);
   } catch (error: unknown) {
     logError('ADMIN_REQUESTS', error);

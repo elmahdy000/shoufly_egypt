@@ -1,10 +1,10 @@
 /**
  * CSRF (Cross-Site Request Forgery) Protection
  * Implements Double Submit Cookie pattern with token validation
+ * Refactored to be compatible with Edge Runtime (Web Crypto API)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 
 // Cookie name for CSRF token
 const CSRF_COOKIE_NAME = 'csrf_token';
@@ -15,10 +15,29 @@ const CSRF_HEADER_NAME = 'x-csrf-token';
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
 /**
- * Generate a cryptographically secure CSRF token
+ * Generate a cryptographically secure CSRF token using Web Crypto API
  */
 export function generateCsrfToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Timing-safe comparison using Web Crypto API or constant-time loop
+ * Compatible with Edge Runtime
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 /**
@@ -30,7 +49,6 @@ function requiresCsrfProtection(method: string): boolean {
 
 /**
  * Extract CSRF token from request
- * Checks both header and cookie
  */
 function extractCsrfToken(req: NextRequest): { cookieToken: string | null; headerToken: string | null } {
   const cookieToken = req.cookies.get(CSRF_COOKIE_NAME)?.value || null;
@@ -41,35 +59,23 @@ function extractCsrfToken(req: NextRequest): { cookieToken: string | null; heade
 
 /**
  * Validate CSRF token
- * Implements Double Submit Cookie pattern
  */
 export function validateCsrfToken(req: NextRequest): boolean {
-  // Skip validation for safe methods
   if (!requiresCsrfProtection(req.method)) {
     return true;
   }
 
   const { cookieToken, headerToken } = extractCsrfToken(req);
 
-  // Both tokens must be present
   if (!cookieToken || !headerToken) {
     return false;
   }
 
-  // Tokens must match (timing-safe comparison)
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(cookieToken),
-      Buffer.from(headerToken)
-    );
-  } catch {
-    return false;
-  }
+  return timingSafeEqual(cookieToken, headerToken);
 }
 
 /**
  * Create CSRF token and set cookie
- * Returns the token to be sent in response headers
  */
 export function createCsrfToken(response: NextResponse): string {
   const token = generateCsrfToken();
@@ -77,12 +83,8 @@ export function createCsrfToken(response: NextResponse): string {
   const isReplit = !!process.env.REPLIT_DOMAINS;
   const isProduction = process.env.NODE_ENV === 'production';
 
-  // Cookie settings must match login route exactly
-  // - Replit: Requires SameSite=None + Secure for iframe support
-  // - Production: SameSite=Lax + Secure
-  // - Local dev: SameSite=Lax (no Secure for HTTP localhost)
   response.cookies.set(CSRF_COOKIE_NAME, token, {
-    httpOnly: false, // Must be readable by JS for double-submit pattern
+    httpOnly: false,
     secure: isReplit || isProduction,
     sameSite: isReplit ? 'none' : 'lax',
     maxAge: 60 * 60 * 24, // 24 hours
@@ -94,24 +96,17 @@ export function createCsrfToken(response: NextResponse): string {
 
 /**
  * Refresh CSRF token on each request
- * This prevents token fixation attacks
  */
 export function refreshCsrfToken(req: NextRequest, response: NextResponse): NextResponse {
-  // Skip for safe methods
   if (!requiresCsrfProtection(req.method)) {
     const token = req.cookies.get(CSRF_COOKIE_NAME)?.value;
-    
-    // If no token exists or token is old, create a new one
     if (!token) {
       createCsrfToken(response);
     }
-    
     return response;
   }
   
-  // For state-changing methods, validate and rotate token
   if (validateCsrfToken(req)) {
-    // Valid token - rotate for security
     createCsrfToken(response);
   }
   
@@ -119,8 +114,7 @@ export function refreshCsrfToken(req: NextRequest, response: NextResponse): Next
 }
 
 /**
- * CSRF protection middleware
- * Returns 403 if CSRF token is invalid
+ * CSRF protection middleware component
  */
 export function csrfProtection(req: NextRequest): { valid: boolean; response?: NextResponse } {
   if (!requiresCsrfProtection(req.method)) {
@@ -138,7 +132,6 @@ export function csrfProtection(req: NextRequest): { valid: boolean; response?: N
         }
       }
     );
-    // Set a new CSRF token so client can retry
     createCsrfToken(response);
     return { valid: false, response };
   }

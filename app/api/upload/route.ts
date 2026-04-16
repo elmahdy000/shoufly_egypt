@@ -5,7 +5,10 @@ import { checkRateLimit } from '@/lib/utils/rate-limiter';
 import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 import path from 'path';
 
-// Allowed file types and their MIME types
+/**
+ * Enhanced Upload Route with VPS Persistence Support
+ */
+
 const ALLOWED_FILE_TYPES = {
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/png': ['.png'],
@@ -14,137 +17,80 @@ const ALLOWED_FILE_TYPES = {
   'application/pdf': ['.pdf'],
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-// Dangerous extensions to block
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const DANGEROUS_EXTENSIONS = ['.exe', '.php', '.jsp', '.asp', '.aspx', '.sh', '.bat', '.cmd', '.js', '.vbs', '.ps1'];
 
 function sanitizeFilename(filename: string): string {
-  // Remove path traversal attempts
   const basename = path.basename(filename);
-  
-  // Remove dangerous characters but keep safe ones
   const sanitized = basename.replace(/[^a-zA-Z0-9.-]/g, '_');
-  
-  // Get extension
   const ext = path.extname(sanitized).toLowerCase();
   const nameWithoutExt = path.basename(sanitized, ext);
-  
-  // Limit filename length
-  const maxNameLength = 100;
-  const truncatedName = nameWithoutExt.substring(0, maxNameLength);
-  
-  return `${truncatedName}${ext}`;
+  return `${nameWithoutExt.substring(0, 100)}${ext}`;
 }
 
 function validateFileType(mimeType: string, filename: string): boolean {
   const ext = path.extname(filename).toLowerCase();
-  
-  // Check if extension is dangerous
-  if (DANGEROUS_EXTENSIONS.includes(ext)) {
-    return false;
-  }
-  
-  // Check if MIME type is allowed and extension matches
+  if (DANGEROUS_EXTENSIONS.includes(ext)) return false;
   const allowedExts = ALLOWED_FILE_TYPES[mimeType as keyof typeof ALLOWED_FILE_TYPES];
-  if (!allowedExts) {
-    return false;
-  }
-  
-  return allowedExts.includes(ext);
+  return !!(allowedExts && allowedExts.includes(ext));
 }
 
-// Allowed roles for file upload
 const ALLOWED_ROLES = ['CLIENT', 'VENDOR', 'ADMIN', 'DELIVERY'];
-
-// Rate limit: 10 uploads per minute per user
-const UPLOAD_RATE_LIMIT = 10;
-const UPLOAD_WINDOW_MS = 60000; // 1 minute
+const UPLOAD_RATE_LIMIT = 20;
+const UPLOAD_WINDOW_MS = 60000;
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser(request.headers);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Rate limit check per user (not just IP)
     const rateLimitKey = `upload:${user.id}`;
     const rateLimitResult = await checkRateLimit(rateLimitKey, UPLOAD_RATE_LIMIT, UPLOAD_WINDOW_MS);
     
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: 'Too many upload attempts. Please try again later.' },
-        { 
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': String(rateLimitResult.limit),
-            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-            'X-RateLimit-Reset': String(rateLimitResult.resetTime),
-          }
-        },
-      );
+      return NextResponse.json({ error: 'Too many uploads' }, { status: 429 });
     }
 
-    // Check if user role is allowed to upload
     if (!ALLOWED_ROLES.includes(user.role)) {
-      return NextResponse.json({ error: 'Forbidden - Insufficient permissions' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
-    }
+    if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 });
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Validate file size
     if (buffer.length > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File too large' }, { status: 400 });
     }
 
-    // Validate file type
     if (!validateFileType(file.type, file.name)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Allowed types: JPG, PNG, GIF, WebP, PDF' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
-    // Create unique filename with sanitization
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const sanitizedName = sanitizeFilename(file.name);
-    const filename = `${uniqueSuffix}-${sanitizedName}`;
+    const filename = `${uniqueSuffix}-${sanitizeFilename(file.name)}`;
     
-    // Setup upload directory
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
+    // PERSISTENCE LOGIC
+    const externalUploadDir = process.env.UPLOAD_PATH;
+    const uploadDir = externalUploadDir 
+      ? path.isAbsolute(externalUploadDir) ? externalUploadDir : path.join(process.cwd(), externalUploadDir)
+      : path.join(process.cwd(), 'public/uploads');
     
-    try {
-        await mkdir(uploadDir, { recursive: true });
-    } catch(e) {
-        // directory exists
-    }
-
+    await mkdir(uploadDir, { recursive: true });
     const filepath = path.join(uploadDir, filename);
-
-    // Save to local filesystem
     await writeFile(filepath, buffer);
 
-    // Return the public URL
-    const fileUrl = `/uploads/${filename}`;
+    // Dynamic file URL pointing to our Media Proxy for VPS persistence
+    const fileUrl = `/api/media/${filename}`;
 
     return NextResponse.json({ 
         success: true, 
         fileUrl,
-        fileName: file.name,
-        fileSize: buffer.length,
-        mimeType: file.type
+        fileName: file.name
     });
 
   } catch (error: unknown) {

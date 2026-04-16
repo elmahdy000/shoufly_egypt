@@ -86,19 +86,19 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b-2 border-border/50 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 dir-rtl">
-        <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-            <Zap size={20} strokeWidth={2.5} />
+        <div className="flex items-center gap-4 group">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
+            <Zap size={22} strokeWidth={2.5} />
           </div>
-          <div className="space-y-1">
-            <h1 className="text-lg font-black leading-none text-slate-900 sm:text-xl">{title}</h1>
-            {subtitle && <p className="text-[11px] font-bold text-slate-500">{subtitle}</p>}
+          <div className="space-y-0.5">
+            <h1 className="text-lg font-black leading-none text-slate-900 sm:text-xl tracking-tight">{title}</h1>
+            {subtitle && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{subtitle}</p>}
           </div>
         </div>
 
-        <nav className="hidden xl:flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+        <nav className="hidden xl:flex items-center gap-1.5 rounded-[20px] bg-muted/30 p-1.5 border border-border/40 backdrop-blur-sm">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -106,10 +106,10 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-all ${
+                className={`inline-flex items-center gap-2.5 rounded-xl px-5 py-2.5 text-xs font-black transition-all ${
                   active
-                    ? "bg-primary text-white"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
+                    : "text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900"
                 }`}
               >
                 <Icon size={16} />
@@ -119,46 +119,46 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/messages"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all hover:border-primary hover:text-primary"
-            title="الرسائل"
-            aria-label="الرسائل"
-          >
-            <MessageSquare size={18} />
-          </Link>
+        <div className="flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2.5">
+            <Link
+              href="/messages"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-slate-400 transition-all hover:border-primary hover:text-primary hover:shadow-lg hover:shadow-primary/5 active:scale-90"
+              title="الرسائل"
+            >
+              <MessageSquare size={18} />
+            </Link>
 
-          <NotificationDropdown />
+            <NotificationDropdown />
+          </div>
 
           <Link
             href={navConfig.profileHref}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all active:scale-90 ${
               isActivePath(pathname, navConfig.profileHref)
-                ? "border-primary bg-primary text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary"
+                ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
+                : "border-border bg-white text-slate-400 hover:border-primary hover:text-primary"
             }`}
             title="الملف الشخصي"
-            aria-label="الملف الشخصي"
           >
             <User size={18} />
           </Link>
 
           <button
             onClick={handleLogout}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-600 transition-all hover:bg-rose-600 hover:text-white"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-500 transition-all hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-100 active:scale-90"
             title="تسجيل الخروج"
-            aria-label="تسجيل الخروج"
           >
-            <LogOut size={17} />
+            <LogOut size={18} />
           </button>
 
           {actions}
         </div>
       </div>
 
-      <div className="xl:hidden border-t border-slate-100 bg-white/80 px-4 py-2 sm:px-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* Mobile Sub-Nav: High Fidelity Glass */}
+      <div className="xl:hidden border-t border-border/30 bg-white/40 px-4 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -166,10 +166,10 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black transition-all ${
                   active
-                    ? "bg-primary text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
+                    : "bg-white border border-border/60 text-slate-500"
                 }`}
               >
                 <Icon size={14} />

@@ -1,7 +1,9 @@
 import { prisma } from '@/lib/prisma';
 
-export async function listAdminUsers(limit = 20, offset = 0) {
+export async function listAdminUsers(limit = 20, offset = 0, role?: string) {
+  const where = role ? { role: role as any } : {};
   return prisma.user.findMany({
+    where,
     select: {
       id: true,
       fullName: true,

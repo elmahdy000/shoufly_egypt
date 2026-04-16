@@ -88,7 +88,7 @@ export async function checkRateLimit(
   windowMs: number = 60000 // 1 minute default
 ): Promise<RateLimitResult> {
   // Check if Redis is available
-  const redisAvailable = await isRedisAvailable();
+  const redisAvailable = isRedisAvailable;
   
   if (redisAvailable) {
     return checkRateLimitRedis(key, maxRequests, windowMs);

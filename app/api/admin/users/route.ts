@@ -12,8 +12,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const role = searchParams.get('role') || undefined;
 
-    const users = await listAdminUsers(limit, offset);
+    const users = await listAdminUsers(limit, offset, role);
     return ok(users);
 
   } catch (error) {

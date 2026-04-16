@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { createNotification } from '../notifications/create-notification';
+import { NotificationType } from '@/app/generated/prisma';
 
 export async function cancelRequest(params: {
   requestId: number;
@@ -17,6 +19,11 @@ export async function cancelRequest(params: {
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           take: 1,
           select: { status: true },
+        },
+        bids: {
+          select: {
+            vendorId: true,
+          },
         },
       },
     });
@@ -49,8 +56,34 @@ export async function cancelRequest(params: {
       data: { status: 'CLOSED_CANCELLED' },
     });
 
-    logger.info('request.cancel.completed', { requestId, userId });
+    // Notify all vendors who participated
+    const vendorIds = Array.from(new Set(request.bids.map((b) => b.vendorId)));
+    
+    // We do notifications outside the transaction return or as a background task
+    // but here we can just loop and use the service.
+    // Note: createNotification is async and uses prisma directly.
+    // To be safe and transactional, we should ideally have a tx-compatible createNotification,
+    // but for now, we'll trigger them after the transaction successfully completes.
+    
+    // We'll return the updated request and the list of vendors to notify
+    return { updated, vendorIds };
+  }).then(async ({ updated, vendorIds }) => {
+    // Post-transaction notifications
+    for (const vendorId of vendorIds) {
+      try {
+        await createNotification({
+          userId: vendorId,
+          type: NotificationType.REQUEST_CANCELLED,
+          title: 'طلب ملغي',
+          message: `تم إلغاء الطلب رقم #${requestId} من قبل العميل.`,
+          requestId,
+        });
+      } catch (err) {
+        logger.error('request.cancel.notification.failed', { vendorId, requestId, err });
+      }
+    }
 
+    logger.info('request.cancel.completed', { requestId, userId });
     return updated;
   });
 }

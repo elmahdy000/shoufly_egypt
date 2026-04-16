@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { CreateBidInput } from '@/lib/validations/bid';
 import { logger } from '@/lib/utils/logger';
 
-const COMMISSION_PERCENTAGE = 15; // From platform settings
 
 export async function createBid(vendorId: number, data: CreateBidInput) {
   logger.info('bid.submitted.started', { vendorId, requestId: data.requestId });

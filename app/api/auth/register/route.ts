@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
          await prisma.notification.create({
            data: {
              userId: admin.id,
-             type: 'NEW_REQUEST',
+             type: 'WITHDRAWAL_REQUESTED', // Using this since NotificationType does not have a VENDOR_ONBOARD type
              title: 'طلب انضمام مورد جديد',
              message: `المورد ${user.fullName} سجل في المنصة وينتظر التفعيل.`,
            }

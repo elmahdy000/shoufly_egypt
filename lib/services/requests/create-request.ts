@@ -6,6 +6,16 @@ import { ImageInput } from '../media/attachment';
 export async function createRequest(clientId: number, data: CreateRequestInput & { images?: ImageInput[] }) {
   logger.info('request.created.started', { clientId, categoryId: data.categoryId });
 
+  // 0. Security check: Is user active?
+  const client = await prisma.user.findUnique({
+    where: { id: clientId },
+    select: { isActive: true, isBlocked: true }
+  });
+
+  if (!client || !client.isActive || client.isBlocked) {
+    throw new Error('Account is inactive or blocked. Cannot create requests.');
+  }
+
   // 1. Enforce Sub-category selection
   const chosenCategory = await prisma.category.findUnique({
     where: { id: data.categoryId },

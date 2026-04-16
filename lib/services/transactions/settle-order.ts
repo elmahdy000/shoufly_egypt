@@ -127,7 +127,7 @@ export async function settleOrder(requestId: number) {
               userId: request.assignedDeliveryAgentId,
               type: 'PAYMENT_RECEIVED',
               title: 'تم استلام أجر التوصيل',
-              message: `تم إضافة ${riderPayout} ج.م لمحفظتك مقابل الطلب #${requestId}`,
+              message: `تم إضافة ${riderPayout.toNumber()} ج.م لمحفظتك مقابل الطلب #${requestId}`,
             },
         });
     }

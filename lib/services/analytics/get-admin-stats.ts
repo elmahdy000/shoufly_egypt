@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { startOfMonth, endOfMonth, subMonths, startOfDay, endOfDay } from 'date-fns';
+import Decimal from 'decimal.js';
 
 export async function getAdminStats() {
   const now = new Date();
@@ -19,10 +20,10 @@ export async function getAdminStats() {
     where: { type: 'REFUND' }
   });
   
-  // Net commission = Gross - Refunds
-  const grossCommission = Number(totalFinancials._sum.amount || 0);
-  const refundsAmount = Number(totalRefunds._sum.amount || 0);
-  const netCommission = Math.max(0, grossCommission - refundsAmount);
+  // Precise math with Decimal
+  const grossCommission = new Decimal(totalFinancials._sum.amount?.toString() || '0');
+  const refundsAmount = new Decimal(totalRefunds._sum.amount?.toString() || '0');
+  const netCommission = Decimal.max(0, grossCommission.minus(refundsAmount));
 
   const gmv = await prisma.transaction.aggregate({
     _sum: { amount: true },
@@ -92,39 +93,40 @@ export async function getAdminStats() {
   }).reverse();
 
   const trends = await Promise.all(last7Days.map(async (day) => {
-      const count = await prisma.request.count({
-          where: { createdAt: { gte: day.start, lte: day.end } }
-      });
-      const revenue = await prisma.transaction.aggregate({
-          _sum: { amount: true },
-          where: { 
-              type: 'ADMIN_COMMISSION',
-              createdAt: { gte: day.start, lte: day.end }
-          }
-      });
+      const [count, revenue, dayRefunds] = await Promise.all([
+          prisma.request.count({
+              where: { createdAt: { gte: day.start, lte: day.end } }
+          }),
+          prisma.transaction.aggregate({
+              _sum: { amount: true },
+              where: { 
+                  type: 'ADMIN_COMMISSION',
+                  createdAt: { gte: day.start, lte: day.end }
+              }
+          }),
+          prisma.transaction.aggregate({
+              _sum: { amount: true },
+              where: { 
+                  type: 'REFUND',
+                  createdAt: { gte: day.start, lte: day.end }
+              }
+          })
+      ]);
       
-      const dayRefunds = await prisma.transaction.aggregate({
-          _sum: { amount: true },
-          where: { 
-              type: 'REFUND',
-              createdAt: { gte: day.start, lte: day.end }
-          }
-      });
-      
-      const netRevenue = Math.max(0, Number(revenue._sum.amount || 0) - Number(dayRefunds._sum.amount || 0));
+      const netRevenue = Decimal.max(0, new Decimal(revenue._sum.amount?.toString() || '0').minus(new Decimal(dayRefunds._sum.amount?.toString() || '0')));
       
       return {
           day: day.label,
           requests: count,
-          revenue: netRevenue
+          revenue: netRevenue.toNumber()
       };
   }));
 
   return {
     overview: {
-      totalAdminCommission: netCommission,
-      grossCommission: grossCommission,
-      totalRefunds: refundsAmount,
+      totalAdminCommission: netCommission.toNumber(),
+      grossCommission: grossCommission.toNumber(),
+      totalRefunds: refundsAmount.toNumber(),
       totalGMV: Number(gmv._sum.amount || 0),
       fulfillmentRate: Number(fulfillmentRate.toFixed(2)),
       avgPlatformRating: Number(avgRating._avg.rating?.toFixed(1) || 0),

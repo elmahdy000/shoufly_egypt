@@ -1,26 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getCategories } from '@/lib/services/categories/get-categories';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const parentId = searchParams.get('parentId');
+    const parentIdParam = searchParams.get('parentId');
+    const parentId = parentIdParam ? parseInt(parentIdParam) : null;
 
-    const categories = await prisma.category.findMany({
-      where: {
-        parentId: parentId ? parseInt(parentId) : null,
-      },
-      include: {
-        _count: {
-          select: { subcategories: true }
-        }
-      },
-      orderBy: { name: 'asc' },
-    });
+    const categories = await getCategories({ parentId });
 
     return NextResponse.json(categories);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('CATEGORIES_GET', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }

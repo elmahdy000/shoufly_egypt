@@ -32,9 +32,9 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
     if (!request) throw new Error('Request not found');
 
     // Make sure it is legally able to be disputed/refunded
-    const validStates = ['FAILED_DELIVERY', 'RETURNED', 'ORDER_PAID_PENDING_DELIVERY'];
+    const validStates = ['ORDER_PAID_PENDING_DELIVERY'];
     if (!validStates.includes(request.status)) {
-        throw new Error(`Cannot dispute request in status ${request.status}. Must be FAILED_DELIVERY or RETURNED.`);
+        throw new Error(`Cannot dispute request in status ${request.status}. Order must be paid to resolve.`);
     }
 
     const acceptedBid = request.bids[0];

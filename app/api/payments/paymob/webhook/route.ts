@@ -95,7 +95,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Use depositFunds service to add balance and notify user
-    await depositFunds(transaction.userId, amount);
+    // PASSING transaction.id here ensures we update the existing record instead of creating a duplicate!
+    await depositFunds(transaction.userId, amount, transaction.id);
 
     // If this transaction is linked to a request, auto-pay it
     if (transaction.requestId) {
@@ -119,19 +120,6 @@ export async function POST(req: NextRequest) {
         // Don't fail the webhook if auto-pay fails - user has balance now
       }
     }
-
-    // Update transaction with success status
-    await prisma.transaction.update({
-      where: { id: transaction.id },
-      data: {
-        metadata: {
-          ...(transaction.metadata as object || {}),
-          paymobStatus: 'SUCCESS',
-          paymobTransactionId: transactionData?.id,
-          processedAt: new Date().toISOString(),
-        },
-      },
-    });
 
     return NextResponse.json({ success: true, received: true });
 

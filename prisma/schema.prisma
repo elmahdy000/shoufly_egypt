@@ -75,6 +75,7 @@ enum NotificationType {
   WITHDRAWAL_APPROVED
   WITHDRAWAL_REJECTED
   WITHDRAWAL_REQUESTED
+  REQUEST_CANCELLED
 }
 
 model User {
@@ -118,8 +119,8 @@ model Category {
   name          String   @unique
   slug          String   @unique
   parentId      Int?
-  requiresBrand Boolean  @default(false) // If true, user must select a brand/type
-  brandType     String? // e.g., "car", "phone", "appliance", "laptop"
+  requiresBrand Boolean  @default(false)
+  brandType     String?
   createdAt     DateTime @default(now())
 
   parent        Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
@@ -133,13 +134,12 @@ model Category {
   @@index([brandType])
 }
 
-// Brands/Types for specialized categories (cars, phones, appliances, etc.)
 model Brand {
   id        Int      @id @default(autoincrement())
-  name      String // e.g., "BMW", "Toyota", "iPhone", "Samsung"
+  name      String
   slug      String   @unique
-  type      String // e.g., "car", "phone", "appliance", "laptop"
-  logo      String? // Optional logo URL
+  type      String
+  logo      String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -150,7 +150,6 @@ model Brand {
   @@index([slug])
 }
 
-// Link vendors to specific brands they deal with
 model VendorBrand {
   id       Int   @id @default(autoincrement())
   vendorId Int
@@ -181,7 +180,7 @@ model Request {
   title                   String
   description             String
   categoryId              Int
-  brandId                 Int? // For specialized categories (cars, phones, etc.)
+  brandId                 Int?
   address                 String
   latitude                Decimal       @db.Decimal(10, 7)
   longitude               Decimal       @db.Decimal(10, 7)
@@ -286,14 +285,15 @@ model Transaction {
   amount      Decimal         @db.Decimal(12, 2)
   type        TransactionType
   description String?
-  metadata    Json?           // Store payment gateway data (Paymob/Fawry order IDs, etc.)
+  metadata    Json?
   createdAt   DateTime        @default(now())
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   request Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([type])
+  @@index([createdAt])
 }
 
 model Notification {
@@ -343,7 +343,7 @@ model WithdrawalRequest {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  vendor     User  @relation("VendorWithdrawals", fields: [vendorId], references: [id], onDelete: Cascade)
+  vendor     User  @relation("VendorWithdrawals", fields: [vendorId], references: [id], onDelete: Restrict)
   reviewedBy User? @relation("AdminWithdrawalReviews", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([vendorId])
@@ -367,7 +367,7 @@ model Review {
   requestId  Int      @unique
   reviewerId Int
   reviewedId Int
-  rating     Int // 1 to 5
+  rating     Int
   comment    String?
   createdAt  DateTime @default(now())
 

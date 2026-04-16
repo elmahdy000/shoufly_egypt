@@ -6,17 +6,21 @@ import { Button } from "@/components/shoofly/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { createClientRequest } from "@/lib/api/requests";
 import { 
-  FileText, MapPin, Phone, Grid, List, 
+  FileText, MapPin, Grid, List, 
   CheckCircle, Image as ImageIcon, UploadCloud, Trash2, 
-  Map as MapIcon, DollarSign, ChevronLeft, ChevronRight,
-  Zap, Activity, Sparkles, Smartphone, Home, Truck, ShieldCheck
+  Activity, Sparkles, Smartphone, Home, Truck, ShieldCheck,
+  ChevronLeft, ChevronRight, Zap, DollarSign
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const EGYPTIAN_CATEGORIES: Record<string, {label: string, sub: string[], icon: any}> = {
-  "home": { label: "خدمات منزلية", sub: ["سباكة", "كهرباء", "نجارة", "نظافة عامة", "مكافحة حشرات"], icon: Home },
-  "tech": { label: "تكنولوجيا وهواتف", sub: ["صيانة هواتف", "برمجة وصيانة حواسيب", "تركيب كاميرات مراقبة"], icon: Smartphone },
-  "logistics": { label: "نقل ومتحركات", sub: ["نقل عفش", "ونش إنقاذ", "سيارات مغلقة"], icon: Truck },
+// Helper to map icons to dynamic category names
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("منزل") || n.includes("بيت")) return Home;
+  if (n.includes("تكنولوجيا") || n.includes("هواتف") || n.includes("موبايل")) return Smartphone;
+  if (n.includes("نقل") || n.includes("شحن") || n.includes("توصيل")) return Truck;
+  if (n.includes("صيانة") || n.includes("تصليح")) return ShieldCheck;
+  return Zap;
 };
 
 export default function NewRequestPage() {
@@ -27,21 +31,19 @@ export default function NewRequestPage() {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [parentCategory, setParentCategory] = useState("home");
-  const [subCategory, setSubCategory] = useState("سباكة");
+  const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [address, setAddress] = useState("");
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [budget, setBudget] = useState("");
   const [notes, setNotes] = useState("");
   const [images, setImages] = useState<File[]>([]);
   
-  // Technical State
-  const [latitude, setLatitude] = useState("30.0444");
-  const [longitude, setLongitude] = useState("31.2357");
-  const [categoryId, setCategoryId] = useState<number>(1);
+  // Data State
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [locStatus, setLocStatus] = useState<"idle" | "detecting" | "success" | "error">("idle");
-  
+  const [latitude, setLatitude] = useState("30.0444");
+  const [longitude, setLongitude] = useState("31.2357");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -51,11 +53,17 @@ export default function NewRequestPage() {
       .then((cats: any[]) => {
         setCategoryList(cats);
         if (cats?.length > 0) {
-          const firstSub = cats[0]?.subcategories?.[0];
-          if (firstSub?.id) setCategoryId(firstSub.id);
+          setSelectedParentId(cats[0].id);
+          if (cats[0].subcategories?.length > 0) {
+            setCategoryId(cats[0].subcategories[0].id);
+          }
         }
-      }).catch(() => {});
+      }).catch(err => setError("فشل تحميل الفئات. يرجى التحديث."));
   }, []);
+
+  const currentParent = useMemo(() => 
+    categoryList.find(c => c.id === selectedParentId), 
+  [categoryList, selectedParentId]);
 
   const detectLocation = () => {
     setLocStatus("detecting");
@@ -92,8 +100,8 @@ export default function NewRequestPage() {
   };
 
   const nextStep = () => {
-    if (step === 1 && (!title || !description)) {
-      setError("برجاء ملء بيانات الطلب الأساسية.");
+    if (step === 1 && (!title || !description || !categoryId)) {
+      setError("برجاء ملء بيانات الطلب الأساسية واختيار النوع.");
       return;
     }
     if (step === 3 && address.length < 5) {
@@ -110,33 +118,35 @@ export default function NewRequestPage() {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Get CSRF token for upload
-    const getCsrfToken = () => {
-      const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
-      return match ? match[2] : null;
-    };
+    // Improved CSRF token retrieval
+    const csrfToken = document.cookie.match(/(^| )csrf_token=([^;]+)/)?.[2] || "";
     
     const response = await fetch('/api/upload', { 
       method: 'POST', 
       body: formData,
       credentials: 'include',
-      headers: {
-        'x-csrf-token': getCsrfToken() || ''
-      }
+      headers: { 'x-csrf-token': csrfToken }
     });
+
+    if (!response.ok) throw new Error(`فشل رفع الصورة: ${file.name}`);
     const result = await response.json();
     return { filePath: result.url, fileName: file.name, mimeType: file.type, fileSize: file.size };
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!categoryId) return;
+
     try {
       setSaving(true);
       setError(null);
-      let uploadedImages = images.length > 0 ? await Promise.all(images.map(file => uploadImage(file))) : undefined;
+      
+      // Parallel uploads with error handling
+      const uploadedImages = await Promise.all(images.map(file => uploadImage(file)));
+      
       const created = await createClientRequest({
         title,
-        description: `[${subCategory}] ${description}`,
+        description,
         budget: budget ? Number(budget) : undefined,
         address,
         latitude: Number(latitude),
@@ -222,7 +232,7 @@ export default function NewRequestPage() {
                    <input 
                      value={title} onChange={(e) => setTitle(e.target.value)}
                      placeholder="مثال: تصليح خلاط مياه الحمام بمدينة نصر"
-                     className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-[28px] text-lg font-bold focus:border-primary focus:bg-white transition-all outline-none"
+                     className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-lg font-bold focus:border-primary focus:bg-white transition-all outline-none"
                    />
                 </div>
 
@@ -231,39 +241,45 @@ export default function NewRequestPage() {
                     <Grid size={18} className="text-primary" /> اختر الفئة المناسبة
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {Object.entries(EGYPTIAN_CATEGORIES).map(([key, cat]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => {
-                          setParentCategory(key);
-                          setSubCategory(cat.sub[0]);
-                        }}
-                        className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${
-                          parentCategory === key ? "bg-primary/5 border-primary shadow-lg shadow-primary/5" : "bg-white border-slate-100"
-                        }`}
-                      >
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${parentCategory === key ? "bg-primary text-white" : "bg-slate-50 text-slate-400"}`}>
-                           <cat.icon size={24} />
-                        </div>
-                        <span className={`text-xs font-black ${parentCategory === key ? "text-primary" : "text-slate-600"}`}>{cat.label}</span>
-                      </button>
-                    ))}
+                    {categoryList.map((cat) => {
+                      const Icon = getCategoryIcon(cat.name);
+                      const isSelected = selectedParentId === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedParentId(cat.id);
+                            if (cat.subcategories?.length > 0) {
+                              setCategoryId(cat.subcategories[0].id);
+                            }
+                          }}
+                          className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${
+                            isSelected ? "bg-primary/5 border-primary shadow-lg shadow-primary/5" : "bg-white border-border"
+                          }`}
+                        >
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? "bg-primary text-white" : "bg-muted text-slate-400"}`}>
+                             <Icon size={24} />
+                          </div>
+                          <span className={`text-xs font-black ${isSelected ? "text-primary" : "text-slate-600"}`}>{cat.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                   
-                  <div className="pt-2">
-                    <select 
-                      value={subCategory}
-                      onChange={(e) => {
-                        setSubCategory(e.target.value);
-                        const found = categoryList.flatMap(c => c.subcategories || []).find(s => s.name === e.target.value);
-                        if (found) setCategoryId(found.id);
-                      }}
-                      className="w-full px-6 py-4 bg-white border-2 border-primary/20 rounded-2xl text-base font-black text-primary outline-none"
-                    >
-                       {EGYPTIAN_CATEGORIES[parentCategory].sub.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
+                  {currentParent && currentParent.subcategories?.length > 0 && (
+                    <div className="pt-2">
+                      <select 
+                        value={categoryId || ""}
+                        onChange={(e) => setCategoryId(Number(e.target.value))}
+                        className="w-full px-6 py-4 bg-white border-2 border-primary/20 rounded-2xl text-base font-black text-primary outline-none"
+                      >
+                         {currentParent.subcategories.map((s: any) => (
+                           <option key={s.id} value={s.id}>{s.name}</option>
+                         ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -274,7 +290,7 @@ export default function NewRequestPage() {
                      value={description} onChange={(e) => setDescription(e.target.value)}
                      rows={4}
                      placeholder="يرجى ذكر ماركة الجهاز، طبيعة العطل، متى بدأت المشكلة..."
-                     className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-[28px] text-base font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none"
+                     className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none"
                    />
                 </div>
              </div>
@@ -296,7 +312,7 @@ export default function NewRequestPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {images.map((file, i) => (
-                    <div key={i} className="aspect-square rounded-[32px] border-4 border-slate-100 overflow-hidden relative group shadow-lg">
+                    <div key={i} className="aspect-square rounded-[32px] border-4 border-border overflow-hidden relative group shadow-lg">
                        <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
                        <button
                          type="button" onClick={() => removeImage(i)}
@@ -340,7 +356,7 @@ export default function NewRequestPage() {
                 <div 
                   onClick={detectLocation}
                   className={`p-8 rounded-[40px] border-4 cursor-pointer transition-all flex flex-col items-center text-center gap-4 ${
-                    locStatus === 'success' ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-500/10' : 'bg-slate-50 border-slate-100 hover:border-primary/30'
+                    locStatus === 'success' ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-500/10' : 'bg-muted/30 border-border hover:border-primary/30'
                   }`}
                 >
                    <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-xl ${
@@ -362,7 +378,7 @@ export default function NewRequestPage() {
                        <input 
                          value={address} onChange={(e) => setAddress(e.target.value)} required
                          placeholder="مثال: التجمع الخامس، المنطقة الثالثة، عمارة 45"
-                         className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-[28px] text-base font-bold focus:border-primary outline-none"
+                         className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none"
                        />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,7 +387,7 @@ export default function NewRequestPage() {
                           <input 
                             value={deliveryPhone} onChange={(e) => setDeliveryPhone(e.target.value)} required
                             placeholder="010xxxxxxxx"
-                            className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-[28px] text-base font-bold focus:border-primary outline-none text-left"
+                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none text-left"
                             dir="ltr"
                           />
                        </div>
@@ -380,7 +396,7 @@ export default function NewRequestPage() {
                           <input 
                             value={notes} onChange={(e) => setNotes(e.target.value)}
                             placeholder="مثل: الجرس لا يعمل"
-                            className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-[28px] text-base font-bold focus:border-primary outline-none"
+                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none"
                           />
                        </div>
                     </div>
@@ -412,7 +428,9 @@ export default function NewRequestPage() {
                    <div className="grid gap-3">
                       <div className="flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/5">
                         <span className="text-slate-400 font-bold">الخدمة:</span>
-                        <span className="font-black text-primary">{subCategory}</span>
+                        <span className="font-black text-primary">
+                          {categoryList.flatMap(c => c.subcategories || []).find(s => s.id === categoryId)?.name || "غير محدد"}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/5">
                         <span className="text-slate-400 font-bold">الموقع:</span>
@@ -452,10 +470,10 @@ export default function NewRequestPage() {
       </AnimatePresence>
 
       {/* Footer Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 lg:p-0 lg:static bg-white/80 backdrop-blur-xl border-t border-slate-100 lg:bg-transparent lg:border-0 z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-4 lg:p-0 lg:static bg-white/10 backdrop-blur-xl border-t border-border/10 lg:bg-transparent lg:border-0 z-50">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
            {step > 1 ? (
-             <Button variant="secondary" onClick={prevStep} className="h-16 px-8 rounded-[2rem] font-black border-2 border-slate-100">
+             <Button variant="outline" onClick={prevStep} className="h-16 px-8 rounded-[2rem] font-black">
                 <ChevronRight className="ml-2" /> السابق
              </Button>
            ) : <div />}

@@ -1,358 +1,330 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  Activity,
-  Briefcase,
-  CheckSquare,
-  Filter,
-  Mail,
-  Phone,
-  RefreshCw,
-  Search,
-  ShieldAlert,
-  ShieldCheck,
-  Square,
-  Truck,
-  User,
-  UserCog,
-  Users,
-  Wallet,
-  X,
+  Search, RefreshCw, Users, ShieldCheck,
+  TrendingUp, Mail, Phone, Clock,
+  Ban, X, ExternalLink,
+  ShieldAlert, ChevronLeft, UserCircle2,
+  Filter, CheckCircle2
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/shoofly/button";
 
-type RoleFilter = "ALL" | "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN";
-type SmartFilter = "ALL" | "ACTIVE" | "BLOCKED" | "NEW" | "UNVERIFIED" | "HIGH_RISK" | "NO_ACTIVITY";
-type ModerationAction = "VERIFY" | "UNVERIFY" | "BLOCK" | "UNBLOCK";
-type RiskLevel = "منخفض" | "متوسط" | "مرتفع";
+type UserFilter = "ALL" | "ACTIVE" | "BLOCKED" | "VERIFIED";
+type UserAction = "block" | "unblock" | "verify" | "unverify";
 
 interface AdminUser {
   id: number;
   fullName: string;
   email: string;
-  phone: string | null;
-  role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN" | string;
+  phone?: string;
   isActive: boolean;
   isVerified: boolean;
-  isBlocked: boolean;
-  walletBalance: number | string;
+  walletBalance: string | number;
   createdAt: string;
-  updatedAt: string;
-  _count: {
-    clientRequests: number;
-    vendorBids: number;
-    assignedDeliveries: number;
-    transactions: number;
-    complaints: number;
-  };
 }
-
-type Row = AdminUser & {
-  blocked: boolean;
-  activityCount: number;
-  riskScore: number;
-  riskLevel: RiskLevel;
-  riskReasons: string[];
-  isNew: boolean;
-  activeToday: boolean;
-  nextAction: string;
-};
-
-const roleLabel = (role: AdminUser["role"]) =>
-  role === "CLIENT" ? "عميل" : role === "VENDOR" ? "تاجر" : role === "DELIVERY" ? "مندوب" : role === "ADMIN" ? "إدارة" : role;
-
-const roleIcon = (role: AdminUser["role"]) =>
-  role === "VENDOR" ? Briefcase : role === "DELIVERY" ? Truck : role === "ADMIN" ? UserCog : User;
-
-const activityCount = (u: AdminUser) =>
-  u.role === "CLIENT" ? u._count.clientRequests : u.role === "VENDOR" ? u._count.vendorBids : u.role === "DELIVERY" ? u._count.assignedDeliveries : u._count.transactions;
-
-const withinDays = (iso: string, days: number) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return false;
-  return Date.now() - d.getTime() <= days * 24 * 60 * 60 * 1000;
-};
-
-function risk(u: AdminUser): { score: number; level: RiskLevel; reasons: string[] } {
-  const reasons: string[] = [];
-  let score = 0;
-  const blocked = u.isBlocked || !u.isActive;
-  const acts = activityCount(u);
-  const complaints = u._count.complaints;
-  const wallet = Number(u.walletBalance) || 0;
-
-  if (blocked) {
-    score += 55;
-    reasons.push("الحساب موقوف");
-  }
-  if (!u.isVerified) {
-    score += 20;
-    reasons.push("غير موثق");
-  }
-  if (acts === 0 && !withinDays(u.createdAt, 14)) {
-    score += 15;
-    reasons.push("بدون نشاط");
-  }
-  if (complaints > 0) {
-    score += Math.min(20, complaints * 5);
-    reasons.push(`شكاوى: ${complaints}`);
-  }
-  if (wallet >= 20000 && !u.isVerified) {
-    score += 10;
-    reasons.push("رصيد مرتفع بدون توثيق");
-  }
-
-  const bounded = Math.min(100, score);
-  const level: RiskLevel = bounded >= 70 ? "مرتفع" : bounded >= 35 ? "متوسط" : "منخفض";
-  return { score: bounded, level, reasons };
-}
-
-const patchByAction = (u: AdminUser, action: ModerationAction): AdminUser =>
-  action === "BLOCK"
-    ? { ...u, isBlocked: true, isActive: false }
-    : action === "UNBLOCK"
-    ? { ...u, isBlocked: false, isActive: true }
-    : action === "VERIFY"
-    ? { ...u, isVerified: true }
-    : { ...u, isVerified: false };
 
 export default function AdminUsersPage() {
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
-  const [smartFilter, setSmartFilter] = useState<SmartFilter>("ALL");
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [statusFilter, setStatusFilter] = useState<UserFilter>("ALL");
+  const [selected, setSelected] = useState<AdminUser | null>(null);
+  const [actionLoading, setActionLoading] = useState<UserAction | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
-  const [lastSync, setLastSync] = useState(new Date());
 
-  const { data, loading, refresh, setData } = useAsyncData<AdminUser[]>(
-    () => apiFetch<AdminUser[]>("/api/admin/users?limit=300", "ADMIN"),
-    []
+  const { data: users, loading, setData, refresh } = useAsyncData<AdminUser[]>(
+    async () => apiFetch<AdminUser[]>("/api/admin/users?limit=100", "ADMIN"), []
   );
 
-  const rows = useMemo<Row[]>(() => {
-    return (data ?? []).map((u) => {
-      const blocked = u.isBlocked || !u.isActive;
-      const acts = activityCount(u);
-      const r = risk(u);
-      const nextAction = blocked ? "مراجعة سبب الإيقاف" : !u.isVerified ? "طلب توثيق الحساب" : r.score >= 70 ? "فتح مراجعة أمنية" : acts === 0 ? "تنبيه تفعيل الاستخدام" : "متابعة دورية";
-      return { ...u, blocked, activityCount: acts, riskScore: r.score, riskLevel: r.level, riskReasons: r.reasons, isNew: withinDays(u.createdAt, 14), activeToday: withinDays(u.updatedAt, 1), nextAction };
-    });
-  }, [data]);
-
-  const filtered = useMemo(() => {
-    let list = rows;
-    if (roleFilter !== "ALL") list = list.filter((u) => u.role === roleFilter);
-    if (smartFilter === "ACTIVE") list = list.filter((u) => !u.blocked);
-    if (smartFilter === "BLOCKED") list = list.filter((u) => u.blocked);
-    if (smartFilter === "NEW") list = list.filter((u) => u.isNew);
-    if (smartFilter === "UNVERIFIED") list = list.filter((u) => !u.isVerified);
-    if (smartFilter === "HIGH_RISK") list = list.filter((u) => u.riskScore >= 70);
-    if (smartFilter === "NO_ACTIVITY") list = list.filter((u) => u.activityCount === 0);
-
-    const q = search.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((u) => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.phone ?? "").includes(q) || String(u.id).includes(q));
-  }, [rows, roleFilter, smartFilter, search]);
-
-  const selected = useMemo(() => rows.find((u) => u.id === selectedId) ?? null, [rows, selectedId]);
-
-  const stats = useMemo(() => {
-    const total = rows.length;
-    const activeToday = rows.filter((u) => u.activeToday).length;
-    const highRisk = rows.filter((u) => u.riskScore >= 70).length;
-    const unverified = rows.filter((u) => !u.isVerified).length;
-    const noActivity = rows.filter((u) => u.activityCount === 0).length;
-    return { total, activeToday, highRisk, noActivity, verifyRate: total ? Math.round(((total - unverified) / total) * 100) : 0 };
-  }, [rows]);
-
-  const allVisibleSelected = filtered.length > 0 && filtered.every((u) => selectedIds.includes(u.id));
-
-  const refreshData = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await refresh();
-    setLastSync(new Date());
-    setTimeout(() => setIsRefreshing(false), 400);
+    setTimeout(() => setIsRefreshing(false), 500);
   }, [refresh]);
 
-  const runAction = useCallback(async (ids: number[], action: ModerationAction) => {
-    if (!ids.length) return;
-    const key = `${action}:${ids.length}`;
-    setBusyKey(key);
-    setNotice(null);
+  const stats = useMemo(() => {
+    const all = users ?? [];
+    return {
+      total: all.length,
+      active: all.filter((u) => u.isActive).length,
+      verified: all.filter((u) => u.isVerified).length,
+      blocked: all.filter((u) => !u.isActive).length,
+    };
+  }, [users]);
 
-    const results = await Promise.allSettled(
-      ids.map((id) => apiFetch(`/api/admin/users/${id}/moderation`, "ADMIN", { method: "PATCH", body: { action } }))
-    );
-    const successIds = ids.filter((_, i) => results[i].status === "fulfilled");
-    const failed = ids.length - successIds.length;
+  const filtered = useMemo(() => {
+    let list = users ?? [];
+    if (statusFilter === "ACTIVE") list = list.filter((u) => u.isActive);
+    if (statusFilter === "BLOCKED") list = list.filter((u) => !u.isActive);
+    if (statusFilter === "VERIFIED") list = list.filter((u) => u.isVerified);
 
-    if (successIds.length) {
-      setData((prev) => (prev ?? []).map((u) => (successIds.includes(u.id) ? patchByAction(u, action) : u)));
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((u) =>
+        u.fullName.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone ?? "").includes(q)
+      );
     }
-    setNotice({ text: failed ? `تم تنفيذ ${successIds.length} وفشل ${failed}` : `تم تنفيذ الإجراء على ${successIds.length} مستخدم`, ok: failed === 0 });
-    setBusyKey(null);
-  }, [setData]);
+    return list;
+  }, [users, statusFilter, search]);
+
+  async function doAction(userId: number, action: UserAction) {
+    setActionLoading(action);
+    try {
+      await apiFetch(`/api/admin/users/${userId}/moderation`, "ADMIN", { method: "PATCH", body: { action } });
+      const patch: Partial<AdminUser> = {};
+      if (action === "block") patch.isActive = false;
+      if (action === "unblock") patch.isActive = true;
+      if (action === "verify") patch.isVerified = true;
+      if (action === "unverify") patch.isVerified = false;
+      setData((prev) => (prev ?? []).map((u) => (u.id === userId ? { ...u, ...patch } : u)));
+      setSelected((prev) => (prev?.id === userId ? { ...prev, ...patch } : prev));
+    } catch (e) {} finally { setActionLoading(null); }
+  }
 
   return (
-    <div className="admin-page admin-page--spacious" dir="rtl">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-black text-primary">User Intelligence Console</span>
-            <h1 className="text-3xl font-black text-slate-900 sm:text-4xl">إدارة <span className="text-primary">المستخدمين</span> باحترافية</h1>
-            <p className="text-sm text-slate-600">بحث ذكي، تقييم مخاطر، إجراءات فردية وجماعية، ولوحة تفاصيل عملية.</p>
+    <div className="min-h-full bg-[#F1F5F9] pb-32 font-sans text-right" dir="rtl">
+      
+      {/* 🚀 Header: Ultra-Contrast Bold */}
+      <section className="bg-slate-950 text-white border-b-8 border-indigo-600 sticky top-0 z-40 shadow-2xl overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] -mr-40 -mt-40 opacity-50" />
+        <div className="w-full px-8 lg:px-12 py-10 relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
+          <div className="space-y-4">
+             <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.8)]" />
+                <span className="text-[11px] font-black tracking-[0.4em] text-indigo-400 uppercase">نظام إدارة العضويات المركزي</span>
+             </div>
+             <h1 className="text-4xl lg:text-5xl font-black tracking-tighter">إدارة <span className="text-indigo-400 italic">المستخدمين</span></h1>
+             <p className="text-lg text-slate-400 font-bold max-w-2xl leading-relaxed">تحكّم كامل في صلاحيات الحسابات، مراجعة التوثيق، ومتابعة النشاط المالي للأعضاء.</p>
           </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <label className="relative block w-full sm:w-96">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بالاسم، البريد، الهاتف أو ID..." className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm outline-none focus:border-primary focus:bg-white" />
-            </label>
-            <button onClick={refreshData} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 hover:border-primary hover:text-primary"><RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />تحديث</button>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+             <div className="relative group w-full sm:w-[400px]">
+                <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-all" size={24} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="بحث باسم العميل أو بريده..."
+                  className="w-full pr-16 pl-6 h-16 bg-white/10 border-4 border-white/10 rounded-2xl text-xl font-bold text-white focus:bg-white focus:text-slate-950 focus:border-indigo-600 outline-none transition-all placeholder:text-slate-600"
+                />
+             </div>
+             <Button onClick={handleRefresh} className="h-16 px-8 rounded-2xl bg-indigo-600 text-white font-black border-4 border-slate-950 shadow-[8px_8px_0px_#ffffff10] hover:scale-[1.02] active:scale-95 transition-all">
+                <RefreshCw size={24} className={isRefreshing ? "animate-spin" : ""} />
+             </Button>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Kpi label="إجمالي المستخدمين" value={stats.total} icon={Users} />
-        <Kpi label="نشط اليوم" value={stats.activeToday} icon={Activity} highlight />
-        <Kpi label="معدل التوثيق" value={`${stats.verifyRate}%`} icon={ShieldCheck} />
-        <Kpi label="مخاطر عالية" value={stats.highRisk} icon={ShieldAlert} danger />
-        <Kpi label="بدون نشاط" value={stats.noActivity} icon={User} />
-      </section>
-
-      <section className="glass-card p-4 sm:p-5 space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {([{ id: "ALL", label: "كل المستخدمين" }, { id: "CLIENT", label: "العملاء" }, { id: "VENDOR", label: "التجار" }, { id: "DELIVERY", label: "المندوبون" }, { id: "ADMIN", label: "الإدارة" }] as { id: RoleFilter; label: string }[]).map((tab) => (
-            <button key={tab.id} onClick={() => setRoleFilter(tab.id)} className={`rounded-xl px-3 py-2 text-xs font-black ${roleFilter === tab.id ? "bg-primary text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}>{tab.label}</button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-500"><Filter size={12} />فلاتر ذكية</span>
-          {([{ id: "ALL", label: "الكل" }, { id: "ACTIVE", label: "نشط" }, { id: "BLOCKED", label: "موقوف" }, { id: "NEW", label: "جديد" }, { id: "UNVERIFIED", label: "غير موثق" }, { id: "HIGH_RISK", label: "مخاطر عالية" }, { id: "NO_ACTIVITY", label: "بدون نشاط" }] as { id: SmartFilter; label: string }[]).map((tab) => (
-            <button key={tab.id} onClick={() => setSmartFilter(tab.id)} className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${smartFilter === tab.id ? "border-primary/30 bg-orange-50 text-primary" : "border-slate-200 bg-white text-slate-500 hover:text-slate-700"}`}>{tab.label}</button>
-          ))}
-          <span className="mr-auto text-xs font-bold text-slate-400">آخر مزامنة: {lastSync.toLocaleTimeString("ar-EG")}</span>
-        </div>
-      </section>
-
-      {selectedIds.length > 0 && (
-        <section className="rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-black text-slate-700">تم تحديد {selectedIds.length} مستخدم</span>
-            <button onClick={() => runAction(selectedIds, "VERIFY")} disabled={busyKey === `VERIFY:${selectedIds.length}`} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 hover:border-primary hover:text-primary">توثيق المحدد</button>
-            <button onClick={() => runAction(selectedIds, "UNBLOCK")} disabled={busyKey === `UNBLOCK:${selectedIds.length}`} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 hover:border-primary hover:text-primary">إعادة التفعيل</button>
-            <button onClick={() => runAction(selectedIds, "BLOCK")} disabled={busyKey === `BLOCK:${selectedIds.length}`} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 hover:bg-rose-100">إيقاف المحدد</button>
-            <button onClick={() => setSelectedIds([])} className="mr-auto rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50">إلغاء التحديد</button>
-          </div>
-        </section>
-      )}
-
-      {notice && <div className={`rounded-xl border px-4 py-3 text-sm font-bold ${notice.ok ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>{notice.text}</div>}
-
-      <div className="flex flex-col gap-8 xl:flex-row xl:items-start">
-        <section className="flex-1 glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="data-table min-w-[980px]">
-              <thead>
-                <tr>
-                  <th className="w-12"><button onClick={() => setSelectedIds((prev) => allVisibleSelected ? prev.filter((id) => !filtered.some((u) => u.id === id)) : Array.from(new Set([...prev, ...filtered.map((u) => u.id)])))} className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:border-primary hover:text-primary">{allVisibleSelected ? <CheckSquare size={14} /> : <Square size={14} />}</button></th>
-                  <th>المستخدم</th><th>الدور</th><th>الحالة</th><th>النشاط</th><th>المحفظة</th><th>المخاطر</th><th>آخر تحديث</th><th className="text-left">إجراء</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? Array.from({ length: 6 }).map((_, i) => <tr key={i} className="animate-pulse"><td colSpan={9} className="h-16 bg-slate-50/60" /></tr>) : filtered.length === 0 ? <tr><td colSpan={9} className="py-20 text-center text-sm font-black text-slate-400">لا توجد نتائج مطابقة للفلاتر الحالية.</td></tr> : filtered.map((u) => {
-                  const RoleIcon = roleIcon(u.role);
-                  return (
-                    <tr key={u.id} onClick={() => setSelectedId(u.id)} className={selectedId === u.id ? "bg-orange-50/60" : ""}>
-                      <td><button onClick={(e) => { e.stopPropagation(); setSelectedIds((prev) => prev.includes(u.id) ? prev.filter((id) => id !== u.id) : [...prev, u.id]); }} className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:border-primary hover:text-primary">{selectedIds.includes(u.id) ? <CheckSquare size={14} /> : <Square size={14} />}</button></td>
-                      <td><div className="flex items-center gap-3"><div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-black ${selectedId === u.id ? "bg-primary text-white" : "bg-slate-100 text-slate-500"}`}>{u.fullName.charAt(0)}</div><div><p className="text-sm font-black text-slate-900">{u.fullName}</p><p className="text-xs text-slate-500">#{u.id} · {u.email}</p></div></div></td>
-                      <td><span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600"><RoleIcon size={12} />{roleLabel(u.role)}</span></td>
-                      <td><div className="flex flex-wrap gap-2"><Status text={u.blocked ? "موقوف" : "نشط"} tone={u.blocked ? "danger" : "success"} />{u.isVerified ? <Status text="موثق" tone="brand" /> : <Status text="غير موثق" tone="muted" />}</div></td>
-                      <td><p className="text-sm font-black text-slate-900">{u.activityCount}</p><p className="text-xs text-slate-500">عمليات أساسية</p></td>
-                      <td><span className="font-jakarta text-sm font-black text-slate-900">{formatCurrency(u.walletBalance)}</span></td>
-                      <td><Risk score={u.riskScore} level={u.riskLevel} /></td>
-                      <td><p className="text-xs text-slate-600">{formatDate(u.updatedAt)}</p></td>
-                      <td className="text-left"><button onClick={(e) => { e.stopPropagation(); runAction([u.id], u.blocked ? "UNBLOCK" : "BLOCK"); }} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-600 hover:border-primary hover:text-primary">{u.blocked ? "تفعيل" : "إيقاف"}</button></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      <div className="w-full px-8 lg:px-12 py-12 space-y-12">
+        
+        {/* 📊 KPI Strip: Bold & Closer */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <UStat label="إحصاء العضويات" val={stats.total} icon={Users} color="bg-slate-900" delay={0.1} />
+          <UStat label="حسابات نشطة" val={stats.active} icon={CheckCircle2} color="bg-emerald-600" pulse delay={0.2} />
+          <UStat label="أعضاء موثقين" val={stats.verified} icon={ShieldCheck} color="bg-indigo-600" delay={0.3} />
+          <UStat label="الموقفين إدارياً" val={stats.blocked} icon={Ban} color="bg-rose-600" delay={0.4} />
         </section>
 
-        <AnimatePresence>
-          {selected && (
-            <motion.aside initial={{ x: 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} className="w-full xl:w-[420px] xl:sticky xl:top-24">
-              <div className="glass-card p-6 space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><User size={20} /></div><div><p className="text-sm font-black text-slate-900">تفاصيل المستخدم</p><p className="text-xs font-bold text-slate-500">User Overview</p></div></div>
-                  <button onClick={() => setSelectedId(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X size={16} /></button>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white text-lg font-black">{selected.fullName.charAt(0)}</div><div><h3 className="text-lg font-black text-slate-900">{selected.fullName}</h3><p className="text-xs text-slate-500">#{selected.id}</p></div></div>
-                  <div className="mt-3 flex flex-wrap gap-2"><Status text={selected.blocked ? "موقوف" : "نشط"} tone={selected.blocked ? "danger" : "success"} />{selected.isVerified ? <Status text="موثق" tone="brand" /> : <Status text="غير موثق" tone="muted" />}</div>
-                </div>
-                <div className="space-y-2">
-                  <Detail icon={Mail} label="البريد" value={selected.email} />
-                  <Detail icon={Phone} label="الهاتف" value={selected.phone || "-"} />
-                  <Detail icon={Activity} label="آخر نشاط" value={formatDate(selected.updatedAt)} />
-                  <Detail icon={Wallet} label="المحفظة" value={formatCurrency(selected.walletBalance)} />
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-3">
-                  <div className="mb-2 flex items-center justify-between"><p className="text-xs font-black text-slate-500">تقييم المخاطر</p><Risk score={selected.riskScore} level={selected.riskLevel} /></div>
-                  {selected.riskReasons.length ? selected.riskReasons.map((reason) => <p key={reason} className="text-xs text-slate-600">- {reason}</p>) : <p className="text-xs text-slate-500">لا توجد مؤشرات خطورة حالية.</p>}
-                </div>
-                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3"><p className="text-xs font-black text-slate-500">الإجراء المقترح</p><p className="mt-1 text-sm font-bold text-slate-800">{selected.nextAction}</p></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => runAction([selected.id], selected.isVerified ? "UNVERIFY" : "VERIFY")} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-xs font-black text-slate-700 hover:border-primary hover:text-primary">{selected.isVerified ? "إلغاء التوثيق" : "توثيق الحساب"}</button>
-                  <button onClick={() => runAction([selected.id], selected.blocked ? "UNBLOCK" : "BLOCK")} className={`rounded-xl px-3 py-3 text-xs font-black ${selected.blocked ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"}`}>{selected.blocked ? "إعادة التفعيل" : "إيقاف الحساب"}</button>
-                </div>
+        {/* 🛠 Heavy Filter Controls */}
+        <motion.div 
+          initial={{ y: 30, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white border-4 border-slate-950 p-10 rounded-[3rem] shadow-[25px_25px_0px_rgba(15,23,42,0.04)]"
+        >
+           <div className="flex flex-wrap items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-slate-950 text-white flex items-center justify-center ml-4">
+                 <Filter size={24} />
               </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
+              {([{ id: "ALL", label: "كل المستخدمين" }, { id: "ACTIVE", label: "نشط حالياً" }, { id: "VERIFIED", label: "موثقين فقط" }, { id: "BLOCKED", label: "موقوفين" }] as { id: UserFilter; label: string }[]).map((tab) => (
+                <button 
+                  key={tab.id} 
+                  onClick={() => setStatusFilter(tab.id)} 
+                  className={`px-10 py-4 rounded-2xl text-base font-black border-4 transition-all ${statusFilter === tab.id ? "bg-indigo-600 text-white border-slate-950 shadow-xl scale-105" : "bg-white text-slate-400 border-slate-100 hover:border-slate-950 hover:text-slate-950"}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+           </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+           
+           {/* 📋 User Grid: High Density / High Contrast */}
+           <div className="lg:col-span-8">
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   {[1,2,3,4].map(i => <div key={i} className="h-80 bg-white border-4 border-slate-50 rounded-[3rem] animate-pulse" />)}
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="h-96 bg-white border-4 border-slate-100 border-dashed rounded-[4rem] flex flex-col items-center justify-center text-slate-300">
+                   <UserCircle2 size={120} className="mb-6 opacity-10" />
+                   <p className="text-2xl font-black opacity-30 italic">لا يوجد مستخدمين بهذا التصنيف</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-bold">
+                   <AnimatePresence mode="popLayout">
+                     {filtered.map(u => (
+                       <motion.div
+                         layout
+                         key={u.id}
+                         initial={{ scale: 0.95, opacity: 0 }}
+                         animate={{ scale: 1, opacity: 1 }}
+                         exit={{ scale: 0.95, opacity: 0 }}
+                         whileHover={{ y: -10, rotate: 1 }}
+                         onClick={() => setSelected(u)}
+                         className={`p-10 rounded-[3.5rem] bg-white border-4 transition-all cursor-pointer group relative ${selected?.id === u.id ? 'border-indigo-600 shadow-3xl' : 'border-white hover:border-slate-950 shadow-xl shadow-slate-200/50'}`}
+                       >
+                         <div className="flex items-start justify-between mb-10">
+                            <div className={`w-24 h-24 rounded-[2rem] border-4 flex items-center justify-center font-black text-4xl transition-all duration-300 ${selected?.id === u.id ? 'bg-indigo-600 text-white border-slate-950 scale-110 rotate-3 shadow-2xl' : 'bg-slate-100 text-slate-400 border-slate-200 group-hover:bg-slate-950 group-hover:border-slate-950 group-hover:text-white group-hover:-rotate-3'}`}>
+                               {u.fullName.charAt(0)}
+                            </div>
+                            <div className="flex flex-col items-end gap-3 pt-2">
+                               {u.isVerified && (
+                                 <span className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-2xl text-[11px] font-black border-2 border-slate-950 uppercase tracking-widest shadow-lg">Verified <ShieldCheck size={16} /></span>
+                               )}
+                               {!u.isActive && (
+                                 <span className="flex items-center gap-2 px-5 py-2 bg-rose-500 text-white rounded-2xl text-[11px] font-black border-2 border-slate-950 uppercase tracking-widest shadow-lg">Blocked <Ban size={16} /></span>
+                               )}
+                            </div>
+                         </div>
+                         
+                         <div className="space-y-3">
+                            <h3 className="text-2xl lg:text-3xl font-black text-slate-950 group-hover:text-indigo-600 transition-all">{u.fullName}</h3>
+                            <p className="text-base text-slate-500 font-jakarta">{u.email}</p>
+                         </div>
+
+                         <div className="mt-12 pt-8 border-t-4 border-slate-50 flex items-center justify-between">
+                            <div className="flex flex-col gap-1">
+                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">الرصيد المتاح</span>
+                               <span className="text-3xl font-black text-slate-950 tracking-tighter font-jakarta italic">{formatCurrency(u.walletBalance)}</span>
+                            </div>
+                            <div className="w-16 h-16 rounded-[1.5rem] bg-slate-950 flex items-center justify-center text-white shadow-2xl transition-all group-hover:bg-indigo-600 group-hover:scale-110">
+                               <ChevronLeft size={36} />
+                            </div>
+                         </div>
+                       </motion.div>
+                     ))}
+                   </AnimatePresence>
+                </div>
+              )}
+           </div>
+
+           {/* 🛡️ User Inspector: Side Audit Panel */}
+           <AnimatePresence>
+              {selected && (
+                 <motion.aside
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: 50, opacity: 0 }}
+                    className="lg:col-span-4 bg-slate-950 rounded-[4rem] p-12 shadow-[0_40px_100px_rgba(0,0,0,0.6)] text-white sticky top-40 space-y-12 border-l-8 border-indigo-500 overflow-hidden"
+                 >
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px] -mr-40 -mt-40" />
+                    
+                    <div className="flex items-center justify-between relative z-10">
+                       <div className="flex items-center gap-6">
+                          <div className="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl border-2 border-white/20">
+                             <UserCircle2 size={50} />
+                          </div>
+                          <div>
+                             <h2 className="text-2xl font-black tracking-tight">تدقيق الحساب</h2>
+                             <p className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] mt-2">USER_AUTH_LOGS: ACTIVE</p>
+                          </div>
+                       </div>
+                       <button onClick={() => setSelected(null)} className="p-5 bg-white/5 hover:bg-white/20 rounded-3xl text-white transition-all active:scale-95 shadow-lg border-2 border-white/5">
+                          <X size={32} />
+                       </button>
+                    </div>
+
+                    <div className="space-y-10 relative z-10">
+                       <div className="p-10 bg-white/5 border-2 border-white/10 rounded-[3.5rem] space-y-10">
+                          <p className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em]">معلومات العضوية</p>
+                          <h3 className="text-4xl font-black leading-tight text-white mb-6 underline decoration-indigo-500/50 underline-offset-8">{selected.fullName}</h3>
+                          
+                          <div className="flex flex-wrap gap-4 pt-4">
+                             <div className={`px-8 py-3 rounded-2xl text-[11px] font-black border-4 ${selected.isActive ? 'bg-emerald-500 text-white border-slate-950 shadow-xl' : 'bg-rose-500 text-white border-slate-950 shadow-xl'}`}>
+                                {selected.isActive ? 'حساب مفعّل' : 'موقوف إدارياً'}
+                             </div>
+                             {selected.isVerified && (
+                                <div className="px-8 py-3 rounded-2xl text-[11px] font-black bg-indigo-600 text-white border-4 border-slate-950 shadow-xl">موثّق رسمياً</div>
+                             )}
+                          </div>
+                       </div>
+
+                       <div className="space-y-5">
+                          <UInfoLine icon={<Phone size={24} />} label="رقم الجوال" value={selected.phone || 'غير مدرج'} />
+                          <UInfoLine icon={<Mail size={24} />} label="البريد الإلكتروني" value={selected.email} />
+                          <UInfoLine icon={<TrendingUp size={24} />} label="إجمالي المحفظة" value={formatCurrency(selected.walletBalance)} />
+                          <UInfoLine icon={<Clock size={24} />} label="تاريخ التسجيل" value={formatDate(selected.createdAt)} />
+                       </div>
+                    </div>
+
+                    <div className="pt-12 border-t-8 border-white/5 space-y-6 relative z-10">
+                       <div className="grid grid-cols-1 gap-6">
+                          <Button 
+                            onClick={() => doAction(selected.id, selected.isVerified ? "unverify" : "verify")}
+                            className={`h-24 rounded-[2.5rem] font-black text-xl flex items-center justify-center gap-6 transition-all active:scale-95 border-4 border-slate-950 ${selected.isVerified ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-indigo-600 text-white shadow-3xl shadow-indigo-600/30 hover:scale-[1.02]'}`}
+                          >
+                             {selected.isVerified ? <ShieldAlert size={36} className="text-rose-400" /> : <ShieldCheck size={36} />}
+                             {selected.isVerified ? "إلغاء توثيق الهوية" : "تفعيل التوثيق الرسمي"}
+                          </Button>
+                          
+                          <Button 
+                            onClick={() => doAction(selected.id, selected.isActive ? "block" : "unblock")}
+                            className={`h-20 rounded-[2rem] font-black text-base border-4 transition-all active:scale-95 ${!selected.isActive ? 'bg-emerald-500 border-slate-950 text-white shadow-2xl' : 'bg-white/5 border-white/20 text-rose-500 hover:bg-rose-600 hover:text-white hover:border-slate-950 shadow-xl'}`}
+                          >
+                             {!selected.isActive ? <CheckCircle2 size={32} /> : <Ban size={32} />}
+                             {!selected.isActive ? "استعادة نشاط الجهاز" : "تعليق وصول الحساب"}
+                          </Button>
+                       </div>
+                       
+                       <Button className="w-full h-16 bg-white/5 border-none text-white/30 hover:text-white transition-colors hover:bg-white/10 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-widest">
+                          <ExternalLink size={20} />
+                          فتح سجل النشاط بالكامل
+                       </Button>
+                    </div>
+                 </motion.aside>
+              )}
+           </AnimatePresence>
+        </div>
       </div>
     </div>
   );
 }
 
-function Kpi({ label, value, icon: Icon, highlight, danger }: { label: string; value: string | number; icon: typeof Users; highlight?: boolean; danger?: boolean }) {
+function UStat({ label, val, icon: Icon, color, isCurrency, pulse, delay }: { label: string; val: number; icon: React.ElementType; color: string; isCurrency?: boolean; pulse?: boolean; delay: number }) {
   return (
-    <div className={`rounded-2xl border bg-white p-4 sm:p-5 ${danger ? "border-rose-200" : highlight ? "border-primary/30" : "border-slate-200"}`}>
-      <div className="mb-2 flex items-center justify-between"><p className="text-xs font-black text-slate-500">{label}</p><div className={`flex h-9 w-9 items-center justify-center rounded-lg ${danger ? "bg-rose-50 text-rose-600" : highlight ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}><Icon size={16} /></div></div>
-      <p className="font-jakarta text-2xl font-black text-slate-900">{value}</p>
-    </div>
+    <motion.div 
+      initial={{ y: 30, opacity: 0 }} 
+      animate={{ y: 0, opacity: 1 }} 
+      transition={{ delay }}
+      className="bg-white border-4 border-slate-950 p-10 rounded-[3rem] space-y-8 hover:shadow-[20px_20px_0px_#0f172a] hover:translate-x-[-10px] hover:translate-y-[-10px] transition-all duration-500 group relative overflow-hidden shadow-2xl"
+    >
+       <div className={`w-24 h-24 ${color} text-white rounded-[2rem] flex items-center justify-center shadow-xl border-4 border-slate-950 relative transition-transform duration-500 group-hover:rotate-12`}>
+          <Icon size={40} />
+          {pulse && <span className="absolute -top-3 -right-3 w-8 h-8 bg-white border-4 border-emerald-400 rounded-full flex items-center justify-center shadow-sm"><span className="w-3.5 h-3.5 bg-emerald-400 rounded-full animate-ping" /></span>}
+       </div>
+       <div className="space-y-2">
+          <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.3em] font-jakarta">{label}</p>
+          <p className="text-5xl font-black text-slate-950 font-jakarta tracking-tighter leading-none">
+             {isCurrency ? formatCurrency(val).split('.')[0] : val}
+          </p>
+       </div>
+    </motion.div>
   );
 }
 
-function Status({ text, tone }: { text: string; tone: "success" | "danger" | "brand" | "muted" }) {
-  const styles: Record<"success" | "danger" | "brand" | "muted", string> = {
-    success: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    danger: "bg-rose-50 text-rose-700 border-rose-100",
-    brand: "bg-primary/10 text-primary border-primary/20",
-    muted: "bg-slate-100 text-slate-600 border-slate-200",
-  };
-  return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${styles[tone]}`}>{text}</span>;
-}
-
-function Risk({ score, level }: { score: number; level: RiskLevel }) {
-  const style = level === "مرتفع" ? "bg-rose-50 text-rose-700 border-rose-100" : level === "متوسط" ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-emerald-50 text-emerald-700 border-emerald-100";
-  return <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black ${style}`}>{level} ({score})</span>;
-}
-
-function Detail({ icon: Icon, label, value }: { icon: typeof Mail; label: string; value: string }) {
+function UInfoLine({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-      <div className="flex items-center gap-2"><Icon size={13} className="text-slate-400" /><span className="text-xs font-black text-slate-500">{label}</span></div>
-      <span className="text-xs font-bold text-slate-700">{value}</span>
+    <div className="flex items-center justify-between p-6 bg-white/5 border-2 border-white/5 rounded-[2rem] group hover:border-white/20 transition-all shadow-md">
+       <div className="flex items-center gap-5">
+          <span className="text-white/30 group-hover:text-indigo-400 transition-colors">{icon}</span>
+          <span className="text-[12px] font-black text-white/40 uppercase tracking-widest">{label}</span>
+       </div>
+       <span className={`text-base font-black ${highlight ? 'text-amber-400' : 'text-white/90'} group-hover:text-white transition-all font-jakarta`}>{value}</span>
     </div>
   );
 }
