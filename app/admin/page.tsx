@@ -77,12 +77,12 @@ function KpiCard({
         )}
       </div>
       <div>
-        <p className={`text-2xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
-          {loading ? <span className="inline-block w-16 h-6 bg-gray-100 rounded animate-pulse" /> : value}
+        <p className={`text-3xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
+          {loading ? <span className="inline-block w-20 h-7 bg-gray-100 rounded animate-pulse" /> : value}
         </p>
-        <p className={`text-xs mt-1.5 font-medium ${highlight ? "text-orange-100" : "text-gray-500"}`}>{title}</p>
+        <p className={`text-xs mt-2 font-semibold ${highlight ? "text-orange-100" : "text-gray-500"}`}>{title}</p>
         {deltaLabel && (
-          <p className={`text-[11px] mt-0.5 ${highlight ? "text-orange-200" : "text-gray-400"}`}>{deltaLabel}</p>
+          <p className={`text-[12px] mt-1 font-medium ${highlight ? "text-orange-200" : "text-gray-400"}`}>{deltaLabel}</p>
         )}
       </div>
     </div>
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
           {/* Quick stats */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <p className="text-xs font-bold text-gray-900 mb-3">ملخص النظام</p>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {[
                 { label: "الموردين النشطين",    value: stats?.totalVendors   ?? 0, color: "bg-orange-500" },
                 { label: "إجمالي المستخدمين",   value: stats?.totalUsers     ?? 0, color: "bg-blue-500"   },
@@ -220,9 +220,9 @@ export default function AdminDashboard() {
                 <div key={item.label} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                    <span className="text-[13px] text-gray-600">{item.label}</span>
+                    <span className="text-sm font-medium text-gray-700">{item.label}</span>
                   </div>
-                  <span className="text-[13px] font-bold text-gray-900 tabular-nums">
+                  <span className="text-base font-bold text-gray-900 tabular-nums">
                     {loading ? "—" : item.value.toLocaleString("ar-EG")}
                   </span>
                 </div>
