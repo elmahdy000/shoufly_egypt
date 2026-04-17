@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { Search, Users, Briefcase, Shield, Truck, MoreVertical } from "lucide-react";
+import { Search, Users, Briefcase, Shield, Truck, MoreVertical, ShoppingCart, Store } from "lucide-react";
 
 interface User {
   id: number;
@@ -57,18 +57,32 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
         {[
-          { label: "إجمالي",        count: counts.all,      color: "text-gray-900",   bg: "bg-gray-50",    border: "border-gray-200" },
-          { label: "العملاء",       count: counts.client,   color: "text-blue-700",   bg: "bg-blue-50",    border: "border-blue-200"  },
-          { label: "الموردين",      count: counts.vendor,   color: "text-orange-700", bg: "bg-orange-50",  border: "border-orange-200"},
-          { label: "مندوبي التوصيل",count: counts.delivery, color: "text-green-700",  bg: "bg-green-50",   border: "border-green-200" },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-2.5 sm:p-3 lg:p-4`}>
-            <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${s.color} truncate`}>{loading ? "—" : s.count.toLocaleString("ar-EG")}</p>
-            <p className="text-[10px] sm:text-xs text-gray-500 mt-1 font-medium truncate">{s.label}</p>
-          </div>
-        ))}
+          { label: "إجمالي",        count: counts.all,      icon: Users,         color: "text-gray-900",   bg: "from-gray-50 to-gray-100",     iconBg: "bg-gray-100",     iconColor: "text-gray-600"     },
+          { label: "العملاء",       count: counts.client,   icon: ShoppingCart,  color: "text-blue-900",   bg: "from-blue-50 to-blue-100",    iconBg: "bg-blue-100",     iconColor: "text-blue-600"     },
+          { label: "الموردين",      count: counts.vendor,   icon: Store,         color: "text-orange-900", bg: "from-orange-50 to-orange-100",iconBg: "bg-orange-100",   iconColor: "text-orange-600"   },
+          { label: "مندوبي التوصيل",count: counts.delivery, icon: Truck,         color: "text-green-900",  bg: "from-green-50 to-green-100",  iconBg: "bg-green-100",    iconColor: "text-green-600"    },
+        ].map(s => {
+          const Icon = s.icon;
+          return (
+            <div
+              key={s.label}
+              className={`bg-gradient-to-br ${s.bg} border border-white rounded-2xl p-3 sm:p-4 lg:p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+                <div className={`${s.iconBg} p-2 sm:p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon size={14} className={`${s.iconColor} hidden sm:block`} />
+                  <Icon size={12} className={`${s.iconColor} sm:hidden`} />
+                </div>
+              </div>
+              <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${s.color} tabular-nums truncate leading-tight`}>
+                {loading ? "—" : s.count.toLocaleString("ar-EG")}
+              </p>
+              <p className="text-[10px] sm:text-xs text-gray-600 mt-1.5 sm:mt-2 font-semibold truncate">{s.label}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Controls */}

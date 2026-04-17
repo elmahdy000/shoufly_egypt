@@ -56,11 +56,12 @@ function KpiCard({
   icon: React.ElementType; loading?: boolean;
 }) {
   return (
-    <div className="rounded-2xl p-3 sm:p-4 lg:p-6 bg-white border border-gray-100 hover:border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5">
+    <div className="rounded-2xl p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-white to-gray-50 border border-white text-gray-900 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
       <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4 lg:mb-5">
-        <div className="w-8 sm:w-9 lg:w-11 h-8 sm:h-9 lg:h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
-          <Icon size={16} className="text-orange-500 hidden sm:block" />
-          <Icon size={14} className="text-orange-500 sm:hidden" />
+        <div className="w-10 sm:w-11 lg:w-12 h-10 sm:h-11 lg:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 border border-orange-200/50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+          <Icon size={16} className="text-orange-600 hidden sm:block lg:hidden" />
+          <Icon size={14} className="text-orange-600 sm:hidden" />
+          <Icon size={18} className="text-orange-600 hidden lg:block" />
         </div>
         {delta && (
           <span className="flex items-center gap-1 text-[11px] sm:text-[13px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shrink-0">

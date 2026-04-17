@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatDate } from "@/lib/formatters";
-import { Search, Package, Clock, CheckCircle2, AlertCircle, Activity, ChevronLeft, Circle } from "lucide-react";
+import { Search, Package, Clock, CheckCircle2, AlertCircle, Activity, ChevronLeft, Circle, Zap, XCircle } from "lucide-react";
 
 interface Request {
   id: number;
@@ -81,19 +81,33 @@ export default function AdminRequestsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
         {[
-          { label: "الإجمالي",      count: counts.total,    bg: "bg-gray-50",     border: "border-gray-200",  text: "text-gray-900"   },
-          { label: "مفتوح",         count: counts.open,     bg: "bg-amber-50",    border: "border-amber-200",  text: "text-amber-700"  },
-          { label: "نشط",           count: counts.active,   bg: "bg-blue-50",     border: "border-blue-200",   text: "text-blue-700"   },
-          { label: "مكتمل",         count: counts.done,     bg: "bg-green-50",    border: "border-green-200",  text: "text-green-700"  },
-          { label: "ملغى",          count: counts.cancelled, bg: "bg-red-50",      border: "border-red-200",    text: "text-red-700"    },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-2.5 sm:p-3 lg:p-4 hover:shadow-md transition-shadow`}>
-            <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${s.text} tabular-nums truncate`}>{loading ? "—" : s.count.toLocaleString("ar-EG")}</p>
-            <p className="text-[10px] sm:text-xs text-gray-600 mt-1 font-medium truncate">{s.label}</p>
-          </div>
-        ))}
+          { label: "الإجمالي",      count: counts.total,    icon: Package,     bg: "from-gray-50 to-gray-100",   text: "text-gray-900",   iconBg: "bg-gray-100",    iconColor: "text-gray-600"   },
+          { label: "مفتوح",         count: counts.open,     icon: Clock,       bg: "from-amber-50 to-amber-100",  text: "text-amber-900",  iconBg: "bg-amber-100",   iconColor: "text-amber-600"  },
+          { label: "نشط",           count: counts.active,   icon: Zap,         bg: "from-blue-50 to-blue-100",    text: "text-blue-900",   iconBg: "bg-blue-100",    iconColor: "text-blue-600"   },
+          { label: "مكتمل",         count: counts.done,     icon: CheckCircle, bg: "from-green-50 to-green-100",  text: "text-green-900",  iconBg: "bg-green-100",   iconColor: "text-green-600"  },
+          { label: "ملغى",          count: counts.cancelled, icon: XCircle,     bg: "from-red-50 to-red-100",      text: "text-red-900",    iconBg: "bg-red-100",     iconColor: "text-red-600"    },
+        ].map(s => {
+          const Icon = s.icon;
+          return (
+            <div
+              key={s.label}
+              className={`bg-gradient-to-br ${s.bg} border border-white rounded-2xl p-3 sm:p-4 lg:p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
+                <div className={`${s.iconBg} p-2 sm:p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon size={14} className={`${s.iconColor} hidden sm:block`} />
+                  <Icon size={12} className={`${s.iconColor} sm:hidden`} />
+                </div>
+              </div>
+              <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${s.text} tabular-nums truncate leading-tight`}>
+                {loading ? "—" : s.count.toLocaleString("ar-EG")}
+              </p>
+              <p className="text-[10px] sm:text-xs text-gray-600 mt-1.5 sm:mt-2 font-semibold truncate">{s.label}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Controls */}
