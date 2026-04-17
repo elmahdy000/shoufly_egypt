@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = process.env.SESSION_SECRET!;
+    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("SESSION_SECRET or JWT_SECRET environment variable is required");
+    }
     const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 days
     const token = await createSessionToken(
       { userId: user.id, role: user.role, exp },

@@ -36,7 +36,7 @@ async function resolveUserBySessionToken(
     return null;
   }
 
-  const sessionSecret = process.env.SESSION_SECRET;
+  const sessionSecret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
   if (!sessionSecret) {
     return null;
   }
@@ -99,7 +99,7 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUser | null> {
   const token = cookieStore.get("session_token")?.value;
   if (!token) return null;
 
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
   if (!secret) return null;
 
   const payload = await verifySessionToken(token, secret);
