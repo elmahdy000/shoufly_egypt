@@ -3,7 +3,7 @@ import { logger } from '@/lib/utils/logger';
 interface PushPayload {
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, string>;
 }
 
 /**

@@ -30,7 +30,7 @@ export async function verifySessionToken(token: string, secret: string): Promise
       role: payload.role as UserRole,
       exp: Number(payload.exp),
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }

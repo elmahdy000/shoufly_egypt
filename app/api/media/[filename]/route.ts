@@ -10,30 +10,32 @@ import { existsSync } from 'fs';
  */
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { filename: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
-    
+    const { filename } = await params;
+
     // Security: Prevent directory traversal
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
       return new NextResponse('Invalid filename', { status: 400 });
     }
 
     const externalUploadDir = process.env.UPLOAD_PATH;
-    const uploadDir = externalUploadDir 
-      ? path.isAbsolute(externalUploadDir) ? externalUploadDir : path.join(process.cwd(), externalUploadDir)
+    const uploadDir = externalUploadDir
+      ? path.isAbsolute(externalUploadDir)
+        ? externalUploadDir
+        : path.join(process.cwd(), externalUploadDir)
       : path.join(process.cwd(), 'public/uploads');
 
     const filePath = path.join(uploadDir, filename);
 
     if (!existsSync(filePath)) {
-        return new NextResponse('File not found', { status: 404 });
+      return new NextResponse('File not found', { status: 404 });
     }
 
     const fileBuffer = await readFile(filePath);
-    
+
     // Determine content type based on extension
     const ext = path.extname(filename).toLowerCase();
     const contentTypeMap: Record<string, string> = {
@@ -53,7 +55,6 @@ export async function GET(
         'Cache-Control': 'public, max-age=31536000, immutable', // High cache for performance
       },
     });
-
   } catch (error) {
     console.error('MEDIA_PROXY_ERROR', error);
     return new NextResponse('Internal Server Error', { status: 500 });

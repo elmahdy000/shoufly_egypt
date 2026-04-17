@@ -7,11 +7,12 @@ import { formatCurrency } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listVendorBids } from "@/lib/api/bids";
 import { listVendorTransactions } from "@/lib/api/transactions";
+import { StatSkeleton, RequestSkeleton } from "@/components/shoofly/skeleton";
 import {
   FiPackage,
   FiTrendingUp, FiPlusCircle,
   FiCheckCircle, FiInbox,
-  FiZap, FiSearch, FiChevronLeft
+  FiZap, FiSearch, FiChevronLeft, FiStar, FiClock
 } from "react-icons/fi";
 
 export default function VendorHomePage() {
@@ -53,52 +54,75 @@ export default function VendorHomePage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          {/* Earnings Card */}
-          <Link href="/vendor/earnings" className="block">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all group h-full">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-700">الأرباح</span>
-                <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                  <FiTrendingUp size={16} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {(bidsLoading || txLoading) ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              {/* Earnings Card */}
+              <Link href="/vendor/earnings" className="md:col-span-1">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-emerald-300 hover:shadow-md transition-all group h-full">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-tighter">صافي الأرباح</span>
+                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                      <FiTrendingUp size={18} />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 tracking-tight">
+                    {formatCurrency(totalEarnings).split(' ')[0]}
+                    <span className="text-xs text-slate-400 mr-1">ج.م</span>
+                  </p>
+                </div>
+              </Link>
+
+              {/* Active Bids Card */}
+              <Link href="/vendor/bids" className="md:col-span-1">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-primary/30 hover:shadow-md transition-all group h-full">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-xs font-black text-slate-500 uppercase tracking-tighter">العروض النشطة</span>
+                    <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors text-xs font-black">
+                      {activeBidsCount}
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-900 tracking-tight">
+                    {activeBidsCount} <span className="text-xs text-slate-400 mr-1 font-medium italic">عرض جاري</span>
+                  </p>
+                </div>
+              </Link>
+
+              {/* Success Rate Card */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full group hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-tighter">نسبة النجاح</span>
+                  <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                    <FiStar size={18} />
+                  </div>
+                </div>
+                <div className="flex items-end gap-1">
+                  <p className="text-2xl font-black text-slate-900">{successRate}%</p>
+                  <div className="w-full bg-slate-100 h-1 rounded-full mb-2 overflow-hidden">
+                    <div className="bg-amber-400 h-full" style={{ width: `${successRate}%` }} />
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-slate-500 font-medium mb-1.5">إجمالي</p>
-              <p className="text-base font-bold text-slate-900 truncate">
-                {txLoading ? "—" : formatCurrency(totalEarnings)}
-              </p>
-            </div>
-          </Link>
 
-          {/* Active Bids Card */}
-          <Link href="/vendor/bids" className="block">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all group h-full">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-700">العروض</span>
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                  <FiPackage size={16} />
+              {/* Response Time (Simulated/Static for now) */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full group hover:bg-slate-50 transition-colors hidden md:block">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-tighter">سرعة الرد</span>
+                  <div className="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600">
+                    <FiClock size={18} />
+                  </div>
                 </div>
+                <p className="text-2xl font-black text-slate-900">15 <span className="text-xs text-slate-400 mr-1 font-medium italic">دقيقة</span></p>
               </div>
-              <p className="text-xs text-slate-500 font-medium mb-1.5">بتتراجع</p>
-              <p className="text-base font-bold text-slate-900">
-                {bidsLoading ? "—" : activeBidsCount}
-              </p>
-            </div>
-          </Link>
-
-          {/* Success Rate Card */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 h-full">
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-700">الأداء</span>
-              <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600">
-                <FiCheckCircle size={16} />
-              </div>
-            </div>
-            <p className="text-xs text-slate-500 font-medium mb-1.5">نسبة النجاح</p>
-            <p className="text-base font-bold text-slate-900">
-              {successRate}<span className="text-xs text-primary font-bold mr-0.5">%</span>
-            </p>
-          </div>
+            </>
+          )}
         </div>
 
       <div className="grid gap-6 lg:grid-cols-5">

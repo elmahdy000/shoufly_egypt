@@ -24,6 +24,8 @@ export async function registerUser(payload: {
   password: string;
   phone?: string;
   role: AnyRole;
+  governorateId?: number;
+  cityId?: number;
 }) {
   // Use the actual role from payload for registration
   return apiFetch<AuthUser>("/api/auth/register", payload.role, {

@@ -99,28 +99,34 @@ function MessagesContent() {
             {convsLoading ? (
                <div className="text-center py-10 text-slate-400 text-sm">جاري التحميل...</div>
             ) : (conversations ?? []).length === 0 ? (
-               <div className="text-center py-10 text-slate-400 text-sm">لا توجد محادثات</div>
-            ) : conversations?.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedUser(c)}
-                className={`w-full text-right p-4 border-b border-slate-100 flex items-center gap-3 transition-colors ${
-                  selectedUser?.id === c.id ? 'bg-primary/5 border-r-2 border-r-primary' : 'hover:bg-slate-50'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                  selectedUser?.id === c.id ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600'
-                }`}>
-                  {c.name[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                   <p className={`text-sm font-medium truncate ${selectedUser?.id === c.id ? 'text-slate-900' : 'text-slate-700'}`}>
-                     {getAnonymizedName(c)}
-                   </p>
-                   <p className="text-xs text-slate-500 truncate">{c.lastMsg}</p>
-                </div>
-              </button>
-            ))}
+               <div className="text-center py-10 text-slate-400 text-sm">لا توجد محادثات سابقة</div>
+            ) : conversations?.map((c) => {
+              // Strictly only show Support/Admin and not Peers
+              const isSupport = c.role === 'ADMIN'; 
+              if (!isSupport) return null;
+
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedUser(c)}
+                  className={`w-full text-right p-4 border-b border-slate-100 flex items-center gap-3 transition-colors ${
+                    selectedUser?.id === c.id ? 'bg-primary/5 border-r-2 border-r-primary' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                    selectedUser?.id === c.id ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {c.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                     <p className={`text-sm font-medium truncate ${selectedUser?.id === c.id ? 'text-slate-900' : 'text-slate-700'}`}>
+                       {getAnonymizedName(c)}
+                     </p>
+                     <p className="text-xs text-slate-500 truncate">{c.lastMsg}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 

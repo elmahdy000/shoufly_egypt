@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { d, toTwo, sub, mul, min, toNumber } from '@/lib/utils/decimal';
-import Decimal from 'decimal.js';
+import { Notify } from '../notifications/hub';
+import { TransactionType } from '@/app/generated/prisma';
 
 export async function settleOrder(requestId: number) {
   logger.info('qr.confirm.settlement.started', { requestId });
@@ -20,44 +21,50 @@ export async function settleOrder(requestId: number) {
         },
         transactions: {
           where: { type: { in: ['VENDOR_PAYOUT', 'ADMIN_COMMISSION', 'REFUND'] } },
-          select: { id: true, type: true },
+          select: { id: true, type: true, amount: true },
         },
       },
     });
 
     if (!request) {
-      throw new Error('Request not found');
+      throw new Error('الطلب غير موجود.');
     }
 
     if (request.status === 'CLOSED_SUCCESS') {
-      throw new Error('Request already settled');
+      logger.info('order.settle.already_closed', { requestId });
+      return { success: true, alreadySettled: true };
     }
 
     // SECURITY: Prevent settlement if request was cancelled or refunded
     if (request.status === 'CLOSED_CANCELLED') {
-      throw new Error('Cannot settle cancelled request');
+      throw new Error('لا يمكن تسوية طلب ملغي.');
     }
 
     // Check for any REFUND transactions
     const refundTransaction = request.transactions.find((t) => t.type === 'REFUND');
     if (refundTransaction) {
-      throw new Error('Cannot settle request - refund was already issued');
+      throw new Error('لا يمكن التسوية، تم رد الأموال لهذا الطلب بالفعل.');
     }
 
     if (!request.selectedBidId) {
-      throw new Error('Request has no selected bid');
+      throw new Error('الطلب ليس له عرض سعر محدد حالياً.');
     }
 
     const selectedBid = request.bids.find((b) => b.id === request.selectedBidId);
     if (!selectedBid) {
-      throw new Error('Accepted selected bid not found');
+      throw new Error('لم يتم العثور على عرض السعر المقبول لهذا الطلب.');
     }
 
     const existingPayout = request.transactions.find((t) => t.type === 'VENDOR_PAYOUT');
     const existingCommission = request.transactions.find((t) => t.type === 'ADMIN_COMMISSION');
 
     if (existingPayout || existingCommission) {
-      throw new Error('Settlement already recorded for this request');
+      logger.info('order.settle.already_settled', { requestId });
+      return { 
+        success: true, 
+        alreadySettled: true, 
+        adminCommission: Number(existingCommission?.amount || 0) 
+      };
     }
 
     const platform = await tx.platformSetting.findFirst({
@@ -65,7 +72,7 @@ export async function settleOrder(requestId: number) {
       select: { commissionPercent: true },
     });
     if (!platform) {
-      throw new Error('Platform settings missing');
+      throw new Error('إعدادات المنصة غير متوفرة، يرجى مراجعة الإدارة.');
     }
 
     const admin = await tx.user.findFirst({
@@ -74,7 +81,7 @@ export async function settleOrder(requestId: number) {
       select: { id: true },
     });
     if (!admin) {
-      throw new Error('Admin user not found');
+      throw new Error('لا يوجد حساب أدمن متاح لإتمام التسوية.');
     }
 
     // Use precise Decimal arithmetic for financial calculations
@@ -168,24 +175,9 @@ export async function settleOrder(requestId: number) {
       data: { status: 'CLOSED_SUCCESS' },
     });
 
-    // Notifications...
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'DELIVERY_UPDATE',
-        title: 'Order Completed',
-        message: `Request #${requestId} was confirmed and closed successfully.`,
-      },
-    });
-
-    await tx.notification.create({
-      data: {
-        userId: selectedBid.vendorId,
-        type: 'PAYMENT_RECEIVED',
-        title: 'Payout Recorded',
-        message: `Payout for request #${requestId} was recorded.`,
-      },
-    });
+    // Real-time Notifications
+    await Notify.orderCompleted(request.clientId, requestId);
+    await Notify.payoutReceived(selectedBid.vendorId, requestId, toNumber(vendorPayout));
 
     logger.info('notification.created', {
       event: 'order.settled',
@@ -206,5 +198,5 @@ export async function settleOrder(requestId: number) {
       adminCommission: toNumber(finalCommission),
       deliveryFinalStatus: 'DELIVERED' as const,
     };
-  });
+  }, { timeout: 20000 }); // Increased timeout for stability under massive load
 }

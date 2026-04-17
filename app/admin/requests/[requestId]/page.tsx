@@ -126,7 +126,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                 <FiFileText className="text-primary" />
                 <span>شرح المشكلة بالتفصيل</span>
               </div>
-              <div className="text-slate-700 leading-relaxed bg-slate-50/80 p-6 rounded-xl border border-slate-100 text-lg font-medium">
+              <div className="text-slate-700 leading-relaxed bg-slate-100 p-6 rounded-xl border border-slate-200 text-lg font-medium">
                 {req?.description || 'لا يوجد وصف تفصيلي لهذا الطلب.'}
               </div>
             </div>
@@ -162,7 +162,7 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
               {bids.loading ? (
                 <div className="text-center py-20 opacity-50 font-bold animate-pulse">بنفرز عروض الأسعار...</div>
               ) : bids.error ? (
-                <div className="shoofly-card p-8 text-center border border-rose-200 bg-rose-50 text-rose-700 font-bold">
+                <div className="shoofly-card p-8 text-center border border-rose-200 bg-rose-100 text-rose-700 font-bold">
                   {bids.error}
                 </div>
               ) : (bids.data ?? []).length === 0 ? (
@@ -182,15 +182,15 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
                         </div>
                       </div>
                     </div>
-                    <div className="text-left bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-sm w-full sm:min-w-[200px]">
-                      <p className="text-xs text-emerald-600 font-black tracking-wide mb-1 text-center">تكلفة العميل النهائية</p>
+                    <div className="text-left bg-emerald-100 p-4 rounded-2xl border border-emerald-200 shadow-sm w-full sm:min-w-[200px]">
+                      <p className="text-xs text-emerald-700 font-bold tracking-wide mb-1 text-center">تكلفة العميل النهائية</p>
                       <p className="text-3xl font-black font-jakarta text-emerald-700 text-center">
                         {formatCurrency(bid.clientPrice || 0)}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 mb-8 italic text-slate-600 font-medium leading-relaxed">
+                  <div className="bg-slate-100 p-6 rounded-2xl border border-slate-200 mb-8 italic text-slate-600 font-medium leading-relaxed">
                     "{bid.description || 'لا يوجد تفاصيل إضافية للعرض.'}"
                   </div>
 

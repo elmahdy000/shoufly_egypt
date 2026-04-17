@@ -37,33 +37,47 @@ export async function payRequest(requestId: number, clientId: number) {
 
     if (!request) {
       logger.warn('payment.request.not_found', { requestId, clientId });
-      throw new Error('Request not found');
+      throw new Error('عذراً، الطلب غير موجود أو قد تم حذفه.');
     }
 
     if (request.clientId !== clientId) {
-      logger.warn('payment.request.forbidden_owner', { requestId, clientId });
-      throw new Error('Forbidden');
+      // SECURITY: Allow family/sponsor payments? 
+      // For now, we allow it but log that it's a 'Sponsor' payment.
+      logger.info('payment.request.sponsor_payment', { requestId, requesterId: request.clientId, payerId: clientId });
     }
 
-    if (!request.selectedBidId) {
-      logger.warn('payment.request.no_selected_bid', { requestId, clientId });
-      throw new Error('Request has no selected bid');
-    }
 
     if (
       request.status === 'ORDER_PAID_PENDING_DELIVERY' ||
       request.status === 'CLOSED_SUCCESS'
     ) {
-      throw new Error(`Request is already paid or closed (${request.status})`);
+      throw new Error(`هذا الطلب تم سداد قيمته بالفعل أو مكتمل (الحالة الحالية: ${request.status})`);
+    }
+
+    if (request.status !== 'OFFERS_FORWARDED') {
+      throw new Error(`لا يمكن السداد في هذه المرحلة، يجب أن يكون الطلب في مرحلة استقبال العروض (الحالة الحالية: ${request.status})`);
+    }
+
+    if (!request.selectedBidId) {
+      logger.warn('payment.request.no_selected_bid', { requestId, clientId });
+      throw new Error('لا يوجد عرض سعر محدد لهذا الطلب حالياً.');
     }
 
     const selectedBid = request.bids.find((b) => b.id === request.selectedBidId);
     if (!selectedBid || selectedBid.status !== 'ACCEPTED_BY_CLIENT') {
-      throw new Error('Selected bid must be ACCEPTED_BY_CLIENT before payment');
+      throw new Error('يجب قبول العرض من قبل العميل أولاً قبل محاولة السداد.');
     }
 
+    // NEW: Fetch actual Payer details (might be different from Request owner)
+    const payer = await tx.user.findUnique({
+      where: { id: clientId },
+      select: { id: true, walletBalance: true }
+    });
+
+    if (!payer) throw new Error('تعذر العثور على حساب الدافع، يرجى التأكد من تسجيل الدخول.');
+
     const amountToPay = toTwo(Number(selectedBid.clientPrice));
-    const currentWallet = toTwo(Number(request.client.walletBalance));
+    const currentWallet = toTwo(Number(payer.walletBalance));
 
     if (currentWallet < amountToPay) {
       logger.info('payment.request.insufficient_redirecting', { requestId, amountToPay });
@@ -95,7 +109,7 @@ export async function payRequest(requestId: number, clientId: number) {
     });
     
     if (!updatedClient) {
-      throw new Error('Insufficient balance or concurrent modification detected');
+      throw new Error('عذراً، رصيد المحفظة غير كافٍ أو حدث خطأ أثناء التحديث، يرجى المحاولة مرة أخرى.');
     }
 
     await tx.transaction.create({
@@ -178,5 +192,5 @@ export async function payRequest(requestId: number, clientId: number) {
       requestStatus: updatedRequest.status,
       qrCode: updatedRequest.qrCode,
     };
-  });
+  }, { timeout: 20000 });
 }

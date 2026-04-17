@@ -13,7 +13,7 @@ export async function createRequest(clientId: number, data: CreateRequestInput &
   });
 
   if (!client || !client.isActive || client.isBlocked) {
-    throw new Error('Account is inactive or blocked. Cannot create requests.');
+    throw new Error('حسابك غير نشط أو محظور حالياً. لا يمكنك إنشاء طلبات جديدة.');
   }
 
   // 1. Enforce Sub-category selection
@@ -22,9 +22,20 @@ export async function createRequest(clientId: number, data: CreateRequestInput &
     select: { parentId: true, name: true }
   });
 
-  if (!chosenCategory) throw new Error('Category not found');
+  if (!chosenCategory) throw new Error('القسم المختار غير موجود.');
   if (chosenCategory.parentId === null) {
-    throw new Error(`Please select a specific sub-category for "${chosenCategory.name}"`);
+    throw new Error(`يرجى اختيار قسم فرعي محدد داخل قسم "${chosenCategory.name}" لضمان وصول طلبك للموردين الصحيحين.`);
+  }
+
+  // 2. Validate Location Consistency (Governorate must own City)
+  if (data.cityId && data.governorateId) {
+    const city = await prisma.city.findUnique({
+        where: { id: data.cityId },
+        select: { governorateId: true }
+    });
+    if (city && city.governorateId !== data.governorateId) {
+        throw new Error('المدينة المختارة لا تتبع المحافظة المختارة، يرجى مراجعة اختيار الموقع.');
+    }
   }
 
   return prisma.$transaction(async (tx) => {

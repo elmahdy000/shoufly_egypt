@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 export async function reviewWithdrawal(params: {
   withdrawalId: number;
@@ -81,17 +82,7 @@ export async function reviewWithdrawal(params: {
       },
     });
 
-    await tx.notification.create({
-      data: {
-        userId: withdrawal.vendorId,
-        type: action === 'approve' ? 'WITHDRAWAL_APPROVED' : 'WITHDRAWAL_REJECTED',
-        title: action === 'approve' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
-        message:
-          action === 'approve'
-            ? `Withdrawal request #${withdrawal.id} was approved.`
-            : `Withdrawal request #${withdrawal.id} was rejected.`,
-      },
-    });
+    await Notify.withdrawalStatus(withdrawal.vendorId, withdrawalId, action === 'approve' ? 'APPROVED' : 'REJECTED');
 
     logger.info('notification.created', {
       event: `withdrawal.${action === 'approve' ? 'approved' : 'rejected'}`,

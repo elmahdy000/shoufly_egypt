@@ -7,6 +7,10 @@ import { Redis } from 'ioredis';
 
 const MOCK_STORAGE = new Map<string, string>();
 
+let _isRedisAvailable = process.env.NODE_ENV === 'test';
+
+export const isRedisAvailable = () => _isRedisAvailable;
+
 class MockRedis {
   status = 'ready';
 
@@ -55,6 +59,7 @@ const createRealClient = () => {
     if (!(currentClient instanceof MockRedis)) {
         console.warn('⚠️ Redis unreachable, using in-memory fallback.');
         currentClient = new MockRedis();
+        _isRedisAvailable = false;
     }
   });
 
@@ -63,6 +68,7 @@ const createRealClient = () => {
 
 // Use existing global instance if available, otherwise create new
 currentClient = global.redis || (process.env.NODE_ENV === 'test' ? new MockRedis() : createRealClient());
+_isRedisAvailable = !(currentClient instanceof MockRedis);
 
 /**
  * 🛡️ The Ultimate Redis Proxy

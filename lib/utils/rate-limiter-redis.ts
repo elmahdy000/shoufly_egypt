@@ -3,9 +3,7 @@
  * Production-ready rate limiting with Redis backend
  */
 
-import { getRedisClient, isRedisAvailable } from '@/lib/redis';
-
-export { isRedisAvailable };
+import { getRedisClient } from '@/lib/redis';
 
 export interface RateLimitResult {
   allowed: boolean;

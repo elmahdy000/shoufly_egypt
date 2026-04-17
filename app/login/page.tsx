@@ -1,21 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/shoofly/button';
-import { FiMail, FiLock, FiShield, FiZap, FiUser, FiBriefcase, FiCpu } from 'react-icons/fi';
-import { loginUser } from '@/lib/api/auth';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ImprovedButton } from "@/components/ui/improved-button";
+import { ImprovedAlert } from "@/components/ui/improved-alert";
+import { FiMail, FiLock, FiShield, FiCpu, FiBriefcase, FiUser, FiZap } from "react-icons/fi";
+import { loginUser } from "@/lib/api/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError("يرجى ملء جميع الحقول");
+      return;
+    }
+
     await performLogin(email, password);
   };
 
@@ -24,28 +32,37 @@ export default function LoginPage() {
     setError(null);
     try {
       const user = await loginUser(loginEmail, loginPass);
-      // Let the middleware handle role redirection, but we can pre-navigate:
-      if (user.role === 'ADMIN') router.push('/admin');
-      else if (user.role === 'CLIENT') router.push('/client');
-      else if (user.role === 'VENDOR') router.push('/vendor');
-      else if (user.role === 'DELIVERY') router.push('/delivery');
-      else router.push('/');
+      if (user.role === "ADMIN") router.push("/admin");
+      else if (user.role === "CLIENT") router.push("/client");
+      else if (user.role === "VENDOR") router.push("/vendor");
+      else if (user.role === "DELIVERY") router.push("/delivery");
+      else router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'فشل تسجيل الدخول. يرجى التأكد من البيانات.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "فشل تسجيل الدخول. يرجى التأكد من البيانات."
+      );
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 text-right dir-rtl font-sans">
+    <div
+      className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col justify-center items-center p-4 sm:p-6 text-right dir-rtl font-sans"
+    >
       <div className="w-full max-w-md space-y-8">
         {/* Logo & Welcome */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-white mb-2">
-            <FiShield size={32} />
+          <Link href="/" className="inline-flex justify-center w-full mb-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-white shadow-lg hover:shadow-xl transition">
+              <FiShield size={32} />
+            </div>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">تسجيل الدخول</h1>
+            <p className="text-slate-500 text-sm mt-1">أهلاً بك في منصة شوفلي</p>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">تسجيل الدخول</h1>
-          <p className="text-slate-500 text-sm">أهلاً بك في منصة شوفلي</p>
         </div>
 
         {/* Login Card */}
@@ -92,13 +109,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-medium rounded-xl mt-2" 
+            <ImprovedButton
+              type="submit"
+              full
               isLoading={isLoading}
+              loadingText="جاري التسجيل..."
             >
-               تسجيل الدخول
-            </Button>
+              تسجيل الدخول
+            </ImprovedButton>
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-100 text-center">

@@ -1,7 +1,4 @@
 import { prisma } from '../lib/prisma';
-import { registerUser } from '../lib/api/auth';
-import { createClientRequest, listVendorOpenRequests } from '../lib/api/requests';
-import { submitBid } from '../lib/api/bids';
 import { acceptOffer } from '../lib/services/offers/accept-offer';
 import { settleOrder } from '../lib/services/transactions/settle-order';
 import { updateDeliveryStatus } from '../lib/services/delivery/update-delivery-status';
@@ -125,6 +122,13 @@ async function runLocationSimulation() {
   // Accept and Settle
   await acceptOffer(request.id, bid.id);
   console.log('✅ Client accepted Cairo Vendor offer');
+
+  // Delivery Simulation
+  console.log('\n🚚 Simulating Delivery/Service Flow...');
+  await updateDeliveryStatus({ requestId: request.id, userId: vendorCairo.id, status: 'VENDOR_PREPARING' });
+  await updateDeliveryStatus({ requestId: request.id, userId: vendorCairo.id, status: 'READY_FOR_PICKUP' });
+  await updateDeliveryStatus({ requestId: request.id, userId: vendorCairo.id, status: 'DELIVERED' });
+  console.log('✅ Vendor marked service as Delivered');
 
   // Settle
   await settleOrder(request.id);

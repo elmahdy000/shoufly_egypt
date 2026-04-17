@@ -12,6 +12,12 @@ import {
   ChevronLeft, ChevronRight, Zap, DollarSign
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/shoofly/map-picker"), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-slate-100 animate-pulse rounded-2xl flex items-center justify-center font-bold text-slate-400">جاري تحميل الخريطة...</div>
+});
 
 // Helper to map icons to dynamic category names
 const getCategoryIcon = (name: string) => {
@@ -142,6 +148,37 @@ export default function NewRequestPage() {
     }
   };
 
+  // --- 💾 Draft Persistence Logic ──────────────────────
+  useEffect(() => {
+    const draft = localStorage.getItem('shoofly_new_request_draft');
+    if (draft) {
+      try {
+        const data = JSON.parse(draft);
+        setTitle(data.title || "");
+        setDescription(data.description || "");
+        setAddress(data.address || "");
+        setDeliveryPhone(data.deliveryPhone || "");
+        setBudget(data.budget || "");
+        setStep(data.step || 1);
+        if (data.categoryId) setCategoryId(data.categoryId);
+        if (data.selectedParentId) setSelectedParentId(data.selectedParentId);
+      } catch (e) {
+        console.error("Failed to load draft", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const draftData = {
+      title, description, address, deliveryPhone, budget, 
+      step, categoryId, selectedParentId, 
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem('shoofly_new_request_draft', JSON.stringify(draftData));
+  }, [title, description, address, deliveryPhone, budget, step, categoryId, selectedParentId]);
+
+  const clearDraft = () => localStorage.removeItem('shoofly_new_request_draft');
+
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -206,6 +243,7 @@ export default function NewRequestPage() {
         cityId: Number(selectedCity),
         brandId: selectedBrand ? Number(selectedBrand) : undefined,
       });
+      clearDraft();
       router.push(`/client/requests/${created.id}?new=true`);
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إرسال الطلب");
@@ -444,6 +482,24 @@ export default function NewRequestPage() {
                       <p className="text-muted text-xs font-medium">سنقوم بتحديد إحداثيات المشكلة لسهولة الوصول.</p>
                    </div>
                    {locStatus !== 'success' && <div className="text-primary font-black text-sm underline">اضغط للتفعيل</div>}
+                </div>
+
+                {/* 🗺️ Interactive Map Picker */}
+                <div className="space-y-4">
+                   <label className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <MapPin size={18} className="text-primary" /> حدد المكان بدقة على الخريطة
+                   </label>
+                   <MapPicker 
+                     initialLat={Number(latitude)} 
+                     initialLng={Number(longitude)} 
+                     onLocationChange={(lat, lng) => {
+                       setLatitude(String(lat));
+                       setLongitude(String(lng));
+                     }}
+                   />
+                   <p className="text-[10px] text-slate-400 font-medium bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
+                      ملاحظة: يمكنك تحريك الخريطة والضغط لتغيير مكان "الدبوس" لضمان وصول المندوب لأقرب نقطة لك.
+                   </p>
                 </div>
 
                 <div className="space-y-4">

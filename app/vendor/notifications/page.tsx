@@ -20,16 +20,45 @@ export default function VendorNotificationsPage() {
       ) : null}
 
       <div className="space-y-3">
-        {(data ?? []).map((item) => (
-          <button key={item.id} onClick={() => markRead(item.id)} className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-right">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">{item.title || item.type}</p>
-              <span className="text-xs text-slate-500">{formatDate(item.createdAt)}</span>
-            </div>
-            <p className="mt-1 text-sm text-slate-600">{item.message}</p>
-            <p className="mt-2 text-xs text-slate-400">{item.isRead ? "مقروء" : "اضغط للتعليم كمقروء"}</p>
-          </button>
-        ))}
+        {(data ?? []).map((item) => {
+          const isRequest = item.type?.includes("REQUEST");
+          const isBid = item.type?.includes("BID");
+          
+          return (
+            <button 
+              key={item.id} 
+              onClick={() => markRead(item.id)} 
+              className={`w-full rounded-2xl border transition-all text-right group p-4 hover:shadow-md ${
+                item.isRead ? "bg-white border-slate-100 opacity-70" : "bg-white border-primary/20 shadow-sm ring-1 ring-primary/5"
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  isRequest ? "bg-amber-50 text-amber-600" : isBid ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                }`}>
+                  {isRequest ? <FiSearch size={18} /> : isBid ? <FiCheckCircle size={18} /> : <FiZap size={18} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`text-sm font-bold ${item.isRead ? "text-slate-600" : "text-slate-900"}`}>
+                      {item.title || "تنبيه جديد"}
+                    </p>
+                    <span className="text-[10px] font-medium text-slate-400">{formatDate(item.createdAt)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    {item.message}
+                  </p>
+                  {!item.isRead && (
+                    <div className="mt-3 flex items-center gap-1.5 text-[9px] font-black text-primary uppercase">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+                      جديد - اضغط للقراءة
+                    </div>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Tajawal, Plus_Jakarta_Sans, Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import SupportChatWidget from "@/components/support/ChatWidget";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -75,8 +76,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 1,
   maximumScale: 5,
+  userScalable: true,
   themeColor: "#ff6a00",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -95,6 +99,7 @@ export default function RootLayout({
         <ThemeProvider>
           <div className="min-h-screen">
             {children}
+            <SupportChatWidget />
           </div>
         </ThemeProvider>
       </body>

@@ -76,6 +76,8 @@ enum NotificationType {
   WITHDRAWAL_REJECTED
   WITHDRAWAL_REQUESTED
   REQUEST_CANCELLED
+  REQUEST_REJECTED
+  REQUEST_NEEDS_REVISION
 }
 
 model User {
@@ -117,7 +119,8 @@ model User {
 
   @@index([email])
   @@index([role])
-  @@index([isActive])
+  @@index([phone])
+  @@index([isActive, isVerified])
 }
 
 enum CategoryType {
@@ -227,7 +230,8 @@ model Request {
   @@index([clientId])
   @@index([categoryId])
   @@index([brandId])
-  @@index([status])
+  @@index([status, categoryId])
+  @@index([latitude, longitude])
   @@index([assignedDeliveryAgentId])
   @@index([createdAt])
 }
@@ -314,6 +318,7 @@ model Transaction {
   request Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([requestId])
   @@index([type])
   @@index([createdAt])
 }
@@ -332,8 +337,7 @@ model Notification {
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   request Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
-  @@index([isRead])
+  @@index([userId, isRead])
   @@index([createdAt])
 }
 

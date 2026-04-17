@@ -3,7 +3,8 @@
  * Uses Redis in production, falls back to in-memory if Redis is unavailable
  */
 
-import { checkRateLimitRedis, isRedisAvailable } from './rate-limiter-redis';
+import { checkRateLimitRedis } from './rate-limiter-redis';
+import { isRedisAvailable } from '@/lib/redis';
 
 interface RateLimitEntry {
   count: number;
@@ -88,7 +89,7 @@ export async function checkRateLimit(
   windowMs: number = 60000 // 1 minute default
 ): Promise<RateLimitResult> {
   // Check if Redis is available
-  const redisAvailable = isRedisAvailable;
+  const redisAvailable = isRedisAvailable();
   
   if (redisAvailable) {
     return checkRateLimitRedis(key, maxRequests, windowMs);

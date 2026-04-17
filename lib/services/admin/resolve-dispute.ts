@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 function toTwo(value: number): number {
   return Math.round(value * 100) / 100;
@@ -76,14 +77,7 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
             }
         });
 
-        await tx.notification.create({
-            data: {
-                userId: request.clientId,
-                type: 'REFUND_ISSUED',
-                title: 'Dispute Resolved',
-                message: `Your request was cancelled. You received a partial refund of ${refundAmount} EGP (Penalty applied: ${penaltyPercentage}%).`
-            }
-        });
+        await Notify.disputeResolved(request.clientId, request.id, 'CLIENT', refundAmount);
     }
 
     // 5. Compensate Vendor
@@ -103,14 +97,7 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
             }
         });
 
-        await tx.notification.create({
-            data: {
-                userId: acceptedBid.vendorId,
-                type: 'PAYMENT_RECEIVED',
-                title: 'Compensation Received',
-                message: `You received ${compensationAmount} EGP as compensation for the cancelled/failed request #${request.id}.`
-            }
-        });
+        await Notify.disputeResolved(acceptedBid.vendorId, request.id, 'VENDOR', compensationAmount);
     }
 
     // 6. Close the request definitively

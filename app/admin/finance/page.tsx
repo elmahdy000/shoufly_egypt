@@ -39,57 +39,56 @@ export default function AdminFinancePage() {
   }, [transactions]);
 
   return (
-    <div className="min-h-full bg-[#F1F5F9] pb-32 font-sans text-right" dir="rtl">
+    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
       
-      {/* 🚀 Header: Financial Control Hub */}
-      <section className="bg-slate-950 text-white border-b-8 border-emerald-500 sticky top-0 z-40 shadow-2xl overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] -mr-40 -mt-40 opacity-50" />
-        <div className="w-full px-8 lg:px-12 py-10 relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
-          <div className="space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
-                <span className="text-[11px] font-black tracking-[0.4em] text-emerald-400 uppercase">نظام التدقيق المالي v3.4</span>
+      {/* 🚀 Header: Modern Financial Hub */}
+      <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
+        <div className="px-6 lg:px-10 py-8 relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="space-y-1">
+             <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">نظام التدقيق المالي v3.4</span>
              </div>
-             <h1 className="text-4xl lg:text-5xl font-black tracking-tighter uppercase">الخزانة <span className="text-emerald-400 italic">المركزية</span></h1>
-             <p className="text-lg text-slate-400 font-bold max-w-2xl leading-relaxed">رقابة شاملة على التدفقات النقدية، إدارة الميزانية، وتدقيق العمليات المالية بكثافة بصرية عالية.</p>
+             <h1 className="text-2xl font-bold tracking-tight text-slate-900 border-r-4 border-emerald-500 pr-4">الخزانة <span className="text-emerald-600">المركزية</span></h1>
+             <p className="text-sm text-slate-500 font-medium max-w-xl">رقابة شاملة على التدفقات النقدية، إدارة الميزانية، وتدقيق العمليات المالية.</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-             <div className="relative group w-full sm:w-[400px]">
-                <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-all" size={24} />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+             <div className="relative group w-full sm:w-[350px]">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-all" size={18} />
                 <input
-                  placeholder="بحث في قيود العمليات..."
-                  className="w-full pr-16 pl-6 h-16 bg-white/10 border-4 border-white/10 rounded-2xl text-xl font-bold text-white focus:bg-white focus:text-slate-950 focus:border-emerald-600 outline-none transition-all placeholder:text-slate-600"
+                   placeholder="بحث في قيود العمليات..."
+                   className="w-full pr-12 pl-4 h-11 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400"
                 />
              </div>
-             <button className="h-16 px-10 rounded-2xl bg-white text-slate-950 font-black border-4 border-slate-950 shadow-[8px_8px_0px_rgba(0,0,0,0.1)] hover:bg-emerald-400 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3">
-                <Download size={24} /> استخراج تقارير
+             <button className="h-11 px-6 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hover:text-emerald-600 hover:border-emerald-200 transition-all flex items-center gap-2 text-sm">
+                <Download size={18} /> استخراج تقارير
              </button>
           </div>
         </div>
       </section>
 
-      <div className="w-full px-8 lg:px-12 py-12 space-y-12">
+      <div className="px-6 lg:px-10 py-8 space-y-8">
         
-        {/* 📊 Balance Summary: Ultra Bold */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           <FinMetric label="صافي المحفظة" val={stats.net} icon={Wallet} color="bg-slate-900" net />
-           <FinMetric label="إجمالي الإيرادات" val={stats.income} icon={TrendingUp} color="bg-emerald-600" />
-           <FinMetric label="إجمالي المصروفات" val={stats.expense} icon={TrendingDown} color="bg-rose-600" />
+        {/* 📊 Balance Summary */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <FinMetric label="صافي المحفظة" val={stats.net} icon={Wallet} color="text-slate-600 bg-slate-100" net />
+           <FinMetric label="إجمالي الإيرادات" val={stats.income} icon={TrendingUp} color="text-emerald-600 bg-emerald-50" />
+           <FinMetric label="إجمالي المصروفات" val={stats.expense} icon={TrendingDown} color="text-rose-600 bg-rose-50" />
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
            
-           {/* 📋 Ledger Entries: High Resolution Contrast */}
-           <div className="lg:col-span-8 bg-white border-4 border-slate-950 rounded-[3rem] shadow-[25px_25px_0px_rgba(15,23,42,0.04)] overflow-hidden font-bold">
-              <div className="px-10 py-8 border-b-4 border-slate-50 flex items-center justify-between">
+           {/* 📋 Ledger Entries */}
+           <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden min-h-[500px]">
+              <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center text-white shadow-xl">
-                       <History size={28} />
+                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                       <History size={20} />
                     </div>
                     <div>
-                       <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tight">سجل المعاملات</h2>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit Trail Active</p>
+                       <h2 className="text-lg font-bold text-slate-900">سجل المعاملات</h2>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Audit Trail Active</p>
                     </div>
                  </div>
               </div>
@@ -97,36 +96,36 @@ export default function AdminFinancePage() {
               <div className="overflow-x-auto">
                  <table className="w-full text-right border-collapse">
                     <thead>
-                       <tr className="bg-slate-50 border-b border-slate-100 italic">
-                          <th className="px-10 py-8 text-[11px] font-black uppercase tracking-widest">نوع العملية</th>
-                          <th className="px-10 py-8 text-[11px] font-black uppercase tracking-widest">تاريخ القيد</th>
-                          <th className="px-10 py-8 text-[11px] font-black uppercase tracking-widest">الوصف</th>
-                          <th className="px-10 py-8 text-[11px] font-black uppercase tracking-widest text-left">القيمة</th>
+                       <tr className="bg-slate-50 text-slate-500">
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">نوع العملية</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">التاريخ</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">الوصف</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-left">القيمة</th>
                        </tr>
                     </thead>
-                    <tbody className="divide-y-4 divide-slate-50">
+                    <tbody className="divide-y divide-slate-50">
                        {loading ? (
-                         [1,2,3,4,5].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-28 bg-slate-50/50" /></tr>)
+                         [1,2,3,4,5].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-20 bg-slate-50/30" /></tr>)
                        ) : transactions?.length === 0 ? (
-                         <tr><td colSpan={4} className="py-32 text-center text-slate-300 text-3xl font-black italic opacity-20">لا توجد حركات مالية مسجلة</td></tr>
+                         <tr><td colSpan={4} className="py-20 text-center text-slate-300 text-lg font-bold opacity-40">لا توجد حركات مالية مسجلة</td></tr>
                        ) : (
                          transactions!.map(tx => (
                            <tr 
                              key={tx.id} 
                              onClick={() => setSelected(tx)}
-                             className={`group cursor-pointer transition-all ${selected?.id === tx.id ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}
+                             className={`group cursor-pointer transition-all ${selected?.id === tx.id ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
                            >
-                              <td className="px-10 py-8">
-                                 <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 ${tx.type === 'IN' ? 'bg-emerald-500 text-white border-slate-950' : 'bg-rose-500 text-white border-slate-950'}`}>
-                                       {tx.type === 'IN' ? <ArrowUpRight size={24} /> : <ArrowDownRight size={24} />}
+                              <td className="px-8 py-5">
+                                 <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${tx.type === 'IN' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
+                                       {tx.type === 'IN' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                                     </div>
-                                    <span className="text-base font-black text-slate-950">{tx.type === 'IN' ? 'وارد' : 'صادر'}</span>
+                                    <span className="text-sm font-bold text-slate-700">{tx.type === 'IN' ? 'وارد' : 'صادر'}</span>
                                  </div>
                               </td>
-                              <td className="px-10 py-8 text-sm font-bold text-slate-400 font-jakarta uppercase">{formatDate(tx.createdAt)}</td>
-                              <td className="px-10 py-8 text-lg font-black text-slate-950">{tx.description}</td>
-                              <td className={`px-10 py-8 text-left font-jakarta text-2xl font-black tracking-tighter italic ${tx.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              <td className="px-8 py-5 text-xs font-bold text-slate-400 font-jakarta">{formatDate(tx.createdAt)}</td>
+                              <td className="px-8 py-5 text-sm font-bold text-slate-900">{tx.description}</td>
+                              <td className={`px-8 py-5 text-left font-jakarta text-lg font-bold tracking-tight ${tx.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                  {tx.type === 'IN' ? '+' : '-'}{formatCurrency(tx.amount)}
                               </td>
                            </tr>
@@ -137,47 +136,50 @@ export default function AdminFinancePage() {
               </div>
            </div>
 
-           {/* 🛡️ Audit Inspector: Tactical Ledger Detail */}
+           {/* 🛡️ Audit Inspector */}
            <AnimatePresence>
-              {selected && (
+              {selected ? (
                  <motion.aside
-                    initial={{ x: 60, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 60, opacity: 0 }}
-                    className="lg:col-span-4 bg-slate-950 rounded-[4rem] p-12 shadow-3xl text-white sticky top-40 border-l-8 border-emerald-500 overflow-hidden"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="lg:col-span-4 bg-white rounded-2xl p-8 border border-slate-200 shadow-xl sticky top-28 space-y-8 overflow-hidden"
                  >
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[150px] -mr-48 -mt-48" />
-                    
-                    <div className="flex items-center justify-between relative z-10 mb-12">
-                       <h2 className="text-3xl font-black tracking-tight">تدقيق العملية</h2>
-                       <button onClick={() => setSelected(null)} className="p-5 bg-white/5 hover:bg-rose-500 rounded-3xl text-white transition-all shadow-xl"><X size={32} /></button>
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-6 text-slate-900">
+                       <h2 className="text-lg font-bold">تدقيق العملية</h2>
+                       <button onClick={() => setSelected(null)} className="p-2 bg-slate-100 hover:bg-rose-100 rounded-lg text-slate-400 hover:text-rose-600 transition-all"><X size={18} /></button>
                     </div>
 
-                    <div className="space-y-12 relative z-10">
-                       <div className="p-10 bg-white/5 border-2 border-white/10 rounded-[3.5rem] space-y-8">
-                          <p className="text-[12px] font-black text-white/30 uppercase tracking-[0.4em]">القيد المالي #TX_{selected.id}</p>
-                          <div className="space-y-4">
-                             <h4 className="text-5xl font-black tracking-tighter italic font-jakarta leading-none">{formatCurrency(selected.amount)}</h4>
-                             <p className={`text-xl font-black uppercase flex items-center gap-3 ${selected.type === 'IN' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {selected.type === 'IN' ? <ArrowUpRight size={24} /> : <ArrowDownRight size={24} />}
+                    <div className="space-y-6">
+                       <div className="p-6 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">القيد المالي #TX_{selected.id}</p>
+                          <div className="space-y-2">
+                             <h4 className="text-4xl font-bold tracking-tight text-slate-900 font-jakarta leading-none">{formatCurrency(selected.amount)}</h4>
+                             <p className={`text-sm font-bold flex items-center gap-2 ${selected.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {selected.type === 'IN' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                                 {selected.type === 'IN' ? 'تحويل وارد' : 'تحويل صادر'}
                              </p>
                           </div>
                        </div>
 
-                       <div className="grid grid-cols-1 gap-6 px-4">
-                          <FDetailBox icon={<Calendar size={28} />} label="تاريخ التنفيذ" value={formatDate(selected.createdAt)} />
-                          <FDetailBox icon={<FileText size={28} />} label="وصف القيد" value={selected.description} highlight />
-                          <FDetailBox icon={<ShieldCheck size={28} />} label="الحالة الأمنية" value="عملية موثقة" />
+                       <div className="space-y-2">
+                          <FDetailBox icon={<Calendar size={18} />} label="تاريخ التنفيذ" value={formatDate(selected.createdAt)} />
+                          <FDetailBox icon={<FileText size={18} />} label="وصف القيد" value={selected.description} highlight />
+                          <FDetailBox icon={<ShieldCheck size={18} />} label="الحالة الأمنية" value="عملية موثقة" />
                        </div>
                     </div>
 
-                    <div className="pt-16 border-t-8 border-white/5 space-y-6 relative z-10 px-4">
-                       <button className="w-full h-24 bg-emerald-500 text-slate-950 rounded-[2.5rem] font-black text-2xl border-4 border-slate-950 shadow-3xl hover:translate-y-[-4px] transition-all active:scale-95 flex items-center justify-center gap-6 uppercase tracking-tighter">
-                          <Download size={36} /> استخراج الفاتورة
+                    <div className="pt-8 border-t border-slate-100">
+                       <button className="w-full h-14 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                          <Download size={24} /> استخراج الفاتورة
                        </button>
                     </div>
                  </motion.aside>
+              ) : (
+                <div className="lg:col-span-4 h-[400px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 gap-4">
+                   <CreditCard size={48} className="opacity-20" />
+                   <p className="text-sm font-medium">اختر عملية لعرض تفاصيل التدقيق</p>
+                </div>
               )}
            </AnimatePresence>
         </div>
@@ -188,32 +190,28 @@ export default function AdminFinancePage() {
 
 function FinMetric({ label, val, icon: Icon, color, net }: any) {
   return (
-    <motion.div 
-      initial={{ y: 30, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="bg-white border-4 border-slate-950 p-12 rounded-[4rem] space-y-10 hover:shadow-[25px_25px_0px_#0f172a] hover:translate-y-[-12px] transition-all duration-500 group relative overflow-hidden shadow-2xl shadow-slate-200/50"
-    >
-       <div className={`w-20 h-20 ${color} text-white rounded-[2rem] flex items-center justify-center shadow-2xl border-4 border-slate-950 transition-transform group-hover:rotate-12`}>
-          <Icon size={40} />
+    <div className="bg-white border border-slate-200 p-8 rounded-2xl flex items-center gap-8 shadow-sm hover:shadow-md transition-all">
+       <div className={`w-14 h-14 ${color} rounded-xl flex items-center justify-center shadow-sm border border-black/5`}>
+          <Icon size={28} />
        </div>
-       <div className="space-y-4">
-          <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.4em]">{label}</p>
-          <p className={`text-5xl font-black font-jakarta tracking-tighter leading-none ${net && val < 0 ? 'text-rose-600' : 'text-slate-950'}`}>
+       <div className="space-y-1">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">{label}</p>
+          <p className={`text-3xl font-bold font-jakarta leading-none mt-1 ${net && val < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
              {formatCurrency(val).split('.')[0]}
           </p>
        </div>
-    </motion.div>
+    </div>
   );
 }
 
 function FDetailBox({ icon, label, value, highlight }: any) {
   return (
-    <div className="flex items-center justify-between p-8 bg-white/5 border-2 border-white/5 rounded-[2.5rem] group hover:border-white/20 transition-all">
-       <div className="flex items-center gap-6">
-          <span className="text-white/20 group-hover:text-emerald-400 transition-colors">{icon}</span>
-          <span className="text-[12px] font-black text-white/30 uppercase tracking-widest">{label}</span>
+    <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+       <div className="flex items-center gap-3">
+          <span className="text-slate-400">{icon}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{label}</span>
        </div>
-       <span className={`text-xl font-black ${highlight ? 'text-emerald-400' : 'text-white/95'} font-jakarta`}>{value}</span>
+       <span className={`text-sm font-bold ${highlight ? 'text-emerald-700' : 'text-slate-900'} font-jakarta`}>{value}</span>
     </div>
-  );
+   );
 }

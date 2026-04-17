@@ -1,53 +1,18 @@
-import "dotenv/config";
-import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+// This file is now consolidated in seed-consolidated.ts
+// To maintain backward compatibility, we import and run it here
+
+import { prisma } from "@/lib/prisma";
+import "./seed-consolidated";
 import bcrypt from "bcryptjs";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
-}
-
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
 async function main() {
-  console.log("🚀 Starting Comprehensive Shoofly Seed...");
-
-  // 1. Reset Everything
-  await prisma.notification.deleteMany();
-  await prisma.complaint.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.transaction.deleteMany();
-  await prisma.deliveryTracking.deleteMany();
-  await prisma.withdrawalRequest.deleteMany();
-  await prisma.bid.deleteMany();
-  await prisma.request.deleteMany();
-  await prisma.platformSetting.deleteMany();
-  await prisma.vendorCategory.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.user.deleteMany();
-
+  // 1. Create Admin User
+  console.log("👤 Creating Admin User...");
   const hashedPassword = await bcrypt.hash("password123", 10);
-
-  // 2. Create Platform Settings
-  console.log("⚙️ Creating Platform Settings...");
-  await prisma.platformSetting.create({
-    data: {
-      commissionPercent: 15,
-      minVendorMatchCount: 3,
-      initialRadiusKm: 5,
-      maxRadiusKm: 50,
-      radiusExpansionStepKm: 5
-    }
-  });
-
-  // 3. Create Users - Admin
-  console.log("👤 Creating Admin...");
+  
   const admin = await prisma.user.create({
     data: {
-      fullName: "أحمد محمد",
+      fullName: "مسؤول شوفلاي",
       email: "admin@shoofly.com",
       password: hashedPassword,
       phone: "+201011111111",

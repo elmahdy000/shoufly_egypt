@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 type ReviewAction = 'approve' | 'reject';
 
@@ -40,15 +41,14 @@ export async function reviewRequest(requestId: number, action: ReviewAction) {
     });
 
     if (vendors.length > 0) {
-      await prisma.notification.createMany({
-        data: vendors.map((v: { id: number }) => ({
+      for (const v of vendors) {
+        await Notify.send({
           userId: v.id,
-
           type: 'NEW_REQUEST',
-          title: 'New Bid Opportunity',
-          message: `A new request in ${updated.category.name} is open for bidding.`,
-        })),
-      });
+          title: 'فرصة عمل جديدة! 🛠️',
+          message: `يوجد طلب جديد في قسم ${updated.category.name} بانتظار عروضك.`,
+        });
+      }
 
       logger.info('notification.created', {
         event: 'request.opened',
@@ -56,6 +56,9 @@ export async function reviewRequest(requestId: number, action: ReviewAction) {
         vendorCount: vendors.length,
       });
     }
+  } else {
+    // Notify client of rejection
+    await Notify.requestRejected(updated.clientId, requestId, updated.title);
   }
 
   logger.info('request.review.completed', {

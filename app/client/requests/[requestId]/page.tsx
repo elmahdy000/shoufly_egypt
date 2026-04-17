@@ -15,7 +15,7 @@ import {
   FiDollarSign, FiXCircle, FiMessageSquare, FiStar, FiActivity,
   FiAlertCircle, FiZap, FiPhone, FiUser, FiArrowLeft, FiClock,
   FiCalendar, FiCreditCard, FiPackage, FiCheck, FiMap, FiBox,
-  FiRefreshCw, FiX
+  FiRefreshCw, FiX, FiInfo
 } from "react-icons/fi";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,6 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
   CLOSED_SUCCESS:               "مكتمل",
   CLOSED_FAILED:                "فشل",
   CLOSED_CANCELLED:             "ملغي",
+  REJECTED:                     "مرفوض من التدقيق",
 };
 
 const JOURNEY = [
@@ -218,6 +219,39 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
             </div>
           </div>
         )}
+        
+        {/* ── AI Audit Feedback (Context-Aware) ────────────── */}
+        {(data.status === 'REJECTED' || data.status === 'PENDING_ADMIN_REVISION') && data.notes && (
+          <div className={`rounded-2xl border p-5 flex items-start gap-4 ${
+            data.status === 'REJECTED' ? "bg-rose-50 border-rose-200 text-rose-800" : "bg-blue-50 border-blue-200 text-blue-800"
+          }`}>
+             <div className="shrink-0 mt-1">
+               {data.status === 'REJECTED' ? <FiXCircle size={24} className="text-rose-600" /> : <FiInfo size={24} className="text-blue-600" />}
+             </div>
+             <div className="flex-1 space-y-2">
+               <h3 className="text-sm font-bold flex items-center gap-2">
+                 نتائج التدقيق الآلي (AI Watchtower)
+               </h3>
+               <p className="text-xs leading-relaxed opacity-90">
+                 {data.notes.replace('رفض آلي (AI): ', '').replace('مراجعة مطلوبة (AI): ', '')}
+               </p>
+               {data.status === 'REJECTED' && (
+                  <div className="pt-2 flex gap-2">
+                    <Link href="/client/requests/new">
+                      <Button size="sm" className="bg-rose-600 hover:bg-rose-700 text-white border-0 shadow-lg shadow-rose-200 text-[10px] font-bold h-8">
+                        إعادة صياغة الطلب
+                      </Button>
+                    </Link>
+                    <Link href="/client/chat">
+                      <Button size="sm" variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-100 text-[10px] font-bold h-8">
+                        تواصل مع الدعم
+                      </Button>
+                    </Link>
+                  </div>
+               )}
+             </div>
+          </div>
+        )}
 
         {isPaid && (
           <div className="bg-violet-50 border border-violet-200 rounded-2xl p-5 space-y-3">
@@ -403,13 +437,22 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
                 {data.budget ? `${data.budget} ج.م` : "—"}
               </p>
             </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 group relative">
               <p className="text-xs text-slate-400 font-medium flex items-center gap-1 mb-1">
                 <FiMapPin size={12} /> عنوان التوصيل
               </p>
               <p className="text-sm font-semibold text-slate-900 leading-snug">
                 {data.address || "لم يتم تحديد عنوان"}
               </p>
+              {data.latitude && data.longitude && (
+                <a 
+                  href={`https://www.google.com/maps?q=${data.latitude},${data.longitude}`}
+                  target="_blank"
+                  className="mt-2 text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+                >
+                  <FiMap size={10} /> عرض على الخريطة الخارجية
+                </a>
+              )}
             </div>
           </div>
         </div>

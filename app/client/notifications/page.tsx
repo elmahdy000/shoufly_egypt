@@ -169,6 +169,26 @@ const notificationConfig: Record<string, {
     action: 'إضافة تقييم',
     route: (id) => `/client/requests/${id}`
   },
+  'REQUEST_REJECTED': {
+    icon: FiXCircle,
+    bg: 'bg-rose-50',
+    text: 'text-rose-600',
+    border: 'border-rose-200',
+    label: 'تم رفض طلبك',
+    description: 'تم رفض طلبك من قبل نظام التدقيق آلياً',
+    action: 'عرض الأسباب',
+    route: (id) => `/client/requests/${id}`
+  },
+  'REQUEST_NEEDS_REVISION': {
+    icon: FiAlertCircle,
+    bg: 'bg-amber-50',
+    text: 'text-amber-600',
+    border: 'border-amber-200',
+    label: 'مراجعة مطلوبة',
+    description: 'طلبك يحتاج لمراجعة إضافية من الإدارة',
+    action: 'عرض التفاصيل',
+    route: (id) => `/client/requests/${id}`
+  },
   'SYSTEM': { 
     icon: FiInfo, 
     bg: 'bg-slate-50', 

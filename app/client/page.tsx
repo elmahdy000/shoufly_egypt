@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/shoofly/status-badge";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listClientRequests } from "@/lib/api/requests";
 import { formatCurrency } from "@/lib/formatters";
+import { StatSkeleton, RequestSkeleton } from "@/components/shoofly/skeleton";
 import { 
   FiPlus, 
   FiGrid, 
@@ -20,7 +21,8 @@ import {
   FiMapPin,
   FiTrendingUp,
   FiDollarSign,
-  FiPackage
+  FiPackage,
+  FiCornerDownLeft
 } from "react-icons/fi";
 
 export default function ClientHomePage() {
@@ -60,45 +62,56 @@ export default function ClientHomePage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-              <FiGrid size={20} />
+        {loading ? (
+          <>
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </>
+        ) : (
+          <>
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                  <FiGrid size={20} />
+                </div>
+                <p className="text-xs text-slate-500 font-medium">كل الطلبات</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
             </div>
-            <p className="text-xs text-slate-500 font-medium">كل الطلبات</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-        </div>
-        
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <FiClock size={20} />
+            
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                  <FiClock size={20} />
+                </div>
+                <p className="text-xs text-slate-500 font-medium">قيد التنفيذ</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{stats.open}</p>
             </div>
-            <p className="text-xs text-slate-500 font-medium">قيد التنفيذ</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.open}</p>
-        </div>
-        
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-              <FiCheckCircle size={20} />
+            
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                  <FiCheckCircle size={20} />
+                </div>
+                <p className="text-xs text-slate-500 font-medium">مكتملة</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{stats.completed}</p>
             </div>
-            <p className="text-xs text-slate-500 font-medium">مكتملة</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.completed}</p>
-        </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-              <FiTrendingUp size={20} />
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md border-b-primary/30">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                  <FiTrendingUp size={20} />
+                </div>
+                <p className="text-xs text-slate-500 font-medium">عروض جديدة</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{stats.hasOffers}</p>
             </div>
-            <p className="text-xs text-slate-500 font-medium">عروض جديدة</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.hasOffers}</p>
-        </div>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -114,9 +127,10 @@ export default function ClientHomePage() {
           </div>
 
           {loading && (
-            <div className="text-center py-12 text-slate-400">
-              <FiBox size={32} className="mx-auto mb-3 opacity-50 animate-pulse" />
-              <p className="text-sm font-medium">جاري تحميل الطلبات...</p>
+            <div className="space-y-3">
+              <RequestSkeleton />
+              <RequestSkeleton />
+              <RequestSkeleton />
             </div>
           )}
 

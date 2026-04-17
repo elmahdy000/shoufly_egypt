@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/prisma';
 import { Notify } from '../notifications/hub';
 import { logger } from '../../utils/logger';
 
@@ -23,9 +24,21 @@ export async function broadcastTelemetry(data: TelemetryData) {
     lng: data.lng 
   });
 
-  // 2. Broadcast via Redis Pub/Sub (Real-time Hub)
+  // 2. Persist to DB for Audit Trail (Monitoring)
+  await prisma.deliveryTracking.create({
+    data: {
+        requestId: data.requestId,
+        status: 'IN_TRANSIT', // Telemetry implies movement
+        latitude: data.lat,
+        longitude: data.lng,
+        speed: data.speed,
+        note: `Telemetry: Speed ${data.speed}km/h, Heading ${data.heading}°`
+    }
+  });
+
+  // 3. Broadcast via Redis Pub/Sub (Real-time Hub)
   await Notify.send({
-    userId: data.agentId, // Tracking context
+    userId: data.agentId, 
     type: 'DELIVERY_UPDATE',
     title: 'Live Tracking Update',
     message: JSON.stringify({

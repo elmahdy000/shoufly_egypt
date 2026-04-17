@@ -149,8 +149,15 @@ export default function VendorOrderDetailsPage() {
             >
               الأوردر خلاص جاهز
             </Button>
+            
+            <Link href="/vendor/chat" className="block">
+              <Button variant="outline" className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 font-bold">
+                <FiMessageSquare size={16} className="text-primary" /> تواصل مع الدعم الفني
+              </Button>
+            </Link>
+
             <p className="text-xs text-[#767684] text-center">
-              سيتم إخطار العميل فوراً بأي تغيير
+              سيتم إخطار العميل فوراً بأي تغيير في حالة الطلب
             </p>
           </div>
         )}

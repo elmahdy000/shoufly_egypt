@@ -10,10 +10,10 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 // Optimized connection pool for high performance
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,                    // Maximum connections in pool
-  min: 5,                     // Minimum connections to maintain
+  max: 50,                    // Increased capacity for high-concurrency simulation 2026
+  min: 0,                     // Avoid forcing warm connections at startup
   idleTimeoutMillis: 30000,   // Close idle connections after 30s
-  connectionTimeoutMillis: 2000, // Timeout for new connections
+  connectionTimeoutMillis: 10000, // Give local Postgres more time to accept connections
   allowExitOnIdle: true,      // Allow process to exit when idle
 });
 const adapter = new PrismaPg(pool);

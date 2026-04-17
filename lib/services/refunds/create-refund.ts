@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 function toTwo(value: number): number {
   return Math.round(value * 100) / 100;
@@ -28,11 +29,11 @@ export async function createRefund(params: {
 
     if (!request) {
       logger.warn('refund.request.not_found', { requestId });
-      throw new Error('Request not found');
+      throw new Error('تعذر العثور على الطلب المحدد لإصدار الاسترداد.');
     }
 
     if (request.status === 'CLOSED_SUCCESS') {
-      throw new Error('Cannot refund successfully closed request');
+      throw new Error('لا يمكن رد الأموال لطلب تم إكماله وتسويته بنجاح بالفعل.');
     }
 
     // Check for existing refund at database level (race-condition safe)
@@ -41,13 +42,13 @@ export async function createRefund(params: {
     });
     if (existingRefund) {
       logger.warn('refund.request.duplicate', { requestId, refundTxId: existingRefund.id });
-      throw new Error(`Refund already issued for this request (TX: ${existingRefund.id})`);
+      throw new Error(`تم إصدار استرداد أموال لهذا الطلب بالفعل (رقم العملية: ${existingRefund.id}).`);
     }
 
     const escrow = request.transactions.find((txr) => txr.type === 'ESCROW_DEPOSIT');
     if (!escrow) {
       logger.warn('refund.request.no_escrow', { requestId });
-      throw new Error('No escrow deposit found for this request');
+      throw new Error('لم يتم العثور على عملية دفع مسبقة (Secure Deposit) لهذا الطلب لردها.');
     }
 
     const refundAmount = toTwo(Number(escrow.amount));
@@ -76,14 +77,7 @@ export async function createRefund(params: {
       select: { id: true, status: true },
     });
 
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'REFUND_ISSUED',
-        title: 'Refund Issued',
-        message: `Refund for request #${requestId} has been credited to your wallet.`,
-      },
-    });
+    await Notify.refundIssued(request.clientId, requestId, refundAmount);
 
     logger.info('notification.created', {
       event: 'refund.issued',
@@ -105,5 +99,5 @@ export async function createRefund(params: {
       amountRefunded: refundAmount,
       newClientWalletBalance: Number(updatedClient.walletBalance),
     };
-  });
+  }, { timeout: 20000 });
 }

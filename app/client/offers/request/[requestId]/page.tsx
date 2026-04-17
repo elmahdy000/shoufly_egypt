@@ -9,12 +9,22 @@ import { acceptClientOffer, listClientForwardedOffers } from "@/lib/api/bids";
 import { formatCurrency } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { FiTag, FiCheckCircle, FiShield, FiAlertTriangle, FiStar } from "react-icons/fi";
+import { Sparkles } from "lucide-react";
 
 function OffersContent({ requestId }: { requestId: number }) {
   const router = useRouter();
   const { data, loading, error } = useAsyncData(() => listClientForwardedOffers(requestId), [requestId]);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [submittingId, setSubmittingId] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<'PRICE' | 'AI_SCORE'>('AI_SCORE');
+
+  const sortedOffers = (data ?? []).slice().sort((a: any, b: any) => {
+    if (sortBy === 'PRICE') {
+      return (a.clientPrice ?? a.netPrice) - (b.clientPrice ?? b.netPrice);
+    } else {
+      return (b.aiScore ?? 0) - (a.aiScore ?? 0);
+    }
+  });
 
   async function accept(bidId: number) {
     try {
@@ -42,6 +52,22 @@ function OffersContent({ requestId }: { requestId: number }) {
             <FiTag className="text-primary" /> العروض المتاحة
           </h1>
           <p className="text-muted text-sm mt-1">قارن بين الأسعار المطروحة لاختيار الأنسب لطلبك رقم REQ-{requestId}</p>
+        </div>
+
+        {/* 🪄 Sorting Controls */}
+        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+           <button 
+             onClick={() => setSortBy('AI_SCORE')}
+             className={`px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all ${sortBy === 'AI_SCORE' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+           >
+              <Sparkles size={14} /> ترتيب ذكي (AI)
+           </button>
+           <button 
+             onClick={() => setSortBy('PRICE')}
+             className={`px-4 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all ${sortBy === 'PRICE' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+           >
+              أقل سعر
+           </button>
         </div>
       </div>
 
@@ -72,7 +98,7 @@ function OffersContent({ requestId }: { requestId: number }) {
       ) : null}
 
       <div className="grid gap-6">
-        {(data ?? []).map((offer: any) => {
+        {sortedOffers.map((offer: any) => {
           const isAccepted = offer.status === 'ACCEPTED_BY_CLIENT';
           const isLoading = submittingId === offer.id;
           
@@ -95,20 +121,33 @@ function OffersContent({ requestId }: { requestId: number }) {
                 <div>
                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-50">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs border border-white shadow-sm">
-                           V
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs border border-primary/20 shadow-sm overflow-hidden">
+                           {offer.vendor?.fullName?.charAt(0) || "V"}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-900">مورّد شوفلي المعتمد # {offer.vendorId}</p>
-                          <div className="flex gap-0.5 text-[10px] text-amber-500">
+                          <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                             {offer.vendor?.fullName || `مورّد رقم ${offer.vendorId}`}
+                             <FiCheckCircle className="text-emerald-500" title="مورد معتمد" />
+                          </p>
+                          <div className="flex gap-0.5 text-[10px] text-amber-500 items-center">
                              <FiStar fill="currentColor" /> <FiStar fill="currentColor" /> <FiStar fill="currentColor" /> <FiStar fill="currentColor" /> <FiStar fill="currentColor" />
+                             {offer.aiScore && (
+                               <span className="mr-2 text-slate-400 font-medium">تقييم AI: {offer.aiScore}/100</span>
+                             )}
                           </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
-                        #{offer.id}
-                      </span>
-                  </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+                          #{offer.id}
+                        </span>
+                        {offer.aiRecommendation === 'TOP_PICK' && (
+                          <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 animate-pulse">
+                            <Sparkles size={10} /> أفضل اختيار
+                          </div>
+                        )}
+                      </div>
+                   </div>
                   
                   {isAccepted && <div className="mb-4"><StatusBadge status="completed" label="تم الاعتماد" /></div>}
                   

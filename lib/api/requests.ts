@@ -10,8 +10,10 @@ export type RequestCreatePayload = {
   longitude: number;
   deliveryPhone: string;
   budget?: number;
+  notes?: string;
   governorateId: number;
   cityId: number;
+  brandId?: number;
   images?: Array<{
     filePath: string;
     fileName: string;

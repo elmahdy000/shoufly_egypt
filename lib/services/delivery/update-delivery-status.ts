@@ -23,6 +23,8 @@ export async function updateDeliveryStatus(params: {
   requestId: number;
   userId: number; // Changed from vendorId for general use
   status: DeliveryStep;
+  lat?: number;
+  lng?: number;
   note?: string;
   locationText?: string;
 }) {
@@ -46,11 +48,11 @@ export async function updateDeliveryStatus(params: {
     });
 
     if (!request) {
-      throw new Error('Request not found');
+      throw new Error('الطلب غير موجود.');
     }
 
     if (request.status !== 'ORDER_PAID_PENDING_DELIVERY') {
-      throw new Error('Delivery updates require paid request state');
+      throw new Error('يجب دفع قيمة الطلب أولاً قبل البدء بتحديثات التوصيل.');
     }
 
     const isAcceptedVendor = request.bids.some((b) => b.vendorId === userId);
@@ -58,16 +60,16 @@ export async function updateDeliveryStatus(params: {
 
     if (!isAcceptedVendor && !isAssignedAgent) {
       logger.warn('delivery.status_update.unauthorized', { requestId, userId, status });
-      throw new Error('Only the assigned vendor or delivery agent can update status');
+      throw new Error('عذراً، فقط البائع المقبول أو مندوب التوصيل المخصص يمكنهم تحديث الحالة.');
     }
 
     // Role-based status restrictions
     if (isAcceptedVendor && !['VENDOR_PREPARING', 'READY_FOR_PICKUP'].includes(status)) {
-      throw new Error(`Vendors can only set PREPARING or READY_FOR_PICKUP`);
+      throw new Error(`كتاجر، يمكنك فقط تحديد الحالة "قيد التجهيز" أو "جاهز للاستلام".`);
     }
 
     if (isAssignedAgent && ['VENDOR_PREPARING', 'READY_FOR_PICKUP'].includes(status)) {
-      throw new Error(`Delivery agents cannot set vendor-specific statuses`);
+      throw new Error(`كمندوب، لا يمكنك تحديد حالات تخص تجهيز التاجر للطلب.`);
     }
 
 
@@ -79,7 +81,17 @@ export async function updateDeliveryStatus(params: {
         from: lastStatus,
         to: status,
       });
-      throw new Error(`Invalid delivery transition: ${lastStatus} -> ${status}`);
+      throw new Error(`تسلسل غير صحيح: لا يمكن الانتقال من "${lastStatus}" إلى "${status}" مباشرة.`);
+    }
+
+    // NEW: Geofencing Security Guard
+    if (status === 'DELIVERED' && isAssignedAgent) {
+        if (!params.lat || !params.lng) {
+            throw new Error('يجب إرسال إحداثيات الموقع (GPS) لإتمام عملية التوصيل.');
+        }
+        const { verifyDeliveryLocation } = await import('./verify-location');
+        await verifyDeliveryLocation(requestId, params.lat, params.lng);
+        logger.info('delivery.geofence.passed', { requestId, userId });
     }
 
     const tracking = await tx.deliveryTracking.create({

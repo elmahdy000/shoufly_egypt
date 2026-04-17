@@ -29,8 +29,8 @@ export function generateCsrfToken(): string {
  * Timing-safe comparison using Web Crypto API or constant-time loop
  * Compatible with Edge Runtime
  */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) {
+function timingSafeEqual(a: any, b: any): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) {
     return false;
   }
   let result = 0;

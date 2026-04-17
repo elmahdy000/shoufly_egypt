@@ -30,6 +30,8 @@ export type ApiRequestSummary = {
 
 export type ApiRequestDetails = ApiRequestSummary & {
   categoryId?: number;
+  category?: { id: number, name: string };
+  brand?: { id: number, name: string };
   latitude?: number;
   longitude?: number;
   deliveryPhone?: string;
@@ -59,6 +61,8 @@ export type ApiBid = {
     fullName: string;
     email: string;
   };
+  aiScore?: number;
+  aiRecommendation?: string;
 };
 
 export type ApiDeliveryEntry = {

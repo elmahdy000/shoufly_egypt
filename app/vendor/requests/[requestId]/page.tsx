@@ -192,8 +192,11 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                     <Briefcase size={22} />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 block mb-0.5">نوع الخدمة</label>
-                    <p className="text-slate-900 font-bold">خدمات عامة</p>
+                    <label className="text-xs font-semibold text-slate-500 block mb-0.5">نوع الخدمة / البراند</label>
+                    <p className="text-slate-900 font-bold">
+                       {data.category?.name || "خدمات عامة"} 
+                       {data.brand ? ` - ${data.brand.name}` : ""}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -233,20 +236,34 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                 </div>
               </div>
 
-              {/* Description Box */}
-              <div className="space-y-3">
-                <label className="text-slate-800 font-black text-sm flex items-center gap-2">
-                  <Send size={16} className="text-primary" /> اشرح عرضك للعميل
-                </label>
-                <textarea 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  rows={4}
-                  placeholder="عرف العميل بخبرتك وإزاي هتحل المشكلة بالتفصيل..."
-                  className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-3xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 text-base transition-all resize-none"
-                />
-              </div>
+               {/* Description Box */}
+               <div className="space-y-3">
+                 <div className="flex items-center justify-between">
+                   <label className="text-slate-800 font-black text-sm flex items-center gap-2">
+                     <Send size={16} className="text-primary" /> اشرح عرضك للعميل
+                   </label>
+                   {description.length > 0 && (
+                     <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full border border-slate-200 animate-in fade-in duration-300">
+                        <div className={`w-2 h-2 rounded-full ${description.length < 50 ? 'bg-amber-400' : 'bg-emerald-500'} animate-pulse`} />
+                        <span className="text-[10px] font-bold text-slate-600">
+                          {description.length < 50 ? 'جودة ضعيفة للرد' : 'جودة ممتازة للرد'} (توقع AI)
+                        </span>
+                     </div>
+                   )}
+                 </div>
+                 <textarea 
+                   value={description}
+                   onChange={(e) => setDescription(e.target.value)}
+                   required
+                   rows={4}
+                   placeholder="عرف العميل بخبرتك وإزاي هتحل المشكلة بالتفصيل..."
+                   className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-3xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 text-base transition-all resize-none font-bold"
+                 />
+                 <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                    <Info size={12} />
+                    نصيحة: كل ما زاد الشرح التقني، زادت فرصة ظهورك كـ "أفضل اختيار" للعميل.
+                 </div>
+               </div>
 
               {/* Price Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">

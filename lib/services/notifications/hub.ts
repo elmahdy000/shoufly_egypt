@@ -25,20 +25,19 @@ export async function sendNotification(payload: NotificationPayload) {
   });
 
   // 2. Real-time Broadcast via Redis (Pub/Sub)
-  // We publish to a specific user channel and a global admin channel
-  const eventPayload = JSON.stringify({
-    ...notification,
-    timestamp: new Date().toISOString()
-  });
+  try {
+    const eventPayload = JSON.stringify({
+      ...notification,
+      timestamp: new Date().toISOString()
+    });
 
-  await redis.publish(`user_notifications:${payload.userId}`, eventPayload);
-  await redis.publish('admin_shoofty_stream', eventPayload);
+    await redis.publish(`user_notifications:${payload.userId}`, eventPayload);
+    await redis.publish('admin_shoofty_stream', eventPayload);
+    console.log(`📡 [Real-time Hub] Notification Sent to User ${payload.userId}: [${payload.title}]`);
+  } catch (err: any) {
+    console.warn('Notification broadcast failed but saved to DB:', err.message);
+  }
 
-  // 3. Optional: Trigger Push Notification (FCM Placeholder)
-  // if (user.fcmToken) { ... }
-
-  console.log(`📡 [Real-time Hub] Notification Sent to User ${payload.userId}: [${payload.title}]`);
-  
   return notification;
 }
 
@@ -88,7 +87,73 @@ export const Notify = {
       userId,
       requestId,
       type: 'OFFER_RECEIVED',
-      title: 'نزاع جديد مشحون ⚠️',
+      title: 'نزاع جديد! ⚠️',
       message: `قام العميل بفتح نزاع على الطلب #${requestId}. السبب: ${reason}`
+    }),
+
+  requestApproved: (userId: number, requestId: number, title: string) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: 'NEW_REQUEST',
+      title: 'تمت الموافقة على طلبك! ✅',
+      message: `تمت الموافقة على طلبك "${title}" وهو الآن متاح لاستقبال العروض.`
+    }),
+
+  requestRejected: (userId: number, requestId: number, title: string) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: 'REQUEST_CANCELLED',
+      title: 'تم رفض الطلب ❌',
+      message: `نعتذر، تم رفض طلبك "${title}" من قبل الإدارة.`
+    }),
+
+  refundIssued: (userId: number, requestId: number, amount: number) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: 'REFUND_ISSUED',
+      title: 'تم استرداد الأموال! 💰',
+      message: `تمت إعادة مبلغ ${amount} ج.م إلى محفظتك للطلب #${requestId}.`
+    }),
+
+  withdrawalStatus: (userId: number, withdrawalId: number, status: 'APPROVED' | 'REJECTED') =>
+    sendNotification({
+      userId,
+      type: status === 'APPROVED' ? 'WITHDRAWAL_APPROVED' : 'WITHDRAWAL_REJECTED',
+      title: status === 'APPROVED' ? 'تمت الموافقة على السحب! ✅' : 'فشل طلب السحب ❌',
+      message: status === 'APPROVED' 
+        ? `طلب السحب رقم #${withdrawalId} تمت الموافقة عليه بنجاح.`
+        : `نعتذر، تم رفض طلب السحب رقم #${withdrawalId}.`
+    }),
+
+  orderCompleted: (userId: number, requestId: number) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: 'DELIVERY_UPDATE',
+      title: 'تم اكتمال الطلب! 🎉',
+      message: `تم تأكيد استلام الطلب رقم #${requestId} وإغلاقه بنجاح.`
+    }),
+
+  payoutReceived: (userId: number, requestId: number, amount: number) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: 'PAYMENT_RECEIVED',
+      title: 'تم تحويل مستحقاتك! 💸',
+      message: `تم تحويل مبلغ ${amount} ج.م إلى محفظتك عن الطلب #${requestId}.`
+    }),
+
+  disputeResolved: (userId: number, requestId: number, role: 'CLIENT' | 'VENDOR', amount: number) =>
+    sendNotification({
+      userId,
+      requestId,
+      type: role === 'CLIENT' ? 'REFUND_ISSUED' : 'PAYMENT_RECEIVED',
+      title: 'تم حل النزاع! ⚖️',
+      message: role === 'CLIENT' 
+        ? `تم حل النزاع واسترداد مبلغ ${amount} ج.م إلى محفظتك.`
+        : `تم حل النزاع وحصلت على تعويض بمبلغ ${amount} ج.م.`
     })
 };

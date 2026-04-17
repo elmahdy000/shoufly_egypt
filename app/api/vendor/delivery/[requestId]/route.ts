@@ -20,7 +20,7 @@ export async function PATCH(
 
     const updated = await updateDeliveryStatus({
       requestId: routeParams.requestId,
-      vendorId: user.id,
+      userId: user.id,
       status: body.status,
       note: body.note,
       locationText: body.locationText,

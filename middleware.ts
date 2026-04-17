@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { validateCsrfToken } from "./lib/utils/csrf";
+import { validateCsrfToken, createCsrfToken } from "./lib/utils/csrf";
 
 /**
  * Optimized Middleware for Security & Performance
@@ -12,11 +12,12 @@ const STATIC_FILES_REGEX = /\.(jpg|jpeg|png|gif|webp|svg|css|js|ico|json|pdf|wof
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Skip static assets, internal Next.js routes, and auth exclusions
+  // 1. Skip static assets, internal Next.js routes, and auth/webhook exclusions
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/register") ||
+    pathname.startsWith("/api/payments/webhook") || // External provider callback
     pathname.startsWith("/static") ||
     STATIC_FILES_REGEX.test(pathname)
   ) {
@@ -34,7 +35,6 @@ export async function middleware(request: NextRequest) {
           );
         }
     } catch (e) {
-        // Safe fallback if CSRF fails during Edge Runtime
         return new NextResponse(
             JSON.stringify({ error: "CSRF Validation failed" }),
             { status: 403, headers: { "Content-Type": "application/json" } }
@@ -42,7 +42,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Admin Route Protection
+  // 3. Proactive CSRF Provisioning
+  let response = NextResponse.next();
+  if (request.method === "GET") {
+    const hasCsrf = request.cookies.has("csrf_token");
+    if (!hasCsrf) {
+        createCsrfToken(response);
+    }
+  }
+
+  // 4. Admin Route Protection
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const token = request.cookies.get("session_token")?.value;
     if (!token) {
@@ -50,7 +59,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

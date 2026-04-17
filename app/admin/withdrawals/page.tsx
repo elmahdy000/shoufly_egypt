@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/api/client";
 import { reviewAdminWithdrawal } from "@/lib/api/transactions";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  Search, X, User, Calendar, Hash, Loader2,
+  Search, X, User, Calendar, Hash, Loader2, Filter,
   CheckCircle, XCircle, Landmark, Activity, History, ChevronLeft,
   Clock, DollarSign, RefreshCw, ShieldCheck
 } from "lucide-react";
@@ -15,9 +15,9 @@ import { ar } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:  { label: "قيد الفحص", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-  APPROVED: { label: "تم الصرف",  color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-  REJECTED: { label: "تم الرفض",    color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
+  PENDING:  { label: "قيد الفحص", color: "text-amber-700", bg: "bg-amber-100", border: "border-amber-200" },
+  APPROVED: { label: "تم الصرف",  color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-200" },
+  REJECTED: { label: "تم الرفض",    color: "text-rose-700", bg: "bg-rose-100", border: "border-rose-200" },
 };
 
 export default function AdminWithdrawalsPage() {
@@ -81,198 +81,229 @@ export default function AdminWithdrawalsPage() {
   }
 
   return (
-    <div className="admin-page" dir="rtl">
+    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
       
-      {/* 🚀 Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-           <h1 className="text-2xl font-bold text-slate-900 leading-tight">سحوبات الأموال</h1>
-           <p className="text-slate-500 font-medium mt-1">مراجعة واعتماد طلبات تحويل الأرصدة للبنوك والمحافظ</p>
+      {/* 🚀 Header: Modern & Clean */}
+      <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
+        <div className="px-6 lg:px-10 py-8 relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="space-y-1">
+             <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">نظام التدقيق المالي</span>
+             </div>
+             <h1 className="text-2xl font-bold tracking-tight text-slate-900 border-r-4 border-orange-500 pr-4">سحوبات <span className="text-orange-600">الأموال</span></h1>
+             <p className="text-sm text-slate-500 font-medium max-w-xl">مراجعة واعتماد طلبات تحويل الأرصدة للبنوك والمحافظ الإلكترونية.</p>
+          </div>
+          
+          <div className="flex items-center gap-3 w-full lg:w-auto">
+             <button onClick={handleRefresh} className="h-11 px-6 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:text-orange-600 hover:border-orange-200 transition-all flex items-center gap-2 shadow-sm">
+                <RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />
+                تحديث البيانات
+             </button>
+          </div>
         </div>
+      </section>
+
+      <div className="px-6 lg:px-10 py-8 space-y-8">
         
-        <div className="flex items-center gap-3">
-           <button onClick={handleRefresh} className="h-11 px-6 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 shadow-sm hover:border-primary transition-all flex items-center gap-2">
-              <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
-              تحديث البيانات
-           </button>
+        {/* 📊 Metrics Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           <StatItem label="بانتظار الفحص" val={stats.pending} icon={Clock} color="text-amber-600 bg-amber-50" />
+           <StatItem label="قيمة المعلق" val={formatCurrency(stats.pendingAmount)} icon={DollarSign} color="text-slate-600 bg-slate-100" isCurrency />
+           <StatItem label="طلبات مكتملة" val={stats.approved} icon={CheckCircle} color="text-emerald-600 bg-emerald-50" />
+           <StatItem label="إجمالي الحركات" val={stats.total} icon={Activity} color="text-orange-600 bg-orange-50" />
         </div>
-      </div>
 
-      {/* 📊 Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-         <StatItem label="بانتظار الفحص" val={stats.pending} icon={Clock} color="text-amber-600" bg="bg-amber-50" />
-         <StatItem label="قيمة المعلق" val={formatCurrency(stats.pendingAmount)} icon={DollarSign} color="text-slate-900" bg="bg-slate-50" />
-         <StatItem label="طلبات مكتملة" val={stats.approved} icon={CheckCircle} color="text-emerald-600" bg="bg-emerald-50" />
-         <StatItem label="إجمالي الحركات" val={stats.total} icon={Activity} color="text-orange-600" bg="bg-orange-50" />
-      </div>
+        {/* 🛠 Toolbar Control Bridge */}
+        <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
+           <div className="relative flex-1 w-full group">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors" size={18} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="ابحث باسم المستفيد أو رقم الطلب..."
+                className="w-full pr-11 pl-4 h-11 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-orange-500 outline-none transition-all placeholder:text-slate-400"
+              />
+           </div>
+           <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
+                 <Filter size={18} />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-11 px-6 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 outline-none transition-all shadow-sm focus:border-orange-500 min-w-[180px]"
+              >
+                <option value="ALL">كل الحالات</option>
+                <option value="PENDING">بانتظار الفحص</option>
+                <option value="APPROVED">تم الصرف</option>
+                <option value="REJECTED">مرفوض</option>
+              </select>
+           </div>
+        </div>
 
-      {/* 🛠 Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4">
-         <div className="relative flex-1 group">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث باسم المستفيد أو رقم الطلب..."
-              className="w-full pr-11 pl-4 h-11 bg-white border border-slate-200 rounded-xl text-sm focus:border-primary outline-none transition-all shadow-sm"
-            />
-         </div>
-         <select
-           value={statusFilter}
-           onChange={(e) => setStatusFilter(e.target.value)}
-           className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none transition-all shadow-sm min-w-[200px]"
-         >
-           <option value="ALL">كل الحالات</option>
-           <option value="PENDING">بانتظار الفحص</option>
-           <option value="APPROVED">تم الصرف</option>
-           <option value="REJECTED">مرفوض</option>
-         </select>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+           
+           {/* 📋 Withdrawal List */}
+           <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden min-h-[500px]">
+              <div className="overflow-x-auto">
+                 <table className="w-full text-right border-collapse">
+                    <thead>
+                       <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">المستفيد / التاريخ</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-center">المبلغ</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-center">الحالة</th>
+                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-left">إجراء</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                       {loading ? (
+                          [1,2,3,4,5,6].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-20 bg-slate-50/30" /></tr>)
+                       ) : filtered.length === 0 ? (
+                          <tr><td colSpan={4} className="py-20 text-center text-slate-300 font-bold text-lg opacity-40">لا توجد طلبات سحب حالياً</td></tr>
+                       ) : (
+                          filtered.map((w: any) => (
+                             <tr 
+                               key={w.id} 
+                               className={`group cursor-pointer transition-all ${selected?.id === w.id ? 'bg-orange-50/50' : 'hover:bg-slate-50'}`} 
+                               onClick={() => setSelected(w)}
+                             >
+                                <td className="px-8 py-5">
+                                   <div className="flex items-center gap-4">
+                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-all ${selected?.id === w.id ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-slate-100 text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600'}`}>
+                                         {w.vendor?.fullName?.charAt(0)}
+                                      </div>
+                                      <div>
+                                         <p className="text-sm font-bold text-slate-900 group-hover:text-orange-600 transition-colors">{w.vendor?.fullName}</p>
+                                         <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">{formatDistanceToNow(new Date(w.createdAt), { addSuffix: true, locale: ar })}</p>
+                                      </div>
+                                   </div>
+                                </td>
+                                <td className="px-8 py-5 text-center">
+                                   <span className="text-lg font-bold text-slate-900 font-jakarta tabular-nums">{formatCurrency(Number(w.amount))}</span>
+                                </td>
+                                <td className="px-8 py-5 text-center"><StatusBadge status={w.status} /></td>
+                                <td className="px-8 py-5 text-left">
+                                   <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 text-slate-300 group-hover:bg-orange-600 group-hover:text-white transition-all">
+                                      <ChevronLeft size={16} />
+                                   </div>
+                                </td>
+                             </tr>
+                          ))
+                       )}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-         <div className="flex-1 w-full glass-card overflow-hidden">
-            <div className="overflow-x-auto">
-               <table className="data-table">
-                  <thead>
-                     <tr>
-                        <th>المستفيد / التاريخ</th>
-                        <th className="text-center">المبلغ</th>
-                        <th>الحالة</th>
-                        <th className="text-center">إجراء</th>
-                     </tr>
-                  </thead>
-                  <tbody>
-                     {loading ? (
-                        [1,2,3,4,5,6].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-16 bg-slate-50/50" /></tr>)
-                     ) : filtered.length === 0 ? (
-                        <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-bold italic">لا توجد طلبات سحب حالياً</td></tr>
-                     ) : (
-                        filtered.map((w: any) => (
-                           <tr key={w.id} className={`group cursor-pointer ${selected?.id === w.id ? 'bg-orange-50/50' : ''}`} onClick={() => setSelected(w)}>
-                              <td>
-                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
-                                       {w.vendor?.fullName?.charAt(0)}
-                                    </div>
-                                    <div>
-                                       <p className="text-xs font-bold text-slate-900">{w.vendor?.fullName}</p>
-                                       <p className="text-xs text-slate-400">{formatDistanceToNow(new Date(w.createdAt), { addSuffix: true, locale: ar })}</p>
-                                    </div>
-                                 </div>
-                              </td>
-                              <td className="text-center">
-                                 <span className="text-sm font-black text-slate-900 tabular-nums">{formatCurrency(Number(w.amount))}</span>
-                              </td>
-                              <td><StatusBadge status={w.status} /></td>
-                              <td className="text-center">
-                                 <button className="p-2 text-slate-400 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
-                                    <ChevronLeft size={16} />
-                                 </button>
-                              </td>
-                           </tr>
-                        ))
-                     )}
-                  </tbody>
-               </table>
-            </div>
-         </div>
+           {/* 🛡️ Withdrawal Auditor */}
+           <AnimatePresence>
+              {selected ? (
+                 <motion.aside
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="lg:col-span-4 bg-white rounded-2xl p-8 border border-slate-200 shadow-xl sticky top-28 space-y-8 overflow-hidden"
+                 >
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-6 text-slate-900">
+                       <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center text-orange-600 shadow-sm"><Landmark size={20} /></div>
+                          <h2 className="text-lg font-bold">تفاصيل السحب</h2>
+                       </div>
+                       <button onClick={() => setSelected(null)} className="p-2 hover:bg-rose-100 rounded-lg text-slate-400 hover:text-rose-600 transition-all active:scale-95"><X size={18} /></button>
+                    </div>
 
-         {/* Details Sidebar */}
-         <AnimatePresence>
-            {selected && (
-               <motion.aside
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 20, opacity: 0 }}
-                  className="w-full lg:w-96 glass-card p-8 sticky top-24 space-y-8"
-               >
-                  <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Landmark size={20} /></div>
-                        <h2 className="text-lg font-bold text-slate-900">تفاصيل السحب</h2>
-                     </div>
-                     <button onClick={() => setSelected(null)} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400"><X size={18} /></button>
-                  </div>
+                    <div className="space-y-6">
+                       <div className="p-6 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">القيمة المطلوب صرفها</p>
+                          <div className="space-y-2">
+                             <h4 className="text-4xl font-bold tracking-tight text-slate-900 font-jakarta leading-none">{formatCurrency(Number(selected.amount))}</h4>
+                             <div className="pt-1"><StatusBadge status={selected.status} /></div>
+                          </div>
+                       </div>
 
-                  <div className="p-6 bg-slate-900 rounded-2xl text-white">
-                     <p className="text-xs text-slate-400 font-bold tracking-wider mb-2">القيمة المطلوب صرفها</p>
-                     <p className="text-3xl font-black tabular-nums">{formatCurrency(Number(selected.amount))}</p>
-                     <div className="mt-4"><StatusBadge status={selected.status} /></div>
-                  </div>
+                       <div className="space-y-2">
+                          <InfoRow icon={<User size={16} />} label="المستفيد الرسمي" val={selected.vendor?.fullName} />
+                          <InfoRow icon={<Hash size={16} />} label="رقم العملية" val={`#WTH-${selected.id}`} />
+                          <InfoRow icon={<Calendar size={16} />} label="تاريخ الطلب" val={formatDate(selected.createdAt)} />
+                       </div>
+                    </div>
 
-                  <div className="space-y-4">
-                     <InfoRow icon={<User size={14} />} label="المستفيد" val={selected.vendor?.fullName} />
-                     <InfoRow icon={<Hash size={14} />} label="رقم الطلب" val={`#WTH-${selected.id}`} />
-                     <InfoRow icon={<Calendar size={14} />} label="تاريخ الطلب" val={formatDate(selected.createdAt)} />
-                  </div>
+                    {actionMsg && (
+                       <div className={`p-4 rounded-xl text-xs font-bold border transition-all ${actionMsg.ok ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
+                          {actionMsg.text}
+                       </div>
+                    )}
 
-                  {actionMsg && (
-                     <div className={`p-4 rounded-xl text-xs font-bold border ${actionMsg.ok ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
-                        {actionMsg.text}
-                     </div>
-                  )}
-
-                  <div className="pt-6 border-t border-slate-100 space-y-3">
-                     {selected.status === "PENDING" && (
-                        <>
-                           <button 
-                             onClick={() => handleReview(selected.id, "APPROVE")}
-                             disabled={!!actionLoading}
-                             className="w-full h-11 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
-                           >
-                              {actionLoading === "approve" ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                              اعتماد وصرف المبلغ
-                           </button>
-                           
-                           <div className="space-y-2">
-                              <textarea
-                                value={rejectNote}
-                                onChange={(e) => setRejectNote(e.target.value)}
-                                placeholder="اكتب سبب الرفض هنا..."
-                                rows={2}
-                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-1 focus:ring-rose-500 outline-none transition-all resize-none"
-                              />
-                              <button 
-                                onClick={() => handleReview(selected.id, "REJECT")}
-                                disabled={!!actionLoading}
-                                className="w-full h-11 bg-rose-50 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
-                              >
-                                 {actionLoading === "reject" ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
-                                 رفض هذا الطلب
-                              </button>
-                           </div>
-                        </>
-                     )}
-                     <button className="w-full h-11 bg-slate-50 text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
-                        <History size={16} /> سجل التدقيق المالي
-                     </button>
-                  </div>
-               </motion.aside>
-            )}
-         </AnimatePresence>
+                    <div className="pt-8 border-t border-slate-100 space-y-3">
+                       {selected.status === "PENDING" && (
+                          <>
+                             <button 
+                               onClick={() => handleReview(selected.id, "APPROVE")}
+                               disabled={!!actionLoading}
+                               className="w-full h-14 bg-orange-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-orange-600/20 hover:bg-orange-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3 border border-orange-700"
+                             >
+                                {actionLoading === "approve" ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />}
+                                اعتماد وصرف المبلغ
+                             </button>
+                             
+                             <div className="space-y-2">
+                                <textarea
+                                  value={rejectNote}
+                                  onChange={(e) => setRejectNote(e.target.value)}
+                                  placeholder="اكتب سبب الرفض هنا (إلزامي للرفض)..."
+                                  rows={2}
+                                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-rose-500 outline-none transition-all resize-none shadow-inner"
+                                />
+                                <button 
+                                  onClick={() => handleReview(selected.id, "REJECT")}
+                                  disabled={!!actionLoading}
+                                  className="w-full h-12 bg-white text-rose-600 border border-rose-100 rounded-xl text-sm font-bold hover:bg-rose-50 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                >
+                                   {actionLoading === "reject" ? <Loader2 size={18} className="animate-spin" /> : <XCircle size={18} />}
+                                   رفض الطلب
+                                </button>
+                             </div>
+                          </>
+                       )}
+                       <button className="w-full h-11 text-slate-400 hover:text-slate-600 transition-colors text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+                          <History size={14} /> سجل التدقيق المالي
+                       </button>
+                    </div>
+                 </motion.aside>
+              ) : (
+                <div className="lg:col-span-4 h-[400px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 gap-4">
+                   <Landmark size={48} className="opacity-20" />
+                   <p className="text-sm font-medium">اختر طلباً لعرض تفاصيل الصرف</p>
+                </div>
+              )}
+           </AnimatePresence>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatItem({ label, val, icon: Icon, color, bg }: { label: string; val: any; icon: any; color: string; bg: string }) {
+function StatItem({ label, val, icon: Icon, color, isCurrency }: any) {
   return (
-    <div className="glass-card p-6 flex flex-col gap-4 group">
-       <div className={`w-11 h-11 ${bg} ${color} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}>
-          <Icon size={20} />
+    <div className="bg-white border border-slate-200 p-6 rounded-2xl flex items-center gap-5 shadow-sm hover:shadow-md transition-all group">
+       <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center shadow-sm border border-black/5 transition-transform group-hover:scale-110`}>
+          <Icon size={22} />
        </div>
-       <div>
-          <p className="text-xs font-bold text-slate-400 tracking-wide mb-1">{label}</p>
-          <p className="text-lg font-black text-slate-900 tracking-tight">{val}</p>
+       <div className="space-y-0.5">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{label}</p>
+          <p className="text-lg font-black text-slate-900 leading-none mt-1 font-jakarta">
+             {isCurrency && typeof val === 'number' ? formatCurrency(val).split('.')[0] : val}
+          </p>
        </div>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] || { label: status, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-100" };
+  const cfg = STATUS_CONFIG[status] || { label: status, color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200" };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold border ${cfg.bg} ${cfg.border} ${cfg.color} whitespace-nowrap uppercase tracking-tighter`}>
        <div className={`w-1.5 h-1.5 rounded-full ${cfg.color.replace('text-', 'bg-')}`} />
        {cfg.label}
     </span>
@@ -281,12 +312,12 @@ function StatusBadge({ status }: { status: string }) {
 
 function InfoRow({ icon, label, val }: { icon: any; label: string; val: string }) {
   return (
-    <div className="p-3 bg-slate-50 rounded-xl border border-slate-50 space-y-1">
-       <div className="flex items-center gap-2 text-slate-400">
-          {icon}
-          <span className="text-xs font-bold tracking-wider">{label}</span>
+    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+       <div className="flex items-center gap-3">
+          <span className="text-slate-400">{icon}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{label}</span>
        </div>
-       <p className="text-xs font-bold text-slate-700 truncate">{val}</p>
+       <span className="text-sm font-bold text-slate-900 truncate max-w-[150px]">{val}</span>
     </div>
   );
 }

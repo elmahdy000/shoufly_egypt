@@ -50,6 +50,14 @@ async function runChaosSimulation() {
     // VERIFY: Check if request is now REJECTED/FROZEN
     const updatedReq = await prisma.request.findUnique({ where: { id: request.id } });
     console.log(`✅ SUCCESS: Order is now in status: ${updatedReq?.status}. Funds are FROZEN.`);
+
+    // 5. RESOLUTION: Admin releases funds after investigation
+    console.log('\n⚖️ ADMIN RESOLUTION: Admin releases funds after mediation...');
+    await prisma.request.update({
+      where: { id: request.id },
+      data: { status: 'CLOSED_SUCCESS' }
+    });
+    console.log('✅ SUCCESS: Admin resolved the dispute. Request status set to CLOSED_SUCCESS.');
     
     console.log('\n🏆 --- SECURITY & INTEGRITY SIMULATION COMPLETED SUCCESSFULLY --- 🏆\n');
 

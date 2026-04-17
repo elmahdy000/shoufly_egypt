@@ -61,9 +61,9 @@ export default function AdminSettingsPage() {
          <div className="lg:col-span-2 space-y-8">
             
             {/* 💰 Financial Configuration */}
-            <section className="glass-card overflow-hidden">
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600"><DollarSign size={20} /></div>
+                  <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700"><DollarSign size={20} /></div>
                   <h2 className="text-lg font-bold text-slate-900">السياسات المالية</h2>
                </div>
                <div className="p-8 space-y-8">
@@ -76,7 +76,7 @@ export default function AdminSettingsPage() {
                              type="number"
                              value={commission}
                              onChange={(e) => setCommission(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                             className="w-full pr-4 pl-10 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
                         <p className="text-xs text-slate-500 mr-2">النسبة المقتطعة من إجمالي قيمة الطلب</p>
@@ -89,7 +89,7 @@ export default function AdminSettingsPage() {
                              type="number"
                              value={vat}
                              onChange={(e) => setVat(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                             className="w-full pr-4 pl-10 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                            />
                         </div>
                         <p className="text-xs text-slate-500 mr-2">الضريبة المفروضة طبقاً للوائح المحلية</p>
@@ -112,9 +112,9 @@ export default function AdminSettingsPage() {
             </section>
 
             {/* Operational Metrics */}
-            <section className="glass-card overflow-hidden">
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><Navigation size={20} /></div>
+                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-700"><Navigation size={20} /></div>
                   <h2 className="text-lg font-bold text-slate-900">نطاق العمليات</h2>
                </div>
                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -124,7 +124,7 @@ export default function AdminSettingsPage() {
                        type="number"
                        value={radius}
                        onChange={(e) => setRadius(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                       className="w-full px-4 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
                      <p className="text-xs text-slate-500 mr-2">أقصى مسافة للربط بين العميل والمندوب</p>
                   </div>
@@ -134,7 +134,7 @@ export default function AdminSettingsPage() {
                        type="number"
                        value={minOrder}
                        onChange={(e) => setMinOrder(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-1 focus:ring-primary outline-none transition-all font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                       className="w-full px-4 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                      />
                      <p className="text-xs text-slate-500 mr-2">أقل قيمة مسموح بها لإنشاء طلب جديد</p>
                   </div>
@@ -142,9 +142,9 @@ export default function AdminSettingsPage() {
             </section>
 
             {/* Guardrail Settings */}
-            <section className="glass-card overflow-hidden">
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600"><Shield size={20} /></div>
+                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-700"><Shield size={20} /></div>
                   <h2 className="text-lg font-bold text-slate-900">بروتوكولات الأمان</h2>
                </div>
                <div className="p-0">
@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
                </div>
             </section>
 
-            <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-4">
+            <div className="p-4 bg-amber-100 border border-amber-200 rounded-xl flex items-start gap-4">
                <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
                <p className="text-sm font-bold text-amber-800 leading-relaxed">
                   ملاحظة هامة: القواعد والنسب المالية الجديدة تسري فقط على العمليات التي تتم بعد لحظة الحفظ. العمليات الجارية حالياً تحتفظ بخصائصها القديمة لضمان الثبات المالي.
@@ -174,7 +174,7 @@ export default function AdminSettingsPage() {
 
          {/* 💾 Control Sidebar */}
          <div className="space-y-6 sticky top-24">
-            <div className="glass-card p-8 space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
                <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-4">ملخص الإعدادات</h3>
                <div className="space-y-4">
                   <SummaryRow label="العمولة" val={`${commission}%`} />

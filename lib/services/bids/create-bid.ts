@@ -14,14 +14,18 @@ export async function createBid(vendorId: number, data: any) {
     });
 
     if (!vendor || vendor.role !== 'VENDOR' || !vendor.isActive) {
-      throw new Error('Only active vendor users can submit bids');
+      throw new Error('عذراً، فقط حسابات الموردين النشطة يمكنها تقديم عروض أسعار.');
     }
 
     const request = await tx.request.findUnique({
       where: { id: data.requestId },
     });
 
-    if (!request) throw new Error('Request not found');
+    if (!request) throw new Error('الطلب الذي تحاول تقديم عرض عليه غير موجود.');
+
+    const settings = await tx.platformSetting.findFirst({ orderBy: { id: 'desc' } });
+    const commission = settings ? Number(settings.commissionPercent) / 100 : 0.15;
+    const clientPrice = Number(data.netPrice) * (1 + commission);
 
     const bid = await tx.bid.upsert({
       where: { requestId_vendorId: { requestId: data.requestId, vendorId } },
@@ -30,13 +34,13 @@ export async function createBid(vendorId: number, data: any) {
         vendorId,
         description: data.description,
         netPrice: data.netPrice,
-        clientPrice: data.netPrice * 1.15, // Simple approximation for seeds
+        clientPrice: clientPrice,
         status: 'PENDING',
       },
       update: {
         description: data.description,
         netPrice: data.netPrice,
-        clientPrice: data.netPrice * 1.15,
+        clientPrice: clientPrice,
         status: 'PENDING',
       },
     });

@@ -10,9 +10,9 @@ import {
 } from "react-icons/fi";
 
 const FILTERS = [
-  { value: "ALL", label: "كل الطلبات" },
-  { value: "OPEN_FOR_BIDDING", label: "طلبات جديدة" },
-  { value: "BIDS_RECEIVED", label: "عليها عروض" },
+  { value: "ALL", label: "الكل" },
+  { value: "OPEN_FOR_BIDDING", label: "جديدة 🔥" },
+  { value: "OFFERS_FORWARDED", label: "عليها عروض 📦" },
 ];
 
 export default function VendorRequestsPage() {
