@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 const DELIVERY_PROGRESS = [
   'ORDER_PLACED',
@@ -82,29 +83,11 @@ export async function updateDeliveryStatus(params: {
     }
 
     const tracking = await tx.deliveryTracking.create({
-      data: {
-        requestId,
-        status,
-        note: note || null,
-        locationText: locationText || null,
-      },
+      data: { requestId, status, note: note || null, locationText: locationText || null },
     });
 
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'DELIVERY_UPDATE',
-        title: 'Delivery Updated',
-        message: `Request #${requestId} delivery moved to ${status}.`,
-      },
-    });
-
-    logger.info('notification.created', {
-      event: 'delivery.updated',
-      requestId,
-      userId: request.clientId,
-      role: 'CLIENT',
-    });
+    // Real-time broadcast to client
+    await Notify.deliveryUpdate(request.clientId, requestId, status);
 
     logger.info('delivery.status_update.completed', {
       requestId,

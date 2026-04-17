@@ -1,4 +1,5 @@
 import { prisma } from '../../prisma';
+import { Notify } from '../notifications/hub';
 
 /**
  * Service to allow a client to dispute an order after delivery.
@@ -43,6 +44,11 @@ export async function disputeOrder(clientId: number, requestId: number, reason: 
     where: { id: requestId },
     data: { status: 'REJECTED' } // This blocks payout logic
   });
+
+  // 5. Notify the vendor about the dispute
+  if (acceptedBid?.vendorId) {
+    await Notify.disputeRaised(acceptedBid.vendorId, requestId, reason);
+  }
 
   console.log(`⚠️ DISPUTE RAISED: Request #${requestId} is now frozen. Admin notified.`);
 
