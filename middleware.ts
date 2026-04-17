@@ -17,6 +17,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth/login") ||
     pathname.startsWith("/api/auth/register") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
     pathname.startsWith("/static") ||
     STATIC_FILES_REGEX.test(pathname)
   ) {
@@ -48,7 +50,15 @@ export async function middleware(request: NextRequest) {
   
   if (isProtectedRoute) {
     const token = request.cookies.get("session_token")?.value;
+    const allCookies = request.headers.get("cookie");
+    console.log("[Middleware]", {
+      pathname,
+      hasToken: !!token,
+      allCookies: allCookies?.substring(0, 100) // Log first 100 chars
+    });
+    
     if (!token) {
+      console.log("[Middleware] No token, redirecting to /login from", pathname);
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -62,6 +72,9 @@ export const config = {
     "/client/:path*", 
     "/vendor/:path*",
     "/delivery/:path*",
-    "/api/:path*",
+    "/api/admin/:path*",
+    "/api/client/:path*",
+    "/api/vendor/:path*",
+    "/api/delivery/:path*",
   ],
 };

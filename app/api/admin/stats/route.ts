@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPlatformStats } from '@/lib/services/admin/get-platform-stats';
 import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +12,8 @@ export async function GET(req: NextRequest) {
     const stats = await getPlatformStats();
     return NextResponse.json(stats);
   } catch (err) {
-    console.error('Failed to fetch platform stats:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    logError('ADMIN_STATS', err);
+    const { response, status } = createErrorResponse(err);
+    return NextResponse.json(response, { status });
   }
 }
