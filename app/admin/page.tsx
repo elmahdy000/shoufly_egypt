@@ -56,33 +56,33 @@ function KpiCard({
   icon: React.ElementType; highlight?: boolean; loading?: boolean;
 }) {
   return (
-    <div className={`rounded-xl p-5 flex flex-col gap-4 border transition-shadow hover:shadow-md ${
+    <div className={`rounded-2xl p-6 flex flex-col gap-5 border transition-all hover:shadow-lg ${
       highlight
-        ? "bg-orange-500 border-orange-400 text-white"
+        ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400/30 text-white shadow-md shadow-orange-200"
         : "bg-white border-gray-200 text-gray-900"
     }`}>
       <div className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-          highlight ? "bg-white/20" : "bg-orange-50"
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+          highlight ? "bg-white/20 backdrop-blur-sm" : "bg-orange-50"
         }`}>
-          <Icon size={18} className={highlight ? "text-white" : "text-orange-500"} />
+          <Icon size={20} className={highlight ? "text-white" : "text-orange-500"} />
         </div>
         {delta && (
-          <span className={`flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-            highlight ? "bg-white/20 text-white" : "bg-green-50 text-green-600"
+          <span className={`flex items-center gap-1 text-[12px] font-bold px-3 py-1.5 rounded-full ${
+            highlight ? "bg-white/20 text-white backdrop-blur-sm" : "bg-green-50 text-green-600"
           }`}>
-            <TrendingUp size={10} />
+            <TrendingUp size={12} />
             {delta}
           </span>
         )}
       </div>
-      <div>
-        <p className={`text-3xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
-          {loading ? <span className="inline-block w-20 h-7 bg-gray-100 rounded animate-pulse" /> : value}
+      <div className="space-y-1">
+        <p className={`text-4xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
+          {loading ? <span className="inline-block w-24 h-8 rounded-lg animate-pulse" style={{ background: highlight ? 'rgba(255,255,255,0.2)' : '#f3f4f6' }} /> : value}
         </p>
-        <p className={`text-xs mt-2 font-semibold ${highlight ? "text-orange-100" : "text-gray-500"}`}>{title}</p>
+        <p className={`text-sm font-semibold ${highlight ? "text-orange-100" : "text-gray-600"}`}>{title}</p>
         {deltaLabel && (
-          <p className={`text-[12px] mt-1 font-medium ${highlight ? "text-orange-200" : "text-gray-400"}`}>{deltaLabel}</p>
+          <p className={`text-[13px] font-medium ${highlight ? "text-orange-200" : "text-gray-500"}`}>{deltaLabel}</p>
         )}
       </div>
     </div>
