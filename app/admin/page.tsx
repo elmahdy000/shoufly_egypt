@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   Activity, ArrowUpRight, Briefcase, FileText,
   Package, Truck, Users, LayoutDashboard,
-  Zap, CreditCard, ChevronLeft, Target, AlertCircle,
+  Zap, CreditCard, ChevronLeft, Target, AlertCircle, TrendingUp, Clock, CheckCircle, Store,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -32,6 +32,108 @@ export default function AdminDashboard() {
     () => apiFetch("/api/admin/stats", "ADMIN"),
     []
   );
+
+  const statCards = [
+    { label: "المستخدمون النشطون", value: stats?.totalUsers, icon: Users, color: "from-cyan-500 to-blue-500" },
+    { label: "الطلبات المفتوحة", value: stats?.openRequests, icon: FileText, color: "from-amber-500 to-orange-500" },
+    { label: "المتاجر المسجلة", value: stats?.totalVendors, icon: Store, color: "from-emerald-500 to-teal-500" },
+    { label: "الطلبات اليوم", value: stats?.todayRequests, icon: Activity, color: "from-purple-500 to-pink-500" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background pb-20 font-sans" dir="rtl">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
+            </div>
+            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition">
+              تسجيل الخروج
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {statCards.map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                <div className="relative bg-card border border-border rounded-2xl p-6 hover:border-primary/50 transition-all duration-300">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-10`}>
+                      <Icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <TrendingUp className="w-4 h-4 text-success opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{stat.label}</p>
+                  <p className="text-3xl font-bold text-foreground">{loading ? "..." : stat.value?.toLocaleString() || 0}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Recent Requests */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-card border border-border rounded-2xl p-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-bold text-foreground">الطلبات الأخيرة</h2>
+            </div>
+            <Link href="#" className="text-sm text-primary hover:text-primary/80 transition">
+              عرض الكل
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">جاري التحميل...</div>
+            ) : stats?.recentRequests && stats.recentRequests.length > 0 ? (
+              stats.recentRequests.map((req) => (
+                <motion.div
+                  key={req.id}
+                  whileHover={{ x: -4 }}
+                  className="flex items-center justify-between p-4 bg-background rounded-xl hover:bg-muted/50 transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-2 h-2 rounded-full bg-primary group-hover:bg-success transition-colors" />
+                    <div className="flex-1">
+                      <p className="text-foreground font-medium">{req.title}</p>
+                      <p className="text-xs text-muted-foreground">من {req.client?.fullName || "عميل"}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{formatDate(req.createdAt)}</span>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">لا توجد طلبات حالياً</div>
+            )}
+          </div>
+        </motion.div>
+      </main>
+    </div>
+  );
+}
+
 
   return (
     <div className="min-h-full bg-[#F1F5F9] pb-32 font-sans text-right" dir="rtl">

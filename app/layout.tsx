@@ -81,23 +81,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html 
-      lang="ar" 
-      dir="rtl" 
-      className={`h-full antialiased ${tajawal.variable} ${cairo.variable} ${plusJakartaSans.variable}`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full font-tajawal bg-slate-50 text-foreground selection:bg-primary/20">
+    <html className="bg-background">
+      <body className={`${tajawal.variable} ${cairo.variable} ${plusJakartaSans.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <div className="min-h-screen">
-            {children}
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

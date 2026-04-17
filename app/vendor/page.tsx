@@ -2,17 +2,224 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Button } from "@/components/shoofly/button";
 import { formatCurrency } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listVendorBids } from "@/lib/api/bids";
 import { listVendorTransactions } from "@/lib/api/transactions";
+import { motion } from "framer-motion";
 import {
-  FiPackage,
-  FiTrendingUp, FiPlusCircle,
-  FiCheckCircle, FiInbox,
-  FiZap, FiSearch, FiChevronLeft
-} from "react-icons/fi";
+  Package, TrendingUp, PlusCircle, CheckCircle, Inbox,
+  Zap, Search, ChevronLeft, AlertCircle, Clock,
+} from "lucide-react";
+
+export default function VendorHomePage() {
+  const { data: bidsData, loading: bidsLoading } = useAsyncData(() => listVendorBids(), []);
+  const { data: txData, loading: txLoading } = useAsyncData(() => listVendorTransactions(), []);
+
+  const totalEarnings = useMemo(() => {
+    return (txData ?? [])
+      .filter((tx: any) => tx.type === "VENDOR_PAYOUT" || tx.type === "REFUND_TO_VENDOR" || tx.type === "SETTLEMENT")
+      .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+  }, [txData]);
+
+  const activeBidsCount = useMemo(() => {
+    return (bidsData ?? []).filter((b: any) => b.status === "PENDING" || b.status === "ACCEPTED_BY_CLIENT").length;
+  }, [bidsData]);
+
+  const successRate = useMemo(() => {
+    const bids = bidsData ?? [];
+    if (bids.length === 0) return 0;
+    const won = bids.filter((b: any) => b.status === "ACCEPTED_BY_CLIENT").length;
+    return Math.round((won / bids.length) * 100);
+  }, [bidsData]);
+
+  return (
+    <div className="min-h-screen bg-background pb-24 font-sans" dir="rtl">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">لوحة الموردين</h1>
+              <p className="text-sm text-muted-foreground mt-1">إدارة العروض والأرباح</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/vendor/earnings">
+                <button className="px-4 py-2.5 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition text-sm font-medium flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> الأرباح
+                </button>
+              </Link>
+              <Link href="/vendor/requests">
+                <button className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition text-sm font-bold flex items-center gap-2">
+                  <Search className="w-4 h-4" /> تصفح الطلبات
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[
+            { label: "الأرباح الإجمالية", value: formatCurrency(totalEarnings), icon: TrendingUp, color: "from-emerald-500 to-teal-500", loading: txLoading },
+            { label: "العروض النشطة", value: activeBidsCount, icon: Package, color: "from-cyan-500 to-blue-500", loading: bidsLoading },
+            { label: "نسبة النجاح", value: `${successRate}%`, icon: CheckCircle, color: "from-purple-500 to-pink-500", loading: bidsLoading },
+          ].map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/40 transition-colors">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.color} bg-opacity-10`}>
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{stat.label}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stat.loading ? "..." : stat.value}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Active Bids List */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-3 bg-card border border-border rounded-2xl p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Inbox className="w-5 h-5 text-primary" />
+                آخر عروضك
+              </h2>
+              <Link href="/vendor/bids" className="text-sm text-primary hover:text-primary/80 transition">
+                عرض الكل
+              </Link>
+            </div>
+
+            {bidsLoading ? (
+              <div className="p-12 text-center">
+                <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">جاري التحميل...</p>
+              </div>
+            ) : (bidsData?.length ?? 0) === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Inbox className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">لا توجد عروض</h3>
+                <p className="text-sm text-muted-foreground mb-6">ابدأ بتصفح الطلبات المتاحة</p>
+                <Link href="/vendor/requests">
+                  <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">
+                    تصفح الطلبات
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {(bidsData ?? []).slice(0, 5).map((bid: any, idx) => {
+                  const isAccepted = bid.status === "ACCEPTED_BY_CLIENT";
+                  return (
+                    <motion.div
+                      key={bid.id}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Link
+                        href={`/vendor/requests/${bid.requestId}`}
+                        className="group p-4 bg-background rounded-xl border border-border/50 hover:border-primary/30 hover:bg-muted/50 transition-all flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isAccepted ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+                          }`}>
+                            <Package className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition">
+                              طلب #{bid.requestId}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">{bid.request?.title || "خدمة"}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            isAccepted ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+                          }`}>
+                            {isAccepted ? "مقبول" : "انتظار"}
+                          </span>
+                          <p className="text-sm font-bold text-foreground">{formatCurrency(bid.netPrice || 0)}</p>
+                          <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition" />
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-2 space-y-4"
+          >
+            <h3 className="text-xl font-bold text-foreground mb-4">إجراءات سريعة</h3>
+            
+            {[
+              { label: "تصفح الطلبات", desc: "طلبات جديدة متاحة الآن", icon: Search, href: "/vendor/requests", color: "from-cyan-500 to-blue-500" },
+              { label: "الأرباح", desc: "تابع أرباحك وفلوسك", icon: TrendingUp, href: "/vendor/earnings", color: "from-emerald-500 to-teal-500" },
+            ].map((action, i) => (
+              <Link key={i} href={action.href}>
+                <div className="group p-4 bg-card border border-border rounded-xl hover:border-primary/40 hover:bg-muted/50 transition-all cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${action.color} bg-opacity-10 group-hover:bg-opacity-20 transition-colors`}>
+                      {action.icon === Search ? <Search className="w-5 h-5 text-primary" /> : <TrendingUp className="w-5 h-5 text-primary" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground text-sm">{action.label}</p>
+                      <p className="text-xs text-muted-foreground">{action.desc}</p>
+                    </div>
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            {/* Tip Card */}
+            <div className="mt-6 p-5 bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-4 h-4 text-primary" />
+                <p className="text-xs font-medium text-primary">نصيحة اليوم</p>
+              </div>
+              <h4 className="font-semibold text-foreground text-sm mb-2">كيف تزيد من فرصك؟</h4>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                العملاء يفضلون الموردين الذين يقدمون ضمانات قوية وردود سريعة على استفساراتهم.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+    </div>
+  );
+}
 
 export default function VendorHomePage() {
   const { data: bidsData, loading: bidsLoading } = useAsyncData(() => listVendorBids(), []);
