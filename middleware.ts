@@ -43,10 +43,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Admin Route Protection
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
+  if (pathname.startsWith("/admin")) {
     const token = request.cookies.get("session_token")?.value;
     if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 

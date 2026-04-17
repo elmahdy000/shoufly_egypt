@@ -85,13 +85,10 @@ export async function POST(req: NextRequest) {
     const maxAge = 60 * 60 * 24 * 7;
 
     // Cookie settings based on environment
-    // - Replit: Requires SameSite=None + Secure + Partitioned for iframe support
-    // - Production: SameSite=Lax + Secure
-    // - Local dev: SameSite=Lax (no Secure for HTTP localhost)
     const cookieOptions = {
       httpOnly: true,
       secure: isReplit || isProduction,
-      sameSite: isReplit ? ("none" as const) : ("lax" as const),
+      sameSite: (isReplit ? "none" : "lax") as const,
       maxAge,
       path: "/",
     };
@@ -104,7 +101,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set("csrf_token", csrfToken, {
       httpOnly: false, // Must be readable by JavaScript
       secure: isReplit || isProduction,
-      sameSite: isReplit ? "none" : "lax",
+      sameSite: (isReplit ? "none" : "lax") as const,
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     });

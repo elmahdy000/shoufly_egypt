@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   Activity, ArrowUpRight, Briefcase, FileText,
   Package, Truck, Users, LayoutDashboard,
-  Zap, CreditCard, ChevronLeft, Target,
+  Zap, CreditCard, ChevronLeft, Target, AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
