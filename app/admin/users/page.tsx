@@ -1,18 +1,221 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { formatCurrency, formatDate } from "@/lib/formatters";
-import {
-  Search, RefreshCw, Users, ShieldCheck,
-  TrendingUp, Mail, Phone, Clock,
-  Ban, X, ExternalLink,
-  ShieldAlert, ChevronLeft, UserCircle2,
-  Filter, CheckCircle2
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/shoofly/button";
+import { Search, MoreVertical, Mail, Phone, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
+
+interface User {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  city?: string;
+  createdAt: string;
+  isActive?: boolean;
+  isVerified?: boolean;
+}
+
+export default function AdminUsers() {
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+
+  const { data: users, loading } = useAsyncData<User[]>(
+    () => apiFetch("/api/admin/users", "ADMIN"),
+    []
+  );
+
+  const filtered = useMemo(() => {
+    return (users ?? []).filter((u) => {
+      const matchesSearch =
+        u.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase());
+      const matchesRole = roleFilter === "all" || u.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, search, roleFilter]);
+
+  const getRoleBadge = (role: string) => {
+    const styles: Record<string, string> = {
+      admin: "bg-purple-50 text-purple-700 border-purple-200",
+      client: "bg-blue-50 text-blue-700 border-blue-200",
+      vendor: "bg-orange-50 text-orange-700 border-orange-200",
+      delivery: "bg-green-50 text-green-700 border-green-200",
+    };
+    return styles[role?.toLowerCase()] || "bg-gray-50 text-gray-700 border-gray-200";
+  };
+
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      admin: "مسؤول",
+      client: "عميل",
+      vendor: "مورد",
+      delivery: "مندوب توصيل",
+    };
+    return labels[role?.toLowerCase()] || role;
+  };
+
+  return (
+    <div className="min-h-screen bg-white" dir="rtl">
+      {/* Page Header */}
+      <div className="px-8 py-10 border-b border-gray-200">
+        <div className="max-w-7xl">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">إدارة المستخدمين</h1>
+          <p className="text-gray-600 font-medium">إدارة حسابات المستخدمين والأعضاء في المنصة</p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-8 py-8">
+        <div className="max-w-7xl space-y-8">
+          {/* Controls */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="ابحث عن مستخدم أو بريد إلكتروني..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+              />
+            </div>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+            >
+              <option value="all">جميع الأدوار</option>
+              <option value="admin">مسؤول</option>
+              <option value="client">عميل</option>
+              <option value="vendor">مورد</option>
+              <option value="delivery">مندوب توصيل</option>
+            </select>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">إجمالي المستخدمين</p>
+              <p className="text-2xl font-bold text-blue-900">{users?.length || 0}</p>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-2">الموردين</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {users?.filter((u) => u.role === "vendor").length || 0}
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">العملاء</p>
+              <p className="text-2xl font-bold text-green-900">
+                {users?.filter((u) => u.role === "client").length || 0}
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2">المسؤولين</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {users?.filter((u) => u.role === "admin").length || 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Users Table */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      الاسم
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      البريد الإلكتروني
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      الدور
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      المدينة
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      تاريخ الانضمام
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      الإجراء
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center">
+                        <div className="flex justify-center">
+                          <div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-medium">
+                        لا توجد مستخدمين
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((user, idx) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="hover:bg-gray-50 transition-colors group"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center font-bold text-sm">
+                              {user.fullName.charAt(0)}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">{user.fullName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getRoleBadge(user.role)}`}
+                          >
+                            {getRoleLabel(user.role)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{user.city || "—"}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(user.createdAt).toLocaleDateString("ar-EG")}
+                        </td>
+                        <td className="px-6 py-4">
+                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Footer Info */}
+          <div className="flex items-center justify-between py-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              عرض <span className="font-semibold text-gray-900">{filtered.length}</span> من{" "}
+              <span className="font-semibold text-gray-900">{users?.length || 0}</span> مستخدم
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type UserFilter = "ALL" | "ACTIVE" | "BLOCKED" | "VERIFIED";
 type UserAction = "block" | "unblock" | "verify" | "unverify";

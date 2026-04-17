@@ -4,42 +4,231 @@ import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatDate, formatCurrency } from "@/lib/formatters";
-import {
-  Package, Search, Filter, RefreshCw,
-  Eye, Truck, CheckCircle2, AlertCircle,
-  X, MapPin, Calendar, User, Phone,
-  ChevronLeft, History, Box, ArrowUpRight
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Search, Filter, Package, CheckCircle, Clock, AlertCircle, ChevronRight, Eye } from "lucide-react";
+import { motion } from "framer-motion";
 
-interface OrderRequest {
+interface Request {
   id: number;
   title: string;
   status: string;
-  total: number;
+  total?: number;
   createdAt: string;
   client?: { fullName?: string; phone?: string };
-  items: any[];
 }
 
-export default function AdminRequestsPage() {
+export default function AdminRequests() {
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<OrderRequest | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: requests, loading, refresh } = useAsyncData<OrderRequest[]>(
+  const { data: requests, loading } = useAsyncData<Request[]>(
     () => apiFetch("/api/admin/requests", "ADMIN"),
     []
   );
 
   const filtered = useMemo(() => {
-    return (requests ?? []).filter(r => 
-      r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.client?.fullName?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [requests, search]);
+    return (requests ?? []).filter((r) => {
+      const matchesSearch =
+        r.title.toLowerCase().includes(search.toLowerCase()) ||
+        r.client?.fullName?.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, search, statusFilter]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+      case "تم التوصيل":
+        return <CheckCircle className="w-4 h-4" />;
+      case "pending":
+      case "قيد الانتظار":
+        return <Clock className="w-4 h-4" />;
+      case "cancelled":
+      case "ملغى":
+        return <AlertCircle className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusStyle = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+      case "تم التوصيل":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "pending":
+      case "قيد الانتظار":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "cancelled":
+      case "ملغى":
+        return "bg-red-50 text-red-700 border-red-200";
+      case "processing":
+      case "قيد المعالجة":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
 
   return (
-    <div className="min-h-full bg-[#F1F5F9] pb-32 font-sans text-right" dir="rtl">
+    <div className="min-h-screen bg-white" dir="rtl">
+      {/* Page Header */}
+      <div className="px-8 py-10 border-b border-gray-200">
+        <div className="max-w-7xl">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">الطلبات والعمليات</h1>
+          <p className="text-gray-600 font-medium">إدارة جميع طلبات المستخدمين والعمليات الجارية</p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-8 py-8">
+        <div className="max-w-7xl space-y-8">
+          {/* Controls */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="ابحث عن طلب أو عميل..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
+            >
+              <option value="all">جميع الحالات</option>
+              <option value="pending">قيد الانتظار</option>
+              <option value="processing">قيد المعالجة</option>
+              <option value="completed">مكتمل</option>
+            </select>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">إجمالي الطلبات</p>
+              <p className="text-2xl font-bold text-blue-900">{requests?.length || 0}</p>
+            </div>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">قيد الانتظار</p>
+              <p className="text-2xl font-bold text-amber-900">
+                {requests?.filter((r) => r.status?.toLowerCase().includes("pending")).length || 0}
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-orange-600 uppercase tracking-wide mb-2">قيد المعالجة</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {requests?.filter((r) => r.status?.toLowerCase().includes("processing")).length || 0}
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-green-600 uppercase tracking-wide mb-2">مكتمل</p>
+              <p className="text-2xl font-bold text-green-900">
+                {requests?.filter((r) => r.status?.toLowerCase().includes("completed")).length || 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Requests Table */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      معرف الطلب
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      العنوان
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      العميل
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      الحالة
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      التاريخ
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide">
+                      الإجراء
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center">
+                        <div className="flex justify-center">
+                          <div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-medium">
+                        لا توجد طلبات
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((req, idx) => (
+                      <motion.tr
+                        key={req.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="hover:bg-gray-50 transition-colors group cursor-pointer"
+                      >
+                        <td className="px-6 py-4 text-sm text-gray-600 font-semibold">#{req.id}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{req.title}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{req.client?.fullName || "غير محدد"}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(req.status)}`}
+                          >
+                            {getStatusIcon(req.status)}
+                            {req.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{formatDate(req.createdAt)}</td>
+                        <td className="px-6 py-4">
+                          <button className="flex items-center gap-1 px-3 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition font-semibold text-sm group-hover:translate-x-1 transition-transform">
+                            عرض
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Footer Info */}
+          <div className="flex items-center justify-between py-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              عرض <span className="font-semibold text-gray-900">{filtered.length}</span> من{" "}
+              <span className="font-semibold text-gray-900">{requests?.length || 0}</span> طلب
+            </p>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-gray-700 font-semibold text-sm">
+                السابق
+              </button>
+              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-gray-700 font-semibold text-sm">
+                التالي
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
       
       {/* 🚀 Header: Tactical Control */}
       <section className="bg-slate-950 text-white border-b-8 border-emerald-500 sticky top-0 z-40 shadow-2xl overflow-hidden">
