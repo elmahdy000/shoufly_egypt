@@ -80,32 +80,34 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
-    const isReplit = !!process.env.REPLIT_DOMAINS;
-    const isProduction = process.env.NODE_ENV === "production";
     const maxAge = 60 * 60 * 24 * 7;
 
-    // Cookie settings based on environment
-    // Always use secure=true and sameSite=lax for Vercel preview (HTTPS)
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true, // Vercel preview and production are HTTPS
-      sameSite: "lax" as const,
-      maxAge,
-      path: "/",
-    };
+    // Cookie settings for iframe compatibility (v0 preview, Replit, etc.)
+    // Use SameSite=None; Secure; Partitioned for cross-site iframe support
+    // This works for normal browsing AND iframe contexts
+    const sessionCookie = [
+      `session_token=${token}`,
+      `Max-Age=${maxAge}`,
+      `Path=/`,
+      `HttpOnly`,
+      `Secure`,
+      `SameSite=None`,
+      `Partitioned`,
+    ].join("; ");
 
-    // Set the session cookie
-    res.cookies.set("session_token", token, cookieOptions);
-
-    // Set CSRF token cookie for subsequent requests
     const csrfToken = generateCsrfToken();
-    res.cookies.set("csrf_token", csrfToken, {
-      httpOnly: false, // Must be readable by JavaScript
-      secure: true, // Vercel preview and production are HTTPS
-      sameSite: "lax" as const,
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: "/",
-    });
+    const csrfCookie = [
+      `csrf_token=${csrfToken}`,
+      `Max-Age=${60 * 60 * 24}`,
+      `Path=/`,
+      `Secure`,
+      `SameSite=None`,
+      `Partitioned`,
+    ].join("; ");
+
+    // Append both cookies - using append to support multiple Set-Cookie headers
+    res.headers.append("Set-Cookie", sessionCookie);
+    res.headers.append("Set-Cookie", csrfCookie);
 
     return res;
   } catch (e: unknown) {
