@@ -50,40 +50,15 @@ function StatusPill({ status }: { status?: string }) {
 }
 
 function KpiCard({
-  title, value, delta, deltaLabel, icon: Icon, highlight = false, loading,
+  title, value, delta, deltaLabel, icon: Icon, loading,
 }: {
   title: string; value: string | number; delta?: string; deltaLabel?: string;
-  icon: React.ElementType; highlight?: boolean; loading?: boolean;
+  icon: React.ElementType; loading?: boolean;
 }) {
-  if (highlight) {
-    return (
-      <div className="rounded-2xl p-6 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 border border-orange-400/20 text-white shadow-lg shadow-orange-200/30 hover:shadow-xl hover:shadow-orange-200/40 transition-all hover:-translate-y-0.5">
-        <div className="flex items-start justify-between mb-5">
-          <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center">
-            <Icon size={20} className="text-white" />
-          </div>
-          {delta && (
-            <span className="flex items-center gap-1 text-[13px] font-bold px-3 py-1.5 bg-white/10 text-white rounded-full backdrop-blur-sm border border-white/20">
-              <TrendingUp size={12} />
-              {delta}
-            </span>
-          )}
-        </div>
-        <div className="space-y-2">
-          <p className="text-4xl font-bold tracking-tight leading-none">
-            {loading ? <span className="inline-block w-24 h-8 rounded-lg animate-pulse bg-white/20" /> : value}
-          </p>
-          <p className="text-sm font-semibold text-orange-100">{title}</p>
-          {deltaLabel && <p className="text-[12px] font-medium text-orange-200/90">{deltaLabel}</p>}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl p-6 bg-white border border-gray-100 hover:border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5">
       <div className="flex items-start justify-between mb-5">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-100 flex items-center justify-center">
+        <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
           <Icon size={20} className="text-orange-500" />
         </div>
         {delta && (
@@ -129,7 +104,7 @@ export default function AdminDashboard() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard title="إجمالي المبيعات"    value={gmv}                                              delta="+12.5%" deltaLabel="مقارنة بالشهر الماضي"  icon={CreditCard} highlight loading={loading} />
+        <KpiCard title="إجمالي المبيعات"    value={gmv}                                              delta="+12.5%" deltaLabel="مقارنة بالشهر الماضي"  icon={CreditCard} loading={loading} />
         <KpiCard title="الطلبات المفتوحة"   value={stats?.openRequests   ?? 0}                       delta={undefined}                                   icon={Package}                loading={loading} />
         <KpiCard title="طلبات اليوم"        value={stats?.todayRequests  ?? 0}                       delta={undefined}                                   icon={Activity}               loading={loading} />
         <KpiCard title="المستخدمين"         value={(stats?.totalUsers    ?? 0).toLocaleString("ar-EG")} deltaLabel={`${stats?.totalVendors ?? 0} مورد`}  icon={Users}                  loading={loading} />
