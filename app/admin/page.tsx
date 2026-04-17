@@ -56,27 +56,25 @@ function KpiCard({
   icon: React.ElementType; loading?: boolean;
 }) {
   return (
-    <div className="rounded-2xl p-4 sm:p-5 lg:p-6 bg-white border border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
-      <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4 lg:mb-5">
-        <div className="w-11 h-11 sm:w-12 sm:h-12 lg:w-13 lg:h-13 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
-          <Icon size={18} className="text-orange-700 sm:hidden" strokeWidth={2} />
-          <Icon size={20} className="text-orange-700 hidden sm:block lg:hidden" strokeWidth={2} />
-          <Icon size={22} className="text-orange-700 hidden lg:block" strokeWidth={2} />
+    <div className="rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 bg-white border border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]">
+      <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 md:mb-3 lg:mb-4">
+        <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+          <Icon size={16} className="text-orange-700" strokeWidth={2} />
         </div>
         {delta && (
-          <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 shrink-0 whitespace-nowrap">
-            <TrendingUp size={12} className="sm:hidden" strokeWidth={2} />
-            <TrendingUp size={14} className="hidden sm:block" strokeWidth={2} />
+          <span className="flex items-center gap-1 text-xs md:text-sm font-bold px-2 sm:px-3 py-0.5 sm:py-1 md:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 flex-shrink-0 whitespace-nowrap">
+            <TrendingUp size={12} className="md:hidden" strokeWidth={2} />
+            <TrendingUp size={14} className="hidden md:block" strokeWidth={2} />
             {delta}
           </span>
         )}
       </div>
-      <div>
-        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-none text-gray-900 mb-2 tabular-nums">
-          {loading ? <span className="inline-block w-24 sm:w-32 h-7 sm:h-8 lg:h-9 rounded-lg animate-pulse bg-gray-200" /> : value}
+      <div className="min-w-0 flex-1">
+        <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight leading-none text-gray-900 mb-1 tabular-nums break-words line-clamp-1">
+          {loading ? <span className="inline-block w-20 sm:w-24 h-6 sm:h-7 rounded-lg animate-pulse bg-gray-200" /> : value}
         </p>
-        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
-        {deltaLabel && <p className="text-xs text-gray-500">{deltaLabel}</p>}
+        <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{title}</p>
+        {deltaLabel && <p className="text-xs text-gray-500 mt-0.5 truncate">{deltaLabel}</p>}
       </div>
     </div>
   );

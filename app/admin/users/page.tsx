@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
         {[
           { label: "إجمالي",        count: counts.all,      icon: Users,         bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-gray-100",     iconColor: "text-gray-700"     },
           { label: "العملاء",       count: counts.client,   icon: ShoppingCart,  bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-blue-100",     iconColor: "text-blue-700"     },
@@ -68,18 +68,16 @@ export default function AdminUsersPage() {
           return (
             <div
               key={s.label}
-              className={`${s.bg} border border-gray-200 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between`}
+              className={`${s.bg} border border-gray-200 rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]`}
             >
-              <div className={`${s.iconBg} w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-3 sm:mb-4`}>
-                <Icon size={18} className={`${s.iconColor} sm:hidden`} strokeWidth={2} />
-                <Icon size={20} className={`${s.iconColor} hidden sm:block lg:hidden`} strokeWidth={2} />
-                <Icon size={22} className={`${s.iconColor} hidden lg:block`} strokeWidth={2} />
+              <div className={`${s.iconBg} w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center mb-2 md:mb-3 flex-shrink-0`}>
+                <Icon size={16} className={`${s.iconColor}`} strokeWidth={2} />
               </div>
-              <div>
-                <p className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${s.color} mb-1 tracking-tight tabular-nums`}>
+              <div className="min-w-0 flex-1">
+                <p className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${s.color} break-words tracking-tight tabular-nums line-clamp-1`}>
                   {loading ? "—" : s.count.toLocaleString("ar-EG")}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-600 font-medium">{s.label}</p>
+                <p className="text-xs md:text-sm text-gray-600 font-medium truncate">{s.label}</p>
               </div>
             </div>
           );

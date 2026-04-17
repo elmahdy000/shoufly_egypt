@@ -324,15 +324,13 @@ function MetricCard({
   icon: ElementType;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
-      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-3 sm:mb-4">
-        <Icon size={18} className="text-orange-700 sm:hidden" strokeWidth={2} />
-        <Icon size={20} className="text-orange-700 hidden sm:block lg:hidden" strokeWidth={2} />
-        <Icon size={22} className="text-orange-700 hidden lg:block" strokeWidth={2} />
+    <div className="bg-white border border-gray-200 rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-2 md:mb-3 flex-shrink-0">
+        <Icon size={16} className="text-orange-700" strokeWidth={2} />
       </div>
-      <div>
-        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tabular-nums tracking-tight">{value}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs md:text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
+        <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 tabular-nums tracking-tight break-words line-clamp-1">{value}</p>
       </div>
     </div>
   );
