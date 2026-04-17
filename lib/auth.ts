@@ -62,9 +62,15 @@ async function resolveUserBySessionToken(
 export async function getCurrentUser(
   headers: Headers,
 ): Promise<CurrentUser | null> {
+  // In API routes, headers parameter is provided, so use that first
+  const userFromHeaders = await resolveUserBySessionToken(headers);
+  if (userFromHeaders) return userFromHeaders;
+  
+  // Fallback to cookie store only if headers didn't have session (Server Components context)
   const cookieUser = await getCurrentUserFromCookie();
   if (cookieUser) return cookieUser;
-  return resolveUserBySessionToken(headers);
+  
+  return null;
 }
 
 /**
