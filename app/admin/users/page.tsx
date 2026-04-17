@@ -57,29 +57,30 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "إجمالي",        count: counts.all,      icon: Users,         color: "text-gray-900",   bg: "from-gray-50 to-gray-100",     iconBg: "bg-gray-100",     iconColor: "text-gray-600"     },
-          { label: "العملاء",       count: counts.client,   icon: ShoppingCart,  color: "text-blue-900",   bg: "from-blue-50 to-blue-100",    iconBg: "bg-blue-100",     iconColor: "text-blue-600"     },
-          { label: "الموردين",      count: counts.vendor,   icon: Store,         color: "text-orange-900", bg: "from-orange-50 to-orange-100",iconBg: "bg-orange-100",   iconColor: "text-orange-600"   },
-          { label: "مندوبي التوصيل",count: counts.delivery, icon: Truck,         color: "text-green-900",  bg: "from-green-50 to-green-100",  iconBg: "bg-green-100",    iconColor: "text-green-600"    },
+          { label: "إجمالي",        count: counts.all,      icon: Users,         bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-gray-100",     iconColor: "text-gray-700"     },
+          { label: "العملاء",       count: counts.client,   icon: ShoppingCart,  bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-blue-100",     iconColor: "text-blue-700"     },
+          { label: "الموردين",      count: counts.vendor,   icon: Store,         bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-orange-100",   iconColor: "text-orange-700"   },
+          { label: "مندوبي التوصيل",count: counts.delivery, icon: Truck,         bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-green-100",    iconColor: "text-green-700"    },
         ].map(s => {
           const Icon = s.icon;
           return (
             <div
               key={s.label}
-              className={`bg-gradient-to-br ${s.bg} border border-white rounded-2xl p-3 sm:p-4 lg:p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group`}
+              className={`${s.bg} border border-gray-200 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between`}
             >
-              <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
-                <div className={`${s.iconBg} p-2 sm:p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon size={14} className={`${s.iconColor} hidden sm:block`} />
-                  <Icon size={12} className={`${s.iconColor} sm:hidden`} />
-                </div>
+              <div className={`${s.iconBg} w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-3 sm:mb-4`}>
+                <Icon size={18} className={`${s.iconColor} sm:hidden`} strokeWidth={2} />
+                <Icon size={20} className={`${s.iconColor} hidden sm:block lg:hidden`} strokeWidth={2} />
+                <Icon size={22} className={`${s.iconColor} hidden lg:block`} strokeWidth={2} />
               </div>
-              <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${s.color} tabular-nums truncate leading-tight`}>
-                {loading ? "—" : s.count.toLocaleString("ar-EG")}
-              </p>
-              <p className="text-[10px] sm:text-xs text-gray-600 mt-1.5 sm:mt-2 font-semibold truncate">{s.label}</p>
+              <div>
+                <p className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${s.color} mb-1 tracking-tight tabular-nums`}>
+                  {loading ? "—" : s.count.toLocaleString("ar-EG")}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">{s.label}</p>
+              </div>
             </div>
           );
         })}

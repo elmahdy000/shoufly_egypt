@@ -56,27 +56,27 @@ function KpiCard({
   icon: React.ElementType; loading?: boolean;
 }) {
   return (
-    <div className="rounded-2xl p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-white to-gray-50 border border-white text-gray-900 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-      <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4 lg:mb-5">
-        <div className="w-10 sm:w-11 lg:w-12 h-10 sm:h-11 lg:h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 border border-orange-200/50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-          <Icon size={16} className="text-orange-600 hidden sm:block lg:hidden" />
-          <Icon size={14} className="text-orange-600 sm:hidden" />
-          <Icon size={18} className="text-orange-600 hidden lg:block" />
+    <div className="rounded-2xl p-4 sm:p-5 lg:p-6 bg-white border border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4 lg:mb-5">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 lg:w-13 lg:h-13 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+          <Icon size={18} className="text-orange-700 sm:hidden" strokeWidth={2} />
+          <Icon size={20} className="text-orange-700 hidden sm:block lg:hidden" strokeWidth={2} />
+          <Icon size={22} className="text-orange-700 hidden lg:block" strokeWidth={2} />
         </div>
         {delta && (
-          <span className="flex items-center gap-1 text-[11px] sm:text-[13px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shrink-0">
-            <TrendingUp size={10} className="sm:hidden" />
-            <TrendingUp size={12} className="hidden sm:block" />
+          <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 shrink-0 whitespace-nowrap">
+            <TrendingUp size={12} className="sm:hidden" strokeWidth={2} />
+            <TrendingUp size={14} className="hidden sm:block" strokeWidth={2} />
             {delta}
           </span>
         )}
       </div>
-      <div className="space-y-1 sm:space-y-2">
-        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-none text-gray-900 break-words">
-          {loading ? <span className="inline-block w-20 sm:w-24 h-6 sm:h-7 lg:h-8 rounded-lg animate-pulse bg-gray-100" /> : value}
+      <div>
+        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-none text-gray-900 mb-2 tabular-nums">
+          {loading ? <span className="inline-block w-24 sm:w-32 h-7 sm:h-8 lg:h-9 rounded-lg animate-pulse bg-gray-200" /> : value}
         </p>
-        <p className="text-xs sm:text-sm font-semibold text-gray-700 truncate">{title}</p>
-        {deltaLabel && <p className="text-[11px] sm:text-[12px] font-medium text-gray-500">{deltaLabel}</p>}
+        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
+        {deltaLabel && <p className="text-xs text-gray-500">{deltaLabel}</p>}
       </div>
     </div>
   );

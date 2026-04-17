@@ -324,14 +324,16 @@ function MetricCard({
   icon: ElementType;
 }) {
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 border border-white rounded-2xl p-3 sm:p-4 lg:p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-      <div className="w-10 sm:w-11 h-10 sm:h-11 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
-        <Icon size={14} className="text-orange-600 sm:hidden" />
-        <Icon size={16} className="text-orange-600 hidden sm:block lg:hidden" />
-        <Icon size={18} className="text-orange-600 hidden lg:block" />
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-3 sm:mb-4">
+        <Icon size={18} className="text-orange-700 sm:hidden" strokeWidth={2} />
+        <Icon size={20} className="text-orange-700 hidden sm:block lg:hidden" strokeWidth={2} />
+        <Icon size={22} className="text-orange-700 hidden lg:block" strokeWidth={2} />
       </div>
-      <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 sm:mb-2">{title}</p>
-      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 tabular-nums truncate leading-tight">{value}</p>
+      <div>
+        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
+        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tabular-nums tracking-tight">{value}</p>
+      </div>
     </div>
   );
 }
