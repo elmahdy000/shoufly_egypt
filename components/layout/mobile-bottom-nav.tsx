@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export type MobileNavItem = {
   href: string;
   label: string;
-  icon: React.ElementType; // Using Lucide icon component type
+  icon: React.ElementType;
 };
 
 export function MobileBottomNav({ items }: { items: MobileNavItem[] }) {
@@ -22,52 +22,104 @@ export function MobileBottomNav({ items }: { items: MobileNavItem[] }) {
   };
 
   return (
-    <nav 
-      className="fixed bottom-0 left-0 right-0 z-[1000] bg-white/95 backdrop-blur-xl border-t border-slate-200/60 md:hidden rounded-t-2xl"
+    <motion.nav 
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-0 left-0 right-0 z-[1000] md:hidden"
       style={{ 
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)', 
-        boxShadow: '0 -8px 32px -8px rgba(0,0,0,0.12), 0 -2px 8px rgba(0,0,0,0.04)',
-        marginLeft: '8px',
-        marginRight: '8px',
-        maxWidth: 'calc(100% - 16px)'
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
       }}
+      dir="rtl"
     >
-      <div className="mx-auto flex max-w-lg items-center justify-around h-[60px] px-2">
-        {items.map((item) => {
-          const active = isPathActive(item.href);
-          const Icon = item.icon;
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="relative flex-1 flex flex-col items-center justify-center h-full group transition-all duration-300 min-w-[60px]"
-            >
-              {/* Active Glow Strip at Top */}
-              {active && (
-                <motion.div 
-                  layoutId="glow-strip"
-                  className="absolute -top-[1px] w-10 h-[2.5px] bg-primary rounded-b-full shadow-[0_2px_8px_rgba(255,90,0,0.4)] z-20"
-                />
-              )}
-              
-              {/* Icon with Active Scale */}
-              <div className={`transition-all duration-300 ${active ? "text-primary scale-105 -translate-y-0.5" : "text-slate-400 group-hover:text-slate-600"}`}>
-                <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
-              </div>
-              
-              <span className={`text-[9px] font-cairo tracking-wide transition-all duration-300 mt-[2px] ${
-                active ? "text-primary font-semibold scale-105" : "text-slate-500 font-medium opacity-70"
-              }`}>
-                {item.label}
-              </span>
+      {/* Background with blur */}
+      <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/90 backdrop-blur-2xl border-t border-gray-200/50" />
 
-              {/* Click Surface Effect */}
-              <div className="absolute inset-x-0 inset-y-1 rounded-xl group-active:bg-slate-100/50 transition-colors pointer-events-none" />
-            </Link>
-          );
-        })}
+      {/* Main Container */}
+      <div className="relative mx-auto flex items-center justify-around h-20 px-2 max-w-lg">
+        <AnimatePresence>
+          {items.map((item, index) => {
+            const active = isPathActive(item.href);
+            const Icon = item.icon;
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative flex-1 flex flex-col items-center justify-center h-full group transition-all duration-300"
+              >
+                {/* Active background bubble */}
+                {active && (
+                  <motion.div 
+                    layoutId="active-bg"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute inset-x-2 top-1 bottom-0 bg-gradient-to-b from-orange-100 via-orange-50 to-transparent rounded-2xl -z-10"
+                  />
+                )}
+
+                {/* Icon with animations */}
+                <motion.div 
+                  whileTap={{ scale: 0.85 }}
+                  className={`transition-all duration-300 p-2 rounded-xl relative z-10 ${
+                    active 
+                      ? "text-orange-600 scale-110 drop-shadow-lg" 
+                      : "text-gray-500 group-hover:text-gray-700"
+                  }`}
+                >
+                  <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
+                  
+                  {/* Glow effect for active */}
+                  {active && (
+                    <motion.div 
+                      initial={{ scale: 0.8, opacity: 0.5 }}
+                      animate={{ scale: 1.2, opacity: 0 }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="absolute inset-0 bg-orange-500/30 rounded-xl blur-md -z-10"
+                    />
+                  )}
+                </motion.div>
+                
+                {/* Label */}
+                <motion.span 
+                  animate={{
+                    scale: active ? 1.05 : 1,
+                    fontWeight: active ? 700 : 600,
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className={`text-[10px] tracking-tight mt-1 transition-all duration-300 ${
+                    active 
+                      ? "text-orange-600 font-bold" 
+                      : "text-gray-600 opacity-80"
+                  }`}
+                >
+                  {item.label}
+                </motion.span>
+
+                {/* Active indicator dot */}
+                {active && (
+                  <motion.div 
+                    layoutId="indicator-dot"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute bottom-0.5 w-1 h-1 bg-orange-600 rounded-full"
+                  />
+                )}
+
+                {/* Ripple effect on tap */}
+                <motion.div 
+                  whileTap={{ scale: 2, opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 rounded-xl bg-orange-400/20 pointer-events-none"
+                />
+              </Link>
+            );
+          })}
+        </AnimatePresence>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
