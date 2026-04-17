@@ -3,29 +3,26 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/shoofly/button";
-import { formatDate } from "@/lib/formatters";
-import { StatusBadge } from "@/components/shoofly/status-badge";
+import { formatDate, formatCurrency } from "@/lib/formatters";
 import { forwardAdminBid, listAdminRequestBids } from "@/lib/api/bids";
 import { getRequestDetails } from "@/lib/api/requests";
-import { formatCurrency } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
-import { 
-  FiClock, 
-  FiMapPin, 
-  FiUser, 
-  FiArrowRight, 
-  FiFileText, 
-  FiActivity, 
-  FiCheckCircle, 
-  FiImage,
-  FiMessageSquare
-} from "react-icons/fi";
+import { ArrowRight, MapPin, FileText, CheckCircle, Clock, User, MessageSquare, ChevronRight } from "lucide-react";
+
+const STATUS_MAP: Record<string, { label: string; cls: string }> = {
+  PENDING_ADMIN_REVISION:       { label: "قيد المراجعة",          cls: "bg-amber-50 text-amber-700 border-amber-200"  },
+  OPEN_FOR_BIDDING:             { label: "مفتوح للعروض",          cls: "bg-blue-50 text-blue-700 border-blue-200"     },
+  BIDS_RECEIVED:                { label: "وصلت عروض",             cls: "bg-purple-50 text-purple-700 border-purple-200"},
+  OFFERS_FORWARDED:             { label: "تم إرسال العروض",        cls: "bg-orange-50 text-orange-700 border-orange-200"},
+  ORDER_PAID_PENDING_DELIVERY:  { label: "مدفوع — بانتظار التوصيل", cls: "bg-green-50 text-green-700 border-green-200"  },
+  CLOSED_SUCCESS:               { label: "مكتمل",                  cls: "bg-gray-100 text-gray-600 border-gray-300"    },
+  CLOSED_CANCELLED:             { label: "ملغي",                   cls: "bg-red-50 text-red-700 border-red-200"        },
+};
 
 function AdminRequestDetails({ requestId }: { requestId: number }) {
   const router = useRouter();
   const request = useAsyncData(() => getRequestDetails(requestId), [requestId]);
-  const bids = useAsyncData(() => listAdminRequestBids(requestId), [requestId]);
+  const bids    = useAsyncData(() => listAdminRequestBids(requestId), [requestId]);
   const [activeActionId, setActiveActionId] = useState<number | null>(null);
 
   async function handleForward(bidId: number) {
@@ -33,9 +30,9 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
     try {
       await forwardAdminBid(bidId);
       bids.setData((rows: any) =>
-        (rows ?? []).map((b: any) => ({ 
-          ...b, 
-          status: b.id === bidId ? "SELECTED" : (b.status === "SELECTED" ? "REJECTED" : b.status) 
+        (rows ?? []).map((b: any) => ({
+          ...b,
+          status: b.id === bidId ? "SELECTED" : (b.status === "SELECTED" ? "REJECTED" : b.status),
         }))
       );
     } catch (err) {
@@ -47,21 +44,26 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
 
   if (request.loading) {
     return (
-      <div className="admin-page admin-page--detail" dir="rtl">
-        <div className="p-10 text-center text-muted font-bold animate-pulse">بنجهز تفاصيل الطلب...</div>
+      <div className="p-6 space-y-4" dir="rtl">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+        ))}
       </div>
     );
   }
-  if (request.error) {
+
+  if (request.error || !request.data) {
     return (
-      <div className="admin-page admin-page--detail" dir="rtl">
-        <div className="shoofly-card border border-rose-200 bg-rose-50 p-6 sm:p-8 text-center space-y-4">
-          <p className="text-rose-700 font-bold">{request.error}</p>
-          <div className="flex items-center justify-center gap-3">
-            <Button onClick={request.refresh}>إعادة المحاولة</Button>
-            <Button variant="secondary" onClick={() => router.push("/admin/requests")}>
+      <div className="p-6" dir="rtl">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center space-y-4">
+          <p className="text-red-700 font-semibold">{request.error ?? "لا يمكن تحميل بيانات الطلب"}</p>
+          <div className="flex justify-center gap-3">
+            <button onClick={request.refresh} className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">
+              إعادة المحاولة
+            </button>
+            <button onClick={() => router.push("/admin/requests")} className="px-4 py-2 bg-white text-gray-700 text-sm font-semibold border border-gray-300 rounded-lg hover:bg-gray-50 transition">
               الرجوع للطلبات
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -69,231 +71,227 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
   }
 
   const req = request.data;
-  if (!req) {
-    return (
-      <div className="admin-page admin-page--detail" dir="rtl">
-        <div className="shoofly-card border border-slate-200 bg-white p-6 sm:p-8 text-center space-y-4">
-          <p className="text-slate-700 font-bold">لا يمكن تحميل بيانات الطلب حاليًا.</p>
-          <Button variant="secondary" onClick={() => router.push("/admin/requests")}>
-            الرجوع للطلبات
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const st  = STATUS_MAP[req.status] ?? { label: req.status, cls: "bg-gray-100 text-gray-600 border-gray-300" };
 
   return (
-    <div className="admin-page admin-page--detail pb-20" dir="rtl">
-      {/* Dynamic Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-8 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => router.back()}
-              className="p-3 bg-white border border-slate-200 hover:bg-slate-50 rounded-2xl transition-all shadow-sm"
-            >
-              <FiArrowRight size={20} />
-            </button>
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 border-r-4 border-primary pr-4">{req?.title}</h1>
-            <StatusBadge status="active" label={req?.status ?? 'Pending'} />
+    <div className="p-6 space-y-6" dir="rtl">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <ArrowRight size={15} />
+            الرجوع للطلبات
+          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold text-gray-900">{req.title}</h1>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${st.cls}`}>
+              {st.label}
+            </span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-500 pr-0 sm:pr-16 font-medium">
-            <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg font-jakarta tracking-tight"><FiClock size={14}/> ID: {requestId}</span>
-            <span className="flex items-center gap-1.5"><FiMapPin size={16} className="text-primary" /> {req?.address}</span>
-            <span className="flex items-center gap-1.5"><FiMessageSquare size={16} /> التواصل مفعل</span>
+          <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">#{requestId}</span>
+            </span>
+            {req.address && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={13} className="text-orange-500" />
+                {req.address}
+              </span>
+            )}
+            {req.createdAt && (
+              <span className="flex items-center gap-1.5">
+                <Clock size={13} />
+                {formatDate(req.createdAt)}
+              </span>
+            )}
           </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <Link href={`/messages?otherId=${req?.clientId}`}>
-            <Button variant="secondary" className="gap-2 bg-slate-900 text-white border-none hover:bg-slate-800 h-14 px-6 rounded-2xl shadow-lg">
-              <FiMessageSquare /> شات مع العميل
-            </Button>
-          </Link>
-          <Button className="h-14 px-6 rounded-2xl shadow-lg border-2 border-rose-100 bg-white text-rose-600 hover:bg-rose-50 font-bold">إيقاف فوري للطلب</Button>
-        </div>
+        <Link
+          href={`/messages?otherId=${req.clientId}`}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap"
+        >
+          <MessageSquare size={15} />
+          مراسلة العميل
+        </Link>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left Column: Details & Bids */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Main Info Card */}
-          <div className="shoofly-card bg-white p-4 sm:p-8 lg:p-10 space-y-6 sm:space-y-10 border-2 border-slate-50 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-            
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 font-black text-2xl text-slate-900">
-                <FiFileText className="text-primary" />
-                <span>شرح المشكلة بالتفصيل</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Description */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+                <FileText size={16} />
               </div>
-              <div className="text-slate-700 leading-relaxed bg-slate-50/80 p-6 rounded-xl border border-slate-100 text-lg font-medium">
-                {req?.description || 'لا يوجد وصف تفصيلي لهذا الطلب.'}
-              </div>
+              <h2 className="text-base font-semibold text-gray-900">تفاصيل الطلب</h2>
             </div>
-            
-            {/* Visual Evidence */}
-            <div className="space-y-6">
-              <p className="text-xs font-black text-slate-400 tracking-wide flex items-center gap-2 border-b border-slate-50 pb-4">
-                <FiImage /> المعاينة البصرية للموقع
+            <div className="p-5">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {req.description || "لا يوجد وصف تفصيلي لهذا الطلب."}
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {[1, 2].map(i => (
-                  <div key={i} className="aspect-square bg-slate-100 rounded-xl flex flex-col items-center justify-center text-slate-300 border-4 border-dashed border-slate-200 hover:border-primary/20 transition-all group">
-                    <FiImage size={32} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-xs mt-2 font-bold">عرض المرفق {i}</span>
+            </div>
+          </div>
+
+          {/* Bids */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-900">عروض الموردين</h2>
+              <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
+                {bids.data?.length ?? 0} عرض
+              </span>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {bids.loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-5">
+                    <div className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  </div>
+                ))
+              ) : !bids.data?.length ? (
+                <div className="p-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <FileText size={18} className="text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500">لا توجد عروض حتى الآن</p>
+                  </div>
+                </div>
+              ) : (
+                (bids.data ?? []).map((bid: any) => (
+                  <div key={bid.id} className={`p-5 ${bid.status === "SELECTED" ? "bg-green-50/50" : "hover:bg-gray-50"} transition-colors`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-700 text-sm shrink-0">
+                          {bid.vendor?.fullName?.[0] ?? "V"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-gray-900">{bid.vendor?.fullName ?? `مورد #${bid.vendorId}`}</p>
+                            {bid.status === "SELECTED" && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                                <CheckCircle size={10} /> تم التوجيه
+                              </span>
+                            )}
+                          </div>
+                          {bid.description && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{bid.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-left shrink-0">
+                        <p className="text-lg font-bold text-gray-900">{formatCurrency(bid.clientPrice || 0)}</p>
+                        <p className="text-xs text-gray-400 text-center">سعر العميل</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                      <Link
+                        href={`/messages?otherId=${bid.vendorId}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <MessageSquare size={12} />
+                        مراسلة المورد
+                      </Link>
+                      <button
+                        onClick={() => handleForward(bid.id)}
+                        disabled={bid.status === "SELECTED" || activeActionId === bid.id}
+                        className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                          bid.status === "SELECTED"
+                            ? "bg-green-100 text-green-700 border border-green-200 cursor-default"
+                            : "bg-orange-500 text-white hover:bg-orange-600 active:scale-95"
+                        } disabled:opacity-60`}
+                      >
+                        {activeActionId === bid.id ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : bid.status === "SELECTED" ? (
+                          <><CheckCircle size={12} /> تم التوجيه</>
+                        ) : (
+                          <><ChevronRight size={12} /> توجيه للعميل</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-5">
+
+          {/* Client Info */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <User size={16} />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">بيانات العميل</h3>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold">
+                  {((req as any).clientName || "ع")[0]}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{(req as any).clientName ?? `عميل #${req.clientId}`}</p>
+                  <p className="text-xs text-gray-400">معرف #{req.clientId}</p>
+                </div>
+              </div>
+              <div className="space-y-2 pt-2 border-t border-gray-100">
+                {[
+                  { label: "تاريخ الإنشاء", value: req.createdAt ? formatDate(req.createdAt) : "—" },
+                  { label: "آخر تحديث",     value: req.updatedAt ? formatDate(req.updatedAt) : "—" },
+                  { label: "الحالة",         value: st.label },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">{label}</span>
+                    <span className="text-xs font-semibold text-gray-800">{value}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Bids Section */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                <FiActivity className="text-primary" /> عروض الموردين المتاحة
-              </h2>
-              <span className="text-sm font-black px-4 py-2 bg-primary/10 text-primary rounded-2xl border border-primary/20">
-                {bids.data?.length ?? 0} عرض مقدم
-              </span>
+          {/* Timeline */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900">التسلسل الزمني</h3>
             </div>
-
-            <div className="space-y-6">
-              {bids.loading ? (
-                <div className="text-center py-20 opacity-50 font-bold animate-pulse">بنفرز عروض الأسعار...</div>
-              ) : bids.error ? (
-                <div className="shoofly-card p-8 text-center border border-rose-200 bg-rose-50 text-rose-700 font-bold">
-                  {bids.error}
-                </div>
-              ) : (bids.data ?? []).length === 0 ? (
-                <div className="shoofly-card p-12 text-center text-slate-400 font-bold border-dashed border-2">لسه مفيش عروض وصلت للطلب ده</div>
-              ) : (bids.data ?? []).map((bid: any) => (
-                <div key={bid.id} className="shoofly-card bg-white p-8 hover:border-primary/40 transition-all border-r-8 border-slate-100 group">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xl border-4 border-white shadow-xl">
-                        {bid.vendor?.fullName?.[0] || 'V'}
+            <div className="p-5">
+              {(req as any)?.deliveryTracking?.length > 0 ? (
+                <div className="space-y-4">
+                  {(req as any).deliveryTracking.map((track: any, i: number) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle size={12} className="text-orange-600" />
                       </div>
                       <div>
-                        <p className="font-black text-xl text-slate-900">{bid.vendor?.fullName || `المورد #${bid.vendorId}`}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                           <StatusBadge status={bid.status === 'SELECTED' ? 'completed' : 'active'} label={bid.status} />
-                           <span className="text-xs text-slate-400 font-bold font-jakarta">UID-{bid.vendorId}</span>
-                        </div>
+                        <p className="text-sm font-medium text-gray-900">{track.status}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {track.deliveryAgent?.fullName ?? "النظام"} · {formatDate(track.createdAt)}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-left bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-sm w-full sm:min-w-[200px]">
-                      <p className="text-xs text-emerald-600 font-black tracking-wide mb-1 text-center">تكلفة العميل النهائية</p>
-                      <p className="text-3xl font-black font-jakarta text-emerald-700 text-center">
-                        {formatCurrency(bid.clientPrice || 0)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 mb-8 italic text-slate-600 font-medium leading-relaxed">
-                    "{bid.description || 'لا يوجد تفاصيل إضافية للعرض.'}"
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-4 border-t border-slate-50 pt-6">
-                    <Link href={`/messages?otherId=${bid.vendorId}`} className="w-full sm:w-auto">
-                      <Button variant="secondary" className="w-full gap-2 h-12 rounded-xl bg-white border-2 border-slate-100 hover:bg-slate-50 font-bold">
-                        <FiMessageSquare /> شات مع المورد
-                      </Button>
-                    </Link>
-                    <Button 
-                      onClick={() => handleForward(bid.id)}
-                      isLoading={activeActionId === bid.id}
-                      className="w-full sm:flex-1 h-12 rounded-xl font-black shadow-lg tracking-wider"
-                      variant={bid.status === 'SELECTED' ? 'secondary' : 'primary'}
-                      disabled={bid.status === 'SELECTED'}
-                    >
-                      {bid.status === 'SELECTED' ? 'تم توجيهه للعميل بنجاح' : 'توجيه العرض للعميل فوراً'}
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Meta & Audit */}
-        <div className="space-y-6">
-          {/* Client Info Hub */}
-          <div className="shoofly-card bg-slate-900 text-white p-4 sm:p-8 space-y-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
-                <h3 className="font-black text-xs text-primary tracking-wide relative z-10">بطاقة صاحب الطلب</h3>
-                <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 relative z-10 transition-all hover:bg-white/10">
-                  <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white/20">
-                    <FiUser />
-                  </div>
-                  <div>
-                    <p className="font-bold text-lg">{(req as any)?.clientName || `عميل #${req?.clientId}`}</p>
-                    <p className="text-xs text-emerald-400 font-black tracking-tighter">حساب موثق بالعلامة الزرقاء</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-3 pt-4 border-t border-white/10 text-sm">
-                   <div className="flex justify-between font-medium">
-                      <span className="text-white/40">تاريخ إنشاء الطلب</span>
-                      <span className="font-jakarta font-bold">{req?.createdAt ? formatDate(req.createdAt) : '---'}</span>
-                   </div>
-                   <div className="flex justify-between font-medium">
-                      <span className="text-white/40">آخر تحديث</span>
-                      <span className="font-jakarta font-bold">{req?.updatedAt ? formatDate(req.updatedAt) : '---'}</span>
-                   </div>
-                   <div className="flex justify-between font-medium">
-                      <span className="text-white/40">معرف العميل</span>
-                      <span className="font-jakarta font-bold">#{req?.clientId}</span>
-                   </div>
-                </div>
-          </div>
-
-          {/* Audit Trail - Dynamic from API */}
-          <div className="shoofly-card bg-white p-4 sm:p-8 space-y-8 border-2 border-slate-50">
-            <h3 className="font-black text-xs text-slate-400 tracking-wide flex items-center gap-2 border-b border-slate-50 pb-4">
-              <FiCheckCircle className="text-primary" /> التسلسل الزمني للأحداث
-            </h3>
-            
-            <div className="space-y-10 relative before:absolute before:right-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
-              {(req as any)?.deliveryTracking?.length > 0 ? (
-                (req as any).deliveryTracking.map((track: any, i: number) => (
-                  <div key={i} className="relative pr-12">
-                     <div className={`absolute right-0 top-1 w-10 h-10 rounded-2xl border-4 border-white flex items-center justify-center z-10 transition-all bg-primary text-white shadow-xl shadow-primary/20 scale-110`}>
-                       <FiCheckCircle size={16} />
-                     </div>
-                     <div className="space-y-1">
-                       <p className="text-md font-black text-slate-900">{track.status}</p>
-                       <div className="flex justify-between text-sm text-slate-400 font-black tracking-wider">
-                          <span>المنفذ: {track.deliveryAgent?.fullName || 'النظام'}</span>
-                          <span className="font-jakarta">{formatDate(track.createdAt)}</span>
-                       </div>
-                     </div>
-                  </div>
-                ))
               ) : (
-                <div className="text-center py-8 text-slate-400">
-                  <p>لا توجد أحداث مسجلة حالياً</p>
-                  <p className="text-xs mt-2">سيتم تحديث هذا القسم تلقائياً مع تقدم الطلب</p>
-                </div>
-              )}
-              
-              {/* Static workflow steps based on current status */}
-              {req?.status === 'PENDING_ADMIN_REVISION' && (
-                <div className="relative pr-12">
-                   <div className="absolute right-0 top-1 w-10 h-10 rounded-2xl border-4 border-white flex items-center justify-center z-10 bg-slate-100 text-slate-300">
-                     <div className="w-2 h-2 bg-current rounded-full" />
-                   </div>
-                   <div className="space-y-1">
-                     <p className="text-md font-black text-slate-400 italic">بانتظار موافقة الأدمن</p>
-                     <div className="flex justify-between text-sm text-slate-400 font-black tracking-wider">
-                        <span>المنفذ: الأدمن</span>
-                        <span className="font-jakarta">قيد الانتظار</span>
-                     </div>
-                   </div>
+                <div className="text-center py-6">
+                  <Clock size={20} className="text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-400">لا توجد أحداث مسجلة بعد</p>
                 </div>
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -303,11 +301,8 @@ function AdminRequestDetails({ requestId }: { requestId: number }) {
 export default function AdminRequestDetailsPage() {
   const params = useParams<{ requestId: string }>();
   const parsed = Number(params.requestId);
-
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    return <div className="p-20 text-center font-bold">معرف الطلب غير صالح.</div>;
+    return <div className="p-20 text-center text-sm font-medium text-gray-500">معرف الطلب غير صالح.</div>;
   }
-
   return <AdminRequestDetails requestId={parsed} />;
 }
-
