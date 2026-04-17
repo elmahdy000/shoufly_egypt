@@ -75,21 +75,22 @@ export default function AdminRequestsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900">الطلبات والعمليات</h1>
-        <p className="text-sm text-gray-500 mt-0.5">إدارة ومتابعة جميع طلبات المنصة</p>
+        <h1 className="text-3xl font-bold text-gray-900">الطلبات والعمليات</h1>
+        <p className="text-sm text-gray-500 mt-1">إدارة ومتابعة جميع طلبات المنصة</p>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: "إجمالي الطلبات", count: counts.total,    bg: "bg-gray-50",   border: "border-gray-200",  color: "text-gray-900"   },
-          { label: "مفتوح / قيد المراجعة", count: counts.open, bg: "bg-amber-50", border: "border-amber-200", color: "text-amber-700"  },
-          { label: "نشط",           count: counts.active,   bg: "bg-blue-50",   border: "border-blue-200",  color: "text-blue-700"   },
-          { label: "مكتمل",         count: counts.done,     bg: "bg-green-50",  border: "border-green-200", color: "text-green-700"  },
+          { label: "الإجمالي",      count: counts.total,    bg: "bg-gray-50",     border: "border-gray-200",  text: "text-gray-900"   },
+          { label: "مفتوح",         count: counts.open,     bg: "bg-amber-50",    border: "border-amber-200",  text: "text-amber-700"  },
+          { label: "نشط",           count: counts.active,   bg: "bg-blue-50",     border: "border-blue-200",   text: "text-blue-700"   },
+          { label: "مكتمل",         count: counts.done,     bg: "bg-green-50",    border: "border-green-200",  text: "text-green-700"  },
+          { label: "ملغى",          count: counts.cancelled, bg: "bg-red-50",      border: "border-red-200",    text: "text-red-700"    },
         ].map(s => (
-          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-4`}>
-            <p className={`text-2xl font-bold ${s.color}`}>{loading ? "—" : s.count.toLocaleString("ar-EG")}</p>
-            <p className="text-xs text-gray-500 mt-1 font-medium">{s.label}</p>
+          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-4 hover:shadow-md transition-shadow`}>
+            <p className={`text-2xl font-bold ${s.text} tabular-nums`}>{loading ? "—" : s.count.toLocaleString("ar-EG")}</p>
+            <p className="text-xs text-gray-600 mt-1 font-medium">{s.label}</p>
           </div>
         ))}
       </div>
@@ -101,14 +102,14 @@ export default function AdminRequestsPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="ابحث بعنوان الطلب أو اسم العميل..."
-            className="w-full h-9 bg-white border border-gray-200 rounded-lg pr-9 pl-4 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+            placeholder="ابحث بعنوان أو عميل..."
+            className="w-full h-10 bg-white border border-gray-200 rounded-lg pr-10 pl-4 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
           />
         </div>
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="h-9 bg-white border border-gray-200 rounded-lg px-3 text-sm text-gray-700 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+          className="h-10 bg-white border border-gray-200 rounded-lg px-3 text-sm text-gray-700 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
         >
           {STATUS_FILTER_OPTIONS.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -117,64 +118,55 @@ export default function AdminRequestsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-right">
             <thead>
-              <tr className="border-b border-gray-100">
-                {["الطلب", "العميل", "الحالة", "التاريخ"].map(h => (
-                  <th key={h} className="px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60 whitespace-nowrap">
+              <tr className="border-b border-gray-100 bg-gray-50/50">
+                {["#", "العنوان", "العميل", "الحالة", "التاريخ"].map(h => (
+                  <th key={h} className="px-6 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {loading
-                ? Array.from({ length: 7 }).map((_, i) => (
-                    <tr key={i} className="border-b border-gray-50">
-                      <td colSpan={4} className="px-5 py-4">
-                        <div className="h-4 bg-gray-100 rounded-md animate-pulse" style={{ width: `${45 + i * 7}%` }} />
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="hover:bg-gray-50 transition-colors">
+                      <td colSpan={5} className="px-6 py-3">
+                        <div className="h-4 bg-gray-100 rounded-md animate-pulse" style={{ width: `${40 + i * 8}%` }} />
                       </td>
                     </tr>
                   ))
                 : filtered.length === 0
                   ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-14 text-center text-sm text-gray-400">
+                      <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400 font-medium">
                         لا توجد طلبات مطابقة
                       </td>
                     </tr>
                   )
                   : filtered.map(req => (
-                      <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors group">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-                              <Package size={13} className="text-orange-500" />
-                            </div>
-                            <div>
-                              <p className="text-[13px] font-semibold text-gray-900 leading-none line-clamp-1 max-w-[200px]">{req.title}</p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">#{req.id}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3.5 text-[13px] text-gray-600">{req.client?.fullName ?? "—"}</td>
-                        <td className="px-5 py-3.5"><StatusPill status={req.status} /></td>
-                        <td className="px-5 py-3.5 text-[12px] text-gray-400 whitespace-nowrap">{formatDate(req.createdAt)}</td>
-                      </tr>
-                    ))}
+                    <tr key={req.id} className="hover:bg-gray-50 transition-colors group cursor-pointer">
+                      <td className="px-6 py-3 text-sm font-semibold text-gray-500">#{req.id}</td>
+                      <td className="px-6 py-3 text-sm font-semibold text-gray-900">{req.title}</td>
+                      <td className="px-6 py-3 text-sm text-gray-600">{req.client?.fullName || "—"}</td>
+                      <td className="px-6 py-3">
+                        <StatusPill status={req.status} />
+                      </td>
+                      <td className="px-6 py-3 text-sm text-gray-500">{formatDate(req.createdAt)}</td>
+                    </tr>
+                  ))
+              }
             </tbody>
           </table>
         </div>
-        {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
-              عرض <span className="font-semibold text-gray-900">{filtered.length}</span> من{" "}
-              <span className="font-semibold text-gray-900">{requests?.length ?? 0}</span> طلب
-            </p>
-          </div>
-        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between text-sm text-gray-600 font-medium">
+        <span>عرض <span className="font-bold text-gray-900">{filtered.length}</span> من <span className="font-bold text-gray-900">{counts.total}</span></span>
       </div>
     </div>
   );
