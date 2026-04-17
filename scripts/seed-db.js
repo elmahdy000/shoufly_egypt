@@ -29,8 +29,7 @@ async function seedDatabase() {
         password: password123,
         role: 'ADMIN',
         isActive: true,
-        phoneNumber: '+966501234567',
-        address: 'الرياض',
+        phone: '+966501234567',
       },
       {
         email: 'client1@shoofly.com',
@@ -38,8 +37,7 @@ async function seedDatabase() {
         password: password123,
         role: 'CLIENT',
         isActive: true,
-        phoneNumber: '+966502345678',
-        address: 'جدة',
+        phone: '+966502345678',
       },
       {
         email: 'vendor1@shoofly.com',
@@ -47,8 +45,7 @@ async function seedDatabase() {
         password: password123,
         role: 'VENDOR',
         isActive: true,
-        phoneNumber: '+966503456789',
-        address: 'الدمام',
+        phone: '+966503456789',
       },
       {
         email: 'rider1@shoofly.com',
@@ -56,23 +53,21 @@ async function seedDatabase() {
         password: password123,
         role: 'DELIVERY',
         isActive: true,
-        phoneNumber: '+966504567890',
-        address: 'مكة',
+        phone: '+966504567890',
       },
     ];
 
     for (const user of users) {
       await client.query(
-        `INSERT INTO "User" (email, "fullName", password, role, "isActive", "phoneNumber", address, "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+        `INSERT INTO "User" (email, "fullName", password, role, "isActive", phone, "isVerified", "isBlocked", "walletBalance", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $6, true, false, 0, NOW(), NOW())`,
         [
           user.email,
           user.fullName,
           user.password,
           user.role,
           user.isActive,
-          user.phoneNumber,
-          user.address,
+          user.phone,
         ]
       );
       console.log(`Created user: ${user.email} (${user.role})`);
