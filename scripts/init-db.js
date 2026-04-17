@@ -1,23 +1,37 @@
-import { execSync } from 'child_process';
+import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import pkg from 'pg';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.join(__dirname, '..');
+const { Client } = pkg;
 
-console.log('Starting database migration...');
+// Use absolute path
+const sqlFilePath = '/vercel/share/v0-project/scripts/init-db.sql';
 
-try {
-  // Run Prisma migrate deploy to apply migrations
-  console.log('Running Prisma migrations...');
-  execSync('npx prisma migrate deploy', {
-    cwd: projectRoot,
-    stdio: 'inherit'
+async function runMigration() {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
   });
-  
-  console.log('Database migration completed successfully!');
-  process.exit(0);
-} catch (error) {
-  console.error('Error during database migration:', error.message);
-  process.exit(1);
+
+  try {
+    console.log('Connecting to database...');
+    await client.connect();
+    console.log('Connected successfully!');
+
+    console.log('Reading SQL migration file from:', sqlFilePath);
+    const sql = fs.readFileSync(sqlFilePath, 'utf-8');
+
+    console.log('Executing SQL migration...');
+    await client.query(sql);
+
+    console.log('Database migration completed successfully!');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during database migration:', error.message);
+    console.error('Full error:', error);
+    process.exit(1);
+  } finally {
+    await client.end();
+  }
 }
+
+runMigration();
