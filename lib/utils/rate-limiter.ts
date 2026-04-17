@@ -3,7 +3,7 @@
  * Uses Redis in production, falls back to in-memory if Redis is unavailable
  */
 
-import { checkRateLimitRedis, isRedisAvailable } from './rate-limiter-redis';
+import { checkRateLimitRedis } from './rate-limiter-redis';
 
 interface RateLimitEntry {
   count: number;
