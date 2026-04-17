@@ -5,12 +5,13 @@ export interface UpdateVendorProfilePayload {
   fullName?: string;
   phone?: string;
   categoryIds?: number[];
+  brandIds?: number[];
 }
 
 export async function updateVendorProfile(vendorId: number, payload: UpdateVendorProfilePayload) {
   logger.info('vendor.profile.update.started', { vendorId, ...payload });
 
-  const { fullName, phone, categoryIds } = payload;
+  const { fullName, phone, categoryIds, brandIds } = payload;
 
   return prisma.$transaction(async (tx) => {
     // 1. Update basic user info
@@ -28,6 +29,9 @@ export async function updateVendorProfile(vendorId: number, payload: UpdateVendo
         role: true,
         vendorCategories: {
           select: { categoryId: true }
+        },
+        vendorBrands: {
+          select: { brandId: true }
         }
       }
     });
@@ -35,19 +39,21 @@ export async function updateVendorProfile(vendorId: number, payload: UpdateVendo
     // 2. Update Categories if provided
     if (categoryIds !== undefined) {
       logger.info('vendor.profile.categories.sync', { vendorId, categoryIds });
-      
-      // Delete old relations
-      await tx.vendorCategory.deleteMany({
-        where: { vendorId }
-      });
-
-      // Create new relations
+      await tx.vendorCategory.deleteMany({ where: { vendorId } });
       if (categoryIds.length > 0) {
         await tx.vendorCategory.createMany({
-          data: categoryIds.map(id => ({
-            vendorId,
-            categoryId: id
-          }))
+          data: categoryIds.map(id => ({ vendorId, categoryId: id }))
+        });
+      }
+    }
+
+    // 3. Update Brands if provided
+    if (brandIds !== undefined) {
+      logger.info('vendor.profile.brands.sync', { vendorId, brandIds });
+      await tx.vendorBrand.deleteMany({ where: { vendorId } });
+      if (brandIds.length > 0) {
+        await tx.vendorBrand.createMany({
+          data: brandIds.map(id => ({ vendorId, brandId: id }))
         });
       }
     }

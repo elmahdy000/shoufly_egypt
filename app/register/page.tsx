@@ -16,12 +16,50 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Locations State
+  const [governorates, setGovernorates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedGov, setSelectedGov] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+
+  // Initial Fetch: Governorates
+  React.useEffect(() => {
+    fetch('/api/locations')
+      .then(res => res.json())
+      .then(data => setGovernorates(data))
+      .catch(err => console.error('Failed to load governorates', err));
+  }, []);
+
+  // Fetch Cities when gov changes
+  React.useEffect(() => {
+    if (!selectedGov) {
+      setCities([]);
+      return;
+    }
+    fetch(`/api/locations?type=cities&governorateId=${selectedGov}`)
+      .then(res => res.json())
+      .then(data => setCities(data))
+      .catch(err => console.error('Failed to load cities', err));
+  }, [selectedGov]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedGov || !selectedCity) {
+      setError('يرجى اختيار المحافظة والمدينة');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      await registerUser({ fullName, email, password, role: role as any });
+      await registerUser({ 
+        fullName, 
+        email, 
+        password, 
+        role: role as any,
+        governorateId: Number(selectedGov),
+        cityId: Number(selectedCity)
+      });
       router.push('/login?registered=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'فشل إنشاء الحساب. يرجى مراجعة البيانات.');
@@ -102,6 +140,39 @@ export default function RegisterPage() {
                     icon={<FiTruck />} 
                     label="مندوب" 
                  />
+              </div>
+            </div>
+
+            {/* NEW: Location Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">المحافظة</label>
+                <select 
+                  value={selectedGov}
+                  onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(''); }}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:bg-white outline-none transition-all appearance-none"
+                  required
+                >
+                  <option value="">اختر المحافطة</option>
+                  {governorates.map((gov: any) => (
+                    <option key={gov.id} value={gov.id}>{gov.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">المدينة</label>
+                <select 
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:bg-white outline-none transition-all appearance-none"
+                  disabled={!selectedGov}
+                  required
+                >
+                  <option value="">اختر المدينة</option>
+                  {cities.map((city: any) => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

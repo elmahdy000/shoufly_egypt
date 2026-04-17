@@ -34,6 +34,14 @@ interface SubCategory {
   name: string;
   slug: string;
   parentId: number;
+  requiresBrand: boolean;
+  brandType: string;
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  type: string;
 }
 
 export default function VendorProfilePage() {
@@ -41,6 +49,7 @@ export default function VendorProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
+  const [allBrands, setAllBrands] = useState<Record<string, Brand[]>>({});
 
   // Fetch categories with subcategories tree
   const { data: cats, loading: catsLoading } = useAsyncData(() => apiFetch<Category[]>('/api/categories/tree', "VENDOR"), []);
@@ -49,14 +58,36 @@ export default function VendorProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedCats, setSelectedCats] = useState<number[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
 
   useEffect(() => {
     if (profile) {
       setFullName(profile.fullName || "");
       setPhone(profile.phone || "");
       setSelectedCats(profile.vendorCategories?.map((vc: any) => vc.categoryId) || []);
+      setSelectedBrands(profile.vendorBrands?.map((vb: any) => vb.brandId) || []);
     }
   }, [profile]);
+
+  // Fetch brands for needed types when categories or selections change
+  useEffect(() => {
+    if (!cats) return;
+    const neededTypes = new Set<string>();
+    cats.forEach(c => {
+      c.subcategories.forEach(sub => {
+        if (sub.requiresBrand && sub.brandType && selectedCats.includes(sub.id)) {
+          neededTypes.add(sub.brandType);
+        }
+      });
+    });
+
+    neededTypes.forEach(type => {
+      if (!allBrands[type]) {
+        apiFetch<Brand[]>(`/api/brands?type=${type}`, "VENDOR")
+          .then(data => setAllBrands(prev => ({ ...prev, [type]: data })));
+      }
+    });
+  }, [cats, selectedCats]);
 
   async function handleLogout() {
     await logoutUser();
@@ -66,6 +97,12 @@ export default function VendorProfilePage() {
   const toggleCategory = (id: number) => {
     setSelectedCats(prev => 
       prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
+
+  const toggleBrand = (id: number) => {
+    setSelectedBrands(prev =>
+      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
     );
   };
 
@@ -98,7 +135,7 @@ export default function VendorProfilePage() {
     try {
       await apiFetch('/api/vendor/profile', "VENDOR", {
         method: "PATCH",
-        body: { fullName, phone, categoryIds: selectedCats }
+        body: { fullName, phone, categoryIds: selectedCats, brandIds: selectedBrands }
       });
       setMessage({ text: "تم تحديث البيانات بنجاح!", type: 'success' });
       refreshProfile();
@@ -244,33 +281,62 @@ export default function VendorProfilePage() {
                   {/* Subcategories List */}
                   {expandedCategories.includes(category.id) && category.subcategories.length > 0 && (
                     <div className="p-3 space-y-2 border-t border-[#E7E7E7]">
-                      {category.subcategories.map((sub) => (
-                        <label 
-                          key={sub.id} 
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                            selectedCats.includes(sub.id) 
-                              ? 'bg-primary/5 border border-primary' 
-                              : 'bg-white border border-[#E7E7E7] hover:border-primary/30'
-                          }`}
-                        >
-                          <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-all ${
-                            selectedCats.includes(sub.id) 
-                              ? 'bg-primary border-primary text-white' 
-                              : 'bg-white border-[#E7E7E7]'
-                          }`}>
-                            {selectedCats.includes(sub.id) && <FiCheck size={12} strokeWidth={3} />}
+                      {category.subcategories.map((sub) => {
+                        const brandsForThis = sub.requiresBrand ? allBrands[sub.brandType] || [] : [];
+                        const isSelected = selectedCats.includes(sub.id);
+
+                        return (
+                          <div key={sub.id} className="space-y-2">
+                             <label 
+                               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                                 isSelected 
+                                   ? 'bg-primary/5 border border-primary text-primary' 
+                                   : 'bg-white border border-[#E7E7E7] hover:border-primary/30'
+                               }`}
+                             >
+                               <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-all ${
+                                 isSelected 
+                                   ? 'bg-primary border-primary text-white' 
+                                   : 'bg-white border-[#E7E7E7]'
+                               }`}>
+                                 {isSelected && <FiCheck size={12} strokeWidth={3} />}
+                               </div>
+                               <span className="font-medium text-sm flex-1">{sub.name}</span>
+                               <input 
+                                 type="checkbox" 
+                                 className="hidden"
+                                 checked={isSelected}
+                                 onChange={() => toggleCategory(sub.id)}
+                               />
+                             </label>
+
+                             {/* Brands List for this Subcategory */}
+                             {isSelected && sub.requiresBrand && (
+                               <div className="mr-8 p-3 bg-white border border-dashed border-slate-200 rounded-xl">
+                                  <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">الأنواع / الماركات المتاحة</p>
+                                  <div className="flex flex-wrap gap-2">
+                                     {brandsForThis.length === 0 ? (
+                                       <span className="text-xs text-slate-400">جاري التحميل...</span>
+                                     ) : brandsForThis.map(brand => (
+                                       <button
+                                         key={brand.id}
+                                         type="button"
+                                         onClick={() => toggleBrand(brand.id)}
+                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                                           selectedBrands.includes(brand.id)
+                                             ? 'bg-primary text-white border-primary border-b-2 active:border-b-0 translate-y-[-1px] active:translate-y-0'
+                                             : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
+                                         }`}
+                                       >
+                                         {brand.name}
+                                       </button>
+                                     ))}
+                                  </div>
+                               </div>
+                             )}
                           </div>
-                          <span className={`font-medium text-sm flex-1 ${selectedCats.includes(sub.id) ? 'text-primary' : 'text-[#0F1111]'}`}>
-                            {sub.name}
-                          </span>
-                          <input 
-                            type="checkbox" 
-                            className="hidden"
-                            checked={selectedCats.includes(sub.id)}
-                            onChange={() => toggleCategory(sub.id)}
-                          />
-                        </label>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

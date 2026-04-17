@@ -8,7 +8,7 @@ export async function listMessages(userId: number, otherId: number, limit = 50, 
         { senderId: otherId, receiverId: userId },
       ],
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     include: {
       sender: { select: { id: true, fullName: true, role: true } },
     },

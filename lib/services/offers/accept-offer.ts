@@ -24,6 +24,15 @@ export async function acceptOffer(bidId: number, clientId: number) {
     throw new Error('Only the client who created the request can accept offers');
   }
 
+  // NEW: Prevent double selection or selection after payment
+  if (bid.request.selectedBidId) {
+    throw new Error('This request already has an accepted offer');
+  }
+
+  if (bid.request.status === 'ORDER_PAID_PENDING_DELIVERY' || bid.request.status === 'CLOSED_SUCCESS') {
+    throw new Error('Cannot change selection after payment or completion');
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     const updated = await tx.bid.update({
       where: { id: bidId },

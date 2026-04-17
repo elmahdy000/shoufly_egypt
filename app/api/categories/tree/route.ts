@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
       },
       include: {
         subcategories: {
+          select: { id: true, name: true, slug: true, parentId: true, requiresBrand: true, brandType: true },
           orderBy: { name: 'asc' },
         },
         _count: {

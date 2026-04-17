@@ -98,6 +98,16 @@ export type Review = $Result.DefaultSelection<Prisma.$ReviewPayload>
  * 
  */
 export type Complaint = $Result.DefaultSelection<Prisma.$ComplaintPayload>
+/**
+ * Model Governorate
+ * 
+ */
+export type Governorate = $Result.DefaultSelection<Prisma.$GovernoratePayload>
+/**
+ * Model City
+ * 
+ */
+export type City = $Result.DefaultSelection<Prisma.$CityPayload>
 
 /**
  * Enums
@@ -194,6 +204,15 @@ export const NotificationType: {
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
 
 
+export const CategoryType: {
+  SERVICE: 'SERVICE',
+  PRODUCT: 'PRODUCT',
+  DIGITAL: 'DIGITAL'
+};
+
+export type CategoryType = (typeof CategoryType)[keyof typeof CategoryType]
+
+
 export const ComplaintStatus: {
   OPEN: 'OPEN',
   IN_PROGRESS: 'IN_PROGRESS',
@@ -232,6 +251,10 @@ export const TransactionType: typeof $Enums.TransactionType
 export type NotificationType = $Enums.NotificationType
 
 export const NotificationType: typeof $Enums.NotificationType
+
+export type CategoryType = $Enums.CategoryType
+
+export const CategoryType: typeof $Enums.CategoryType
 
 export type ComplaintStatus = $Enums.ComplaintStatus
 
@@ -527,6 +550,26 @@ export class PrismaClient<
     * ```
     */
   get complaint(): Prisma.ComplaintDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.governorate`: Exposes CRUD operations for the **Governorate** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Governorates
+    * const governorates = await prisma.governorate.findMany()
+    * ```
+    */
+  get governorate(): Prisma.GovernorateDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.city`: Exposes CRUD operations for the **City** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Cities
+    * const cities = await prisma.city.findMany()
+    * ```
+    */
+  get city(): Prisma.CityDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -977,7 +1020,9 @@ export namespace Prisma {
     WithdrawalRequest: 'WithdrawalRequest',
     PlatformSetting: 'PlatformSetting',
     Review: 'Review',
-    Complaint: 'Complaint'
+    Complaint: 'Complaint',
+    Governorate: 'Governorate',
+    City: 'City'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -993,7 +1038,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "category" | "brand" | "vendorBrand" | "vendorCategory" | "request" | "requestImage" | "bid" | "bidImage" | "deliveryTracking" | "transaction" | "notification" | "chatMessage" | "withdrawalRequest" | "platformSetting" | "review" | "complaint"
+      modelProps: "user" | "category" | "brand" | "vendorBrand" | "vendorCategory" | "request" | "requestImage" | "bid" | "bidImage" | "deliveryTracking" | "transaction" | "notification" | "chatMessage" | "withdrawalRequest" | "platformSetting" | "review" | "complaint" | "governorate" | "city"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2255,6 +2300,154 @@ export namespace Prisma {
           }
         }
       }
+      Governorate: {
+        payload: Prisma.$GovernoratePayload<ExtArgs>
+        fields: Prisma.GovernorateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.GovernorateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.GovernorateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          findFirst: {
+            args: Prisma.GovernorateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.GovernorateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          findMany: {
+            args: Prisma.GovernorateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>[]
+          }
+          create: {
+            args: Prisma.GovernorateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          createMany: {
+            args: Prisma.GovernorateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.GovernorateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>[]
+          }
+          delete: {
+            args: Prisma.GovernorateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          update: {
+            args: Prisma.GovernorateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          deleteMany: {
+            args: Prisma.GovernorateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.GovernorateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.GovernorateUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>[]
+          }
+          upsert: {
+            args: Prisma.GovernorateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GovernoratePayload>
+          }
+          aggregate: {
+            args: Prisma.GovernorateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateGovernorate>
+          }
+          groupBy: {
+            args: Prisma.GovernorateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<GovernorateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.GovernorateCountArgs<ExtArgs>
+            result: $Utils.Optional<GovernorateCountAggregateOutputType> | number
+          }
+        }
+      }
+      City: {
+        payload: Prisma.$CityPayload<ExtArgs>
+        fields: Prisma.CityFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CityFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CityFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          findFirst: {
+            args: Prisma.CityFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CityFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          findMany: {
+            args: Prisma.CityFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>[]
+          }
+          create: {
+            args: Prisma.CityCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          createMany: {
+            args: Prisma.CityCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CityCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>[]
+          }
+          delete: {
+            args: Prisma.CityDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          update: {
+            args: Prisma.CityUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          deleteMany: {
+            args: Prisma.CityDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CityUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CityUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>[]
+          }
+          upsert: {
+            args: Prisma.CityUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CityPayload>
+          }
+          aggregate: {
+            args: Prisma.CityAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCity>
+          }
+          groupBy: {
+            args: Prisma.CityGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CityGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CityCountArgs<ExtArgs>
+            result: $Utils.Optional<CityCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2380,6 +2573,8 @@ export namespace Prisma {
     platformSetting?: PlatformSettingOmit
     review?: ReviewOmit
     complaint?: ComplaintOmit
+    governorate?: GovernorateOmit
+    city?: CityOmit
   }
 
   /* Types for Logging */
@@ -2473,6 +2668,7 @@ export namespace Prisma {
     reviewsGiven: number
     reviewsReceived: number
     complaints: number
+    complaintsReceived: number
     resolvedComplaints: number
     vendorBrands: number
   }
@@ -2491,6 +2687,7 @@ export namespace Prisma {
     reviewsGiven?: boolean | UserCountOutputTypeCountReviewsGivenArgs
     reviewsReceived?: boolean | UserCountOutputTypeCountReviewsReceivedArgs
     complaints?: boolean | UserCountOutputTypeCountComplaintsArgs
+    complaintsReceived?: boolean | UserCountOutputTypeCountComplaintsReceivedArgs
     resolvedComplaints?: boolean | UserCountOutputTypeCountResolvedComplaintsArgs
     vendorBrands?: boolean | UserCountOutputTypeCountVendorBrandsArgs
   }
@@ -2594,6 +2791,13 @@ export namespace Prisma {
    * UserCountOutputType without action
    */
   export type UserCountOutputTypeCountComplaintsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComplaintWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountComplaintsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ComplaintWhereInput
   }
 
@@ -2809,6 +3013,95 @@ export namespace Prisma {
 
 
   /**
+   * Count Type GovernorateCountOutputType
+   */
+
+  export type GovernorateCountOutputType = {
+    cities: number
+    users: number
+    requests: number
+  }
+
+  export type GovernorateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cities?: boolean | GovernorateCountOutputTypeCountCitiesArgs
+    users?: boolean | GovernorateCountOutputTypeCountUsersArgs
+    requests?: boolean | GovernorateCountOutputTypeCountRequestsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * GovernorateCountOutputType without action
+   */
+  export type GovernorateCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GovernorateCountOutputType
+     */
+    select?: GovernorateCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * GovernorateCountOutputType without action
+   */
+  export type GovernorateCountOutputTypeCountCitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CityWhereInput
+  }
+
+  /**
+   * GovernorateCountOutputType without action
+   */
+  export type GovernorateCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
+  }
+
+  /**
+   * GovernorateCountOutputType without action
+   */
+  export type GovernorateCountOutputTypeCountRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RequestWhereInput
+  }
+
+
+  /**
+   * Count Type CityCountOutputType
+   */
+
+  export type CityCountOutputType = {
+    users: number
+    requests: number
+  }
+
+  export type CityCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    users?: boolean | CityCountOutputTypeCountUsersArgs
+    requests?: boolean | CityCountOutputTypeCountRequestsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CityCountOutputType without action
+   */
+  export type CityCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CityCountOutputType
+     */
+    select?: CityCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CityCountOutputType without action
+   */
+  export type CityCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
+  }
+
+  /**
+   * CityCountOutputType without action
+   */
+  export type CityCountOutputTypeCountRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RequestWhereInput
+  }
+
+
+  /**
    * Models
    */
 
@@ -2827,11 +3120,15 @@ export namespace Prisma {
   export type UserAvgAggregateOutputType = {
     id: number | null
     walletBalance: Decimal | null
+    cityId: number | null
+    governorateId: number | null
   }
 
   export type UserSumAggregateOutputType = {
     id: number | null
     walletBalance: Decimal | null
+    cityId: number | null
+    governorateId: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -2846,6 +3143,8 @@ export namespace Prisma {
     isBlocked: boolean | null
     walletBalance: Decimal | null
     fcmToken: string | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2862,6 +3161,8 @@ export namespace Prisma {
     isBlocked: boolean | null
     walletBalance: Decimal | null
     fcmToken: string | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2878,6 +3179,8 @@ export namespace Prisma {
     isBlocked: number
     walletBalance: number
     fcmToken: number
+    cityId: number
+    governorateId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2887,11 +3190,15 @@ export namespace Prisma {
   export type UserAvgAggregateInputType = {
     id?: true
     walletBalance?: true
+    cityId?: true
+    governorateId?: true
   }
 
   export type UserSumAggregateInputType = {
     id?: true
     walletBalance?: true
+    cityId?: true
+    governorateId?: true
   }
 
   export type UserMinAggregateInputType = {
@@ -2906,6 +3213,8 @@ export namespace Prisma {
     isBlocked?: true
     walletBalance?: true
     fcmToken?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2922,6 +3231,8 @@ export namespace Prisma {
     isBlocked?: true
     walletBalance?: true
     fcmToken?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2938,6 +3249,8 @@ export namespace Prisma {
     isBlocked?: true
     walletBalance?: true
     fcmToken?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3041,6 +3354,8 @@ export namespace Prisma {
     isBlocked: boolean
     walletBalance: Decimal
     fcmToken: string | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -3076,8 +3391,12 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: boolean
     fcmToken?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
     clientRequests?: boolean | User$clientRequestsArgs<ExtArgs>
     vendorBids?: boolean | User$vendorBidsArgs<ExtArgs>
     vendorCategories?: boolean | User$vendorCategoriesArgs<ExtArgs>
@@ -3091,6 +3410,7 @@ export namespace Prisma {
     reviewsGiven?: boolean | User$reviewsGivenArgs<ExtArgs>
     reviewsReceived?: boolean | User$reviewsReceivedArgs<ExtArgs>
     complaints?: boolean | User$complaintsArgs<ExtArgs>
+    complaintsReceived?: boolean | User$complaintsReceivedArgs<ExtArgs>
     resolvedComplaints?: boolean | User$resolvedComplaintsArgs<ExtArgs>
     vendorBrands?: boolean | User$vendorBrandsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -3108,8 +3428,12 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: boolean
     fcmToken?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3124,8 +3448,12 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: boolean
     fcmToken?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -3140,12 +3468,16 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: boolean
     fcmToken?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullName" | "email" | "password" | "phone" | "role" | "isActive" | "isVerified" | "isBlocked" | "walletBalance" | "fcmToken" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullName" | "email" | "password" | "phone" | "role" | "isActive" | "isVerified" | "isBlocked" | "walletBalance" | "fcmToken" | "cityId" | "governorateId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
     clientRequests?: boolean | User$clientRequestsArgs<ExtArgs>
     vendorBids?: boolean | User$vendorBidsArgs<ExtArgs>
     vendorCategories?: boolean | User$vendorCategoriesArgs<ExtArgs>
@@ -3159,16 +3491,25 @@ export namespace Prisma {
     reviewsGiven?: boolean | User$reviewsGivenArgs<ExtArgs>
     reviewsReceived?: boolean | User$reviewsReceivedArgs<ExtArgs>
     complaints?: boolean | User$complaintsArgs<ExtArgs>
+    complaintsReceived?: boolean | User$complaintsReceivedArgs<ExtArgs>
     resolvedComplaints?: boolean | User$resolvedComplaintsArgs<ExtArgs>
     vendorBrands?: boolean | User$vendorBrandsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
+  }
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | User$cityArgs<ExtArgs>
+    governorate?: boolean | User$governorateArgs<ExtArgs>
+  }
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
+      city: Prisma.$CityPayload<ExtArgs> | null
+      governorate: Prisma.$GovernoratePayload<ExtArgs> | null
       clientRequests: Prisma.$RequestPayload<ExtArgs>[]
       vendorBids: Prisma.$BidPayload<ExtArgs>[]
       vendorCategories: Prisma.$VendorCategoryPayload<ExtArgs>[]
@@ -3182,6 +3523,7 @@ export namespace Prisma {
       reviewsGiven: Prisma.$ReviewPayload<ExtArgs>[]
       reviewsReceived: Prisma.$ReviewPayload<ExtArgs>[]
       complaints: Prisma.$ComplaintPayload<ExtArgs>[]
+      complaintsReceived: Prisma.$ComplaintPayload<ExtArgs>[]
       resolvedComplaints: Prisma.$ComplaintPayload<ExtArgs>[]
       vendorBrands: Prisma.$VendorBrandPayload<ExtArgs>[]
     }
@@ -3197,6 +3539,8 @@ export namespace Prisma {
       isBlocked: boolean
       walletBalance: Prisma.Decimal
       fcmToken: string | null
+      cityId: number | null
+      governorateId: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -3593,6 +3937,8 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    city<T extends User$cityArgs<ExtArgs> = {}>(args?: Subset<T, User$cityArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    governorate<T extends User$governorateArgs<ExtArgs> = {}>(args?: Subset<T, User$governorateArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     clientRequests<T extends User$clientRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$clientRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     vendorBids<T extends User$vendorBidsArgs<ExtArgs> = {}>(args?: Subset<T, User$vendorBidsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BidPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     vendorCategories<T extends User$vendorCategoriesArgs<ExtArgs> = {}>(args?: Subset<T, User$vendorCategoriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VendorCategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3606,6 +3952,7 @@ export namespace Prisma {
     reviewsGiven<T extends User$reviewsGivenArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewsGivenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reviewsReceived<T extends User$reviewsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     complaints<T extends User$complaintsArgs<ExtArgs> = {}>(args?: Subset<T, User$complaintsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    complaintsReceived<T extends User$complaintsReceivedArgs<ExtArgs> = {}>(args?: Subset<T, User$complaintsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     resolvedComplaints<T extends User$resolvedComplaintsArgs<ExtArgs> = {}>(args?: Subset<T, User$resolvedComplaintsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     vendorBrands<T extends User$vendorBrandsArgs<ExtArgs> = {}>(args?: Subset<T, User$vendorBrandsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VendorBrandPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -3648,6 +3995,8 @@ export namespace Prisma {
     readonly isBlocked: FieldRef<"User", 'Boolean'>
     readonly walletBalance: FieldRef<"User", 'Decimal'>
     readonly fcmToken: FieldRef<"User", 'String'>
+    readonly cityId: FieldRef<"User", 'Int'>
+    readonly governorateId: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -3904,6 +4253,10 @@ export namespace Prisma {
      */
     data: UserCreateManyInput | UserCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3974,6 +4327,10 @@ export namespace Prisma {
      * Limit how many Users to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4040,6 +4397,44 @@ export namespace Prisma {
      * Limit how many Users to delete.
      */
     limit?: number
+  }
+
+  /**
+   * User.city
+   */
+  export type User$cityArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    where?: CityWhereInput
+  }
+
+  /**
+   * User.governorate
+   */
+  export type User$governorateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    where?: GovernorateWhereInput
   }
 
   /**
@@ -4355,6 +4750,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.complaintsReceived
+   */
+  export type User$complaintsReceivedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Complaint
+     */
+    select?: ComplaintSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Complaint
+     */
+    omit?: ComplaintOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComplaintInclude<ExtArgs> | null
+    where?: ComplaintWhereInput
+    orderBy?: ComplaintOrderByWithRelationInput | ComplaintOrderByWithRelationInput[]
+    cursor?: ComplaintWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComplaintScalarFieldEnum | ComplaintScalarFieldEnum[]
+  }
+
+  /**
    * User.resolvedComplaints
    */
   export type User$resolvedComplaintsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4450,6 +4869,7 @@ export namespace Prisma {
     parentId: number | null
     requiresBrand: boolean | null
     brandType: string | null
+    type: $Enums.CategoryType | null
     createdAt: Date | null
   }
 
@@ -4460,6 +4880,7 @@ export namespace Prisma {
     parentId: number | null
     requiresBrand: boolean | null
     brandType: string | null
+    type: $Enums.CategoryType | null
     createdAt: Date | null
   }
 
@@ -4470,6 +4891,7 @@ export namespace Prisma {
     parentId: number
     requiresBrand: number
     brandType: number
+    type: number
     createdAt: number
     _all: number
   }
@@ -4492,6 +4914,7 @@ export namespace Prisma {
     parentId?: true
     requiresBrand?: true
     brandType?: true
+    type?: true
     createdAt?: true
   }
 
@@ -4502,6 +4925,7 @@ export namespace Prisma {
     parentId?: true
     requiresBrand?: true
     brandType?: true
+    type?: true
     createdAt?: true
   }
 
@@ -4512,6 +4936,7 @@ export namespace Prisma {
     parentId?: true
     requiresBrand?: true
     brandType?: true
+    type?: true
     createdAt?: true
     _all?: true
   }
@@ -4609,6 +5034,7 @@ export namespace Prisma {
     parentId: number | null
     requiresBrand: boolean
     brandType: string | null
+    type: $Enums.CategoryType
     createdAt: Date
     _count: CategoryCountAggregateOutputType | null
     _avg: CategoryAvgAggregateOutputType | null
@@ -4638,6 +5064,7 @@ export namespace Prisma {
     parentId?: boolean
     requiresBrand?: boolean
     brandType?: boolean
+    type?: boolean
     createdAt?: boolean
     parent?: boolean | Category$parentArgs<ExtArgs>
     subcategories?: boolean | Category$subcategoriesArgs<ExtArgs>
@@ -4653,6 +5080,7 @@ export namespace Prisma {
     parentId?: boolean
     requiresBrand?: boolean
     brandType?: boolean
+    type?: boolean
     createdAt?: boolean
     parent?: boolean | Category$parentArgs<ExtArgs>
   }, ExtArgs["result"]["category"]>
@@ -4664,6 +5092,7 @@ export namespace Prisma {
     parentId?: boolean
     requiresBrand?: boolean
     brandType?: boolean
+    type?: boolean
     createdAt?: boolean
     parent?: boolean | Category$parentArgs<ExtArgs>
   }, ExtArgs["result"]["category"]>
@@ -4675,10 +5104,11 @@ export namespace Prisma {
     parentId?: boolean
     requiresBrand?: boolean
     brandType?: boolean
+    type?: boolean
     createdAt?: boolean
   }
 
-  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "parentId" | "requiresBrand" | "brandType" | "createdAt", ExtArgs["result"]["category"]>
+  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "parentId" | "requiresBrand" | "brandType" | "type" | "createdAt", ExtArgs["result"]["category"]>
   export type CategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     parent?: boolean | Category$parentArgs<ExtArgs>
     subcategories?: boolean | Category$subcategoriesArgs<ExtArgs>
@@ -4708,6 +5138,7 @@ export namespace Prisma {
       parentId: number | null
       requiresBrand: boolean
       brandType: string | null
+      type: $Enums.CategoryType
       createdAt: Date
     }, ExtArgs["result"]["category"]>
     composites: {}
@@ -5142,6 +5573,7 @@ export namespace Prisma {
     readonly parentId: FieldRef<"Category", 'Int'>
     readonly requiresBrand: FieldRef<"Category", 'Boolean'>
     readonly brandType: FieldRef<"Category", 'String'>
+    readonly type: FieldRef<"Category", 'CategoryType'>
     readonly createdAt: FieldRef<"Category", 'DateTime'>
   }
     
@@ -9011,6 +9443,8 @@ export namespace Prisma {
     longitude: Decimal | null
     selectedBidId: number | null
     assignedDeliveryAgentId: number | null
+    cityId: number | null
+    governorateId: number | null
   }
 
   export type RequestSumAggregateOutputType = {
@@ -9022,6 +9456,8 @@ export namespace Prisma {
     longitude: Decimal | null
     selectedBidId: number | null
     assignedDeliveryAgentId: number | null
+    cityId: number | null
+    governorateId: number | null
   }
 
   export type RequestMinAggregateOutputType = {
@@ -9040,6 +9476,8 @@ export namespace Prisma {
     selectedBidId: number | null
     qrCode: string | null
     assignedDeliveryAgentId: number | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -9060,6 +9498,8 @@ export namespace Prisma {
     selectedBidId: number | null
     qrCode: string | null
     assignedDeliveryAgentId: number | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -9080,6 +9520,8 @@ export namespace Prisma {
     selectedBidId: number
     qrCode: number
     assignedDeliveryAgentId: number
+    cityId: number
+    governorateId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -9095,6 +9537,8 @@ export namespace Prisma {
     longitude?: true
     selectedBidId?: true
     assignedDeliveryAgentId?: true
+    cityId?: true
+    governorateId?: true
   }
 
   export type RequestSumAggregateInputType = {
@@ -9106,6 +9550,8 @@ export namespace Prisma {
     longitude?: true
     selectedBidId?: true
     assignedDeliveryAgentId?: true
+    cityId?: true
+    governorateId?: true
   }
 
   export type RequestMinAggregateInputType = {
@@ -9124,6 +9570,8 @@ export namespace Prisma {
     selectedBidId?: true
     qrCode?: true
     assignedDeliveryAgentId?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -9144,6 +9592,8 @@ export namespace Prisma {
     selectedBidId?: true
     qrCode?: true
     assignedDeliveryAgentId?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -9164,6 +9614,8 @@ export namespace Prisma {
     selectedBidId?: true
     qrCode?: true
     assignedDeliveryAgentId?: true
+    cityId?: true
+    governorateId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -9271,6 +9723,8 @@ export namespace Prisma {
     selectedBidId: number | null
     qrCode: string | null
     assignedDeliveryAgentId: number | null
+    cityId: number | null
+    governorateId: number | null
     createdAt: Date
     updatedAt: Date
     _count: RequestCountAggregateOutputType | null
@@ -9310,8 +9764,12 @@ export namespace Prisma {
     selectedBidId?: boolean
     qrCode?: boolean
     assignedDeliveryAgentId?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -9342,8 +9800,12 @@ export namespace Prisma {
     selectedBidId?: boolean
     qrCode?: boolean
     assignedDeliveryAgentId?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -9366,8 +9828,12 @@ export namespace Prisma {
     selectedBidId?: boolean
     qrCode?: boolean
     assignedDeliveryAgentId?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -9390,12 +9856,16 @@ export namespace Prisma {
     selectedBidId?: boolean
     qrCode?: boolean
     assignedDeliveryAgentId?: boolean
+    cityId?: boolean
+    governorateId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type RequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "title" | "description" | "categoryId" | "brandId" | "address" | "latitude" | "longitude" | "deliveryPhone" | "notes" | "status" | "selectedBidId" | "qrCode" | "assignedDeliveryAgentId" | "createdAt" | "updatedAt", ExtArgs["result"]["request"]>
+  export type RequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "title" | "description" | "categoryId" | "brandId" | "address" | "latitude" | "longitude" | "deliveryPhone" | "notes" | "status" | "selectedBidId" | "qrCode" | "assignedDeliveryAgentId" | "cityId" | "governorateId" | "createdAt" | "updatedAt", ExtArgs["result"]["request"]>
   export type RequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -9410,12 +9880,16 @@ export namespace Prisma {
     _count?: boolean | RequestCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type RequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
     brand?: boolean | Request$brandArgs<ExtArgs>
   }
   export type RequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    city?: boolean | Request$cityArgs<ExtArgs>
+    governorate?: boolean | Request$governorateArgs<ExtArgs>
     client?: boolean | UserDefaultArgs<ExtArgs>
     deliveryAgent?: boolean | Request$deliveryAgentArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -9425,6 +9899,8 @@ export namespace Prisma {
   export type $RequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Request"
     objects: {
+      city: Prisma.$CityPayload<ExtArgs> | null
+      governorate: Prisma.$GovernoratePayload<ExtArgs> | null
       client: Prisma.$UserPayload<ExtArgs>
       deliveryAgent: Prisma.$UserPayload<ExtArgs> | null
       category: Prisma.$CategoryPayload<ExtArgs>
@@ -9453,6 +9929,8 @@ export namespace Prisma {
       selectedBidId: number | null
       qrCode: string | null
       assignedDeliveryAgentId: number | null
+      cityId: number | null
+      governorateId: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["request"]>
@@ -9849,6 +10327,8 @@ export namespace Prisma {
    */
   export interface Prisma__RequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    city<T extends Request$cityArgs<ExtArgs> = {}>(args?: Subset<T, Request$cityArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    governorate<T extends Request$governorateArgs<ExtArgs> = {}>(args?: Subset<T, Request$governorateArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     client<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     deliveryAgent<T extends Request$deliveryAgentArgs<ExtArgs> = {}>(args?: Subset<T, Request$deliveryAgentArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     category<T extends CategoryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CategoryDefaultArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
@@ -9904,6 +10384,8 @@ export namespace Prisma {
     readonly selectedBidId: FieldRef<"Request", 'Int'>
     readonly qrCode: FieldRef<"Request", 'String'>
     readonly assignedDeliveryAgentId: FieldRef<"Request", 'Int'>
+    readonly cityId: FieldRef<"Request", 'Int'>
+    readonly governorateId: FieldRef<"Request", 'Int'>
     readonly createdAt: FieldRef<"Request", 'DateTime'>
     readonly updatedAt: FieldRef<"Request", 'DateTime'>
   }
@@ -10304,6 +10786,44 @@ export namespace Prisma {
      * Limit how many Requests to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Request.city
+   */
+  export type Request$cityArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    where?: CityWhereInput
+  }
+
+  /**
+   * Request.governorate
+   */
+  export type Request$governorateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    where?: GovernorateWhereInput
   }
 
   /**
@@ -14019,17 +14539,26 @@ export namespace Prisma {
   export type DeliveryTrackingAvgAggregateOutputType = {
     id: number | null
     requestId: number | null
+    latitude: Decimal | null
+    longitude: Decimal | null
+    speed: Decimal | null
   }
 
   export type DeliveryTrackingSumAggregateOutputType = {
     id: number | null
     requestId: number | null
+    latitude: Decimal | null
+    longitude: Decimal | null
+    speed: Decimal | null
   }
 
   export type DeliveryTrackingMinAggregateOutputType = {
     id: number | null
     requestId: number | null
     status: $Enums.DeliveryStatus | null
+    latitude: Decimal | null
+    longitude: Decimal | null
+    speed: Decimal | null
     note: string | null
     locationText: string | null
     createdAt: Date | null
@@ -14039,6 +14568,9 @@ export namespace Prisma {
     id: number | null
     requestId: number | null
     status: $Enums.DeliveryStatus | null
+    latitude: Decimal | null
+    longitude: Decimal | null
+    speed: Decimal | null
     note: string | null
     locationText: string | null
     createdAt: Date | null
@@ -14048,6 +14580,9 @@ export namespace Prisma {
     id: number
     requestId: number
     status: number
+    latitude: number
+    longitude: number
+    speed: number
     note: number
     locationText: number
     createdAt: number
@@ -14058,17 +14593,26 @@ export namespace Prisma {
   export type DeliveryTrackingAvgAggregateInputType = {
     id?: true
     requestId?: true
+    latitude?: true
+    longitude?: true
+    speed?: true
   }
 
   export type DeliveryTrackingSumAggregateInputType = {
     id?: true
     requestId?: true
+    latitude?: true
+    longitude?: true
+    speed?: true
   }
 
   export type DeliveryTrackingMinAggregateInputType = {
     id?: true
     requestId?: true
     status?: true
+    latitude?: true
+    longitude?: true
+    speed?: true
     note?: true
     locationText?: true
     createdAt?: true
@@ -14078,6 +14622,9 @@ export namespace Prisma {
     id?: true
     requestId?: true
     status?: true
+    latitude?: true
+    longitude?: true
+    speed?: true
     note?: true
     locationText?: true
     createdAt?: true
@@ -14087,6 +14634,9 @@ export namespace Prisma {
     id?: true
     requestId?: true
     status?: true
+    latitude?: true
+    longitude?: true
+    speed?: true
     note?: true
     locationText?: true
     createdAt?: true
@@ -14183,6 +14733,9 @@ export namespace Prisma {
     id: number
     requestId: number
     status: $Enums.DeliveryStatus
+    latitude: Decimal | null
+    longitude: Decimal | null
+    speed: Decimal | null
     note: string | null
     locationText: string | null
     createdAt: Date
@@ -14211,6 +14764,9 @@ export namespace Prisma {
     id?: boolean
     requestId?: boolean
     status?: boolean
+    latitude?: boolean
+    longitude?: boolean
+    speed?: boolean
     note?: boolean
     locationText?: boolean
     createdAt?: boolean
@@ -14221,6 +14777,9 @@ export namespace Prisma {
     id?: boolean
     requestId?: boolean
     status?: boolean
+    latitude?: boolean
+    longitude?: boolean
+    speed?: boolean
     note?: boolean
     locationText?: boolean
     createdAt?: boolean
@@ -14231,6 +14790,9 @@ export namespace Prisma {
     id?: boolean
     requestId?: boolean
     status?: boolean
+    latitude?: boolean
+    longitude?: boolean
+    speed?: boolean
     note?: boolean
     locationText?: boolean
     createdAt?: boolean
@@ -14241,12 +14803,15 @@ export namespace Prisma {
     id?: boolean
     requestId?: boolean
     status?: boolean
+    latitude?: boolean
+    longitude?: boolean
+    speed?: boolean
     note?: boolean
     locationText?: boolean
     createdAt?: boolean
   }
 
-  export type DeliveryTrackingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "status" | "note" | "locationText" | "createdAt", ExtArgs["result"]["deliveryTracking"]>
+  export type DeliveryTrackingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "status" | "latitude" | "longitude" | "speed" | "note" | "locationText" | "createdAt", ExtArgs["result"]["deliveryTracking"]>
   export type DeliveryTrackingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     request?: boolean | RequestDefaultArgs<ExtArgs>
   }
@@ -14266,6 +14831,9 @@ export namespace Prisma {
       id: number
       requestId: number
       status: $Enums.DeliveryStatus
+      latitude: Prisma.Decimal | null
+      longitude: Prisma.Decimal | null
+      speed: Prisma.Decimal | null
       note: string | null
       locationText: string | null
       createdAt: Date
@@ -14696,6 +15264,9 @@ export namespace Prisma {
     readonly id: FieldRef<"DeliveryTracking", 'Int'>
     readonly requestId: FieldRef<"DeliveryTracking", 'Int'>
     readonly status: FieldRef<"DeliveryTracking", 'DeliveryStatus'>
+    readonly latitude: FieldRef<"DeliveryTracking", 'Decimal'>
+    readonly longitude: FieldRef<"DeliveryTracking", 'Decimal'>
+    readonly speed: FieldRef<"DeliveryTracking", 'Decimal'>
     readonly note: FieldRef<"DeliveryTracking", 'String'>
     readonly locationText: FieldRef<"DeliveryTracking", 'String'>
     readonly createdAt: FieldRef<"DeliveryTracking", 'DateTime'>
@@ -22052,6 +22623,7 @@ export namespace Prisma {
     requestId: number | null
     userId: number | null
     resolvedById: number | null
+    reportedUserId: number | null
   }
 
   export type ComplaintSumAggregateOutputType = {
@@ -22059,6 +22631,7 @@ export namespace Prisma {
     requestId: number | null
     userId: number | null
     resolvedById: number | null
+    reportedUserId: number | null
   }
 
   export type ComplaintMinAggregateOutputType = {
@@ -22073,6 +22646,7 @@ export namespace Prisma {
     resolvedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    reportedUserId: number | null
   }
 
   export type ComplaintMaxAggregateOutputType = {
@@ -22087,6 +22661,7 @@ export namespace Prisma {
     resolvedAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
+    reportedUserId: number | null
   }
 
   export type ComplaintCountAggregateOutputType = {
@@ -22101,6 +22676,7 @@ export namespace Prisma {
     resolvedAt: number
     createdAt: number
     updatedAt: number
+    reportedUserId: number
     _all: number
   }
 
@@ -22110,6 +22686,7 @@ export namespace Prisma {
     requestId?: true
     userId?: true
     resolvedById?: true
+    reportedUserId?: true
   }
 
   export type ComplaintSumAggregateInputType = {
@@ -22117,6 +22694,7 @@ export namespace Prisma {
     requestId?: true
     userId?: true
     resolvedById?: true
+    reportedUserId?: true
   }
 
   export type ComplaintMinAggregateInputType = {
@@ -22131,6 +22709,7 @@ export namespace Prisma {
     resolvedAt?: true
     createdAt?: true
     updatedAt?: true
+    reportedUserId?: true
   }
 
   export type ComplaintMaxAggregateInputType = {
@@ -22145,6 +22724,7 @@ export namespace Prisma {
     resolvedAt?: true
     createdAt?: true
     updatedAt?: true
+    reportedUserId?: true
   }
 
   export type ComplaintCountAggregateInputType = {
@@ -22159,6 +22739,7 @@ export namespace Prisma {
     resolvedAt?: true
     createdAt?: true
     updatedAt?: true
+    reportedUserId?: true
     _all?: true
   }
 
@@ -22260,6 +22841,7 @@ export namespace Prisma {
     resolvedAt: Date | null
     createdAt: Date
     updatedAt: Date
+    reportedUserId: number | null
     _count: ComplaintCountAggregateOutputType | null
     _avg: ComplaintAvgAggregateOutputType | null
     _sum: ComplaintSumAggregateOutputType | null
@@ -22293,8 +22875,10 @@ export namespace Prisma {
     resolvedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    reportedUserId?: boolean
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }, ExtArgs["result"]["complaint"]>
 
@@ -22310,8 +22894,10 @@ export namespace Prisma {
     resolvedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    reportedUserId?: boolean
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }, ExtArgs["result"]["complaint"]>
 
@@ -22327,8 +22913,10 @@ export namespace Prisma {
     resolvedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    reportedUserId?: boolean
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }, ExtArgs["result"]["complaint"]>
 
@@ -22344,22 +22932,26 @@ export namespace Prisma {
     resolvedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    reportedUserId?: boolean
   }
 
-  export type ComplaintOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "userId" | "subject" | "description" | "status" | "resolution" | "resolvedById" | "resolvedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["complaint"]>
+  export type ComplaintOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "userId" | "subject" | "description" | "status" | "resolution" | "resolvedById" | "resolvedAt" | "createdAt" | "updatedAt" | "reportedUserId", ExtArgs["result"]["complaint"]>
   export type ComplaintInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }
   export type ComplaintIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }
   export type ComplaintIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     request?: boolean | RequestDefaultArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
+    reportedUser?: boolean | Complaint$reportedUserArgs<ExtArgs>
     resolvedBy?: boolean | Complaint$resolvedByArgs<ExtArgs>
   }
 
@@ -22368,6 +22960,7 @@ export namespace Prisma {
     objects: {
       request: Prisma.$RequestPayload<ExtArgs>
       user: Prisma.$UserPayload<ExtArgs>
+      reportedUser: Prisma.$UserPayload<ExtArgs> | null
       resolvedBy: Prisma.$UserPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -22382,6 +22975,7 @@ export namespace Prisma {
       resolvedAt: Date | null
       createdAt: Date
       updatedAt: Date
+      reportedUserId: number | null
     }, ExtArgs["result"]["complaint"]>
     composites: {}
   }
@@ -22778,6 +23372,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     request<T extends RequestDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RequestDefaultArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    reportedUser<T extends Complaint$reportedUserArgs<ExtArgs> = {}>(args?: Subset<T, Complaint$reportedUserArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     resolvedBy<T extends Complaint$resolvedByArgs<ExtArgs> = {}>(args?: Subset<T, Complaint$resolvedByArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -22819,6 +23414,7 @@ export namespace Prisma {
     readonly resolvedAt: FieldRef<"Complaint", 'DateTime'>
     readonly createdAt: FieldRef<"Complaint", 'DateTime'>
     readonly updatedAt: FieldRef<"Complaint", 'DateTime'>
+    readonly reportedUserId: FieldRef<"Complaint", 'Int'>
   }
     
 
@@ -23220,6 +23816,25 @@ export namespace Prisma {
   }
 
   /**
+   * Complaint.reportedUser
+   */
+  export type Complaint$reportedUserArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
    * Complaint.resolvedBy
    */
   export type Complaint$resolvedByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -23258,6 +23873,2265 @@ export namespace Prisma {
 
 
   /**
+   * Model Governorate
+   */
+
+  export type AggregateGovernorate = {
+    _count: GovernorateCountAggregateOutputType | null
+    _avg: GovernorateAvgAggregateOutputType | null
+    _sum: GovernorateSumAggregateOutputType | null
+    _min: GovernorateMinAggregateOutputType | null
+    _max: GovernorateMaxAggregateOutputType | null
+  }
+
+  export type GovernorateAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type GovernorateSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type GovernorateMinAggregateOutputType = {
+    id: number | null
+    name: string | null
+  }
+
+  export type GovernorateMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+  }
+
+  export type GovernorateCountAggregateOutputType = {
+    id: number
+    name: number
+    _all: number
+  }
+
+
+  export type GovernorateAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type GovernorateSumAggregateInputType = {
+    id?: true
+  }
+
+  export type GovernorateMinAggregateInputType = {
+    id?: true
+    name?: true
+  }
+
+  export type GovernorateMaxAggregateInputType = {
+    id?: true
+    name?: true
+  }
+
+  export type GovernorateCountAggregateInputType = {
+    id?: true
+    name?: true
+    _all?: true
+  }
+
+  export type GovernorateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Governorate to aggregate.
+     */
+    where?: GovernorateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Governorates to fetch.
+     */
+    orderBy?: GovernorateOrderByWithRelationInput | GovernorateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: GovernorateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Governorates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Governorates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Governorates
+    **/
+    _count?: true | GovernorateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: GovernorateAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: GovernorateSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: GovernorateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: GovernorateMaxAggregateInputType
+  }
+
+  export type GetGovernorateAggregateType<T extends GovernorateAggregateArgs> = {
+        [P in keyof T & keyof AggregateGovernorate]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateGovernorate[P]>
+      : GetScalarType<T[P], AggregateGovernorate[P]>
+  }
+
+
+
+
+  export type GovernorateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GovernorateWhereInput
+    orderBy?: GovernorateOrderByWithAggregationInput | GovernorateOrderByWithAggregationInput[]
+    by: GovernorateScalarFieldEnum[] | GovernorateScalarFieldEnum
+    having?: GovernorateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: GovernorateCountAggregateInputType | true
+    _avg?: GovernorateAvgAggregateInputType
+    _sum?: GovernorateSumAggregateInputType
+    _min?: GovernorateMinAggregateInputType
+    _max?: GovernorateMaxAggregateInputType
+  }
+
+  export type GovernorateGroupByOutputType = {
+    id: number
+    name: string
+    _count: GovernorateCountAggregateOutputType | null
+    _avg: GovernorateAvgAggregateOutputType | null
+    _sum: GovernorateSumAggregateOutputType | null
+    _min: GovernorateMinAggregateOutputType | null
+    _max: GovernorateMaxAggregateOutputType | null
+  }
+
+  type GetGovernorateGroupByPayload<T extends GovernorateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<GovernorateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof GovernorateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], GovernorateGroupByOutputType[P]>
+            : GetScalarType<T[P], GovernorateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type GovernorateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    cities?: boolean | Governorate$citiesArgs<ExtArgs>
+    users?: boolean | Governorate$usersArgs<ExtArgs>
+    requests?: boolean | Governorate$requestsArgs<ExtArgs>
+    _count?: boolean | GovernorateCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["governorate"]>
+
+  export type GovernorateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+  }, ExtArgs["result"]["governorate"]>
+
+  export type GovernorateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+  }, ExtArgs["result"]["governorate"]>
+
+  export type GovernorateSelectScalar = {
+    id?: boolean
+    name?: boolean
+  }
+
+  export type GovernorateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name", ExtArgs["result"]["governorate"]>
+  export type GovernorateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cities?: boolean | Governorate$citiesArgs<ExtArgs>
+    users?: boolean | Governorate$usersArgs<ExtArgs>
+    requests?: boolean | Governorate$requestsArgs<ExtArgs>
+    _count?: boolean | GovernorateCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type GovernorateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type GovernorateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $GovernoratePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Governorate"
+    objects: {
+      cities: Prisma.$CityPayload<ExtArgs>[]
+      users: Prisma.$UserPayload<ExtArgs>[]
+      requests: Prisma.$RequestPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      name: string
+    }, ExtArgs["result"]["governorate"]>
+    composites: {}
+  }
+
+  type GovernorateGetPayload<S extends boolean | null | undefined | GovernorateDefaultArgs> = $Result.GetResult<Prisma.$GovernoratePayload, S>
+
+  type GovernorateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<GovernorateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: GovernorateCountAggregateInputType | true
+    }
+
+  export interface GovernorateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Governorate'], meta: { name: 'Governorate' } }
+    /**
+     * Find zero or one Governorate that matches the filter.
+     * @param {GovernorateFindUniqueArgs} args - Arguments to find a Governorate
+     * @example
+     * // Get one Governorate
+     * const governorate = await prisma.governorate.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends GovernorateFindUniqueArgs>(args: SelectSubset<T, GovernorateFindUniqueArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Governorate that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {GovernorateFindUniqueOrThrowArgs} args - Arguments to find a Governorate
+     * @example
+     * // Get one Governorate
+     * const governorate = await prisma.governorate.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends GovernorateFindUniqueOrThrowArgs>(args: SelectSubset<T, GovernorateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Governorate that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateFindFirstArgs} args - Arguments to find a Governorate
+     * @example
+     * // Get one Governorate
+     * const governorate = await prisma.governorate.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends GovernorateFindFirstArgs>(args?: SelectSubset<T, GovernorateFindFirstArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Governorate that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateFindFirstOrThrowArgs} args - Arguments to find a Governorate
+     * @example
+     * // Get one Governorate
+     * const governorate = await prisma.governorate.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends GovernorateFindFirstOrThrowArgs>(args?: SelectSubset<T, GovernorateFindFirstOrThrowArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Governorates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Governorates
+     * const governorates = await prisma.governorate.findMany()
+     * 
+     * // Get first 10 Governorates
+     * const governorates = await prisma.governorate.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const governorateWithIdOnly = await prisma.governorate.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends GovernorateFindManyArgs>(args?: SelectSubset<T, GovernorateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Governorate.
+     * @param {GovernorateCreateArgs} args - Arguments to create a Governorate.
+     * @example
+     * // Create one Governorate
+     * const Governorate = await prisma.governorate.create({
+     *   data: {
+     *     // ... data to create a Governorate
+     *   }
+     * })
+     * 
+     */
+    create<T extends GovernorateCreateArgs>(args: SelectSubset<T, GovernorateCreateArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Governorates.
+     * @param {GovernorateCreateManyArgs} args - Arguments to create many Governorates.
+     * @example
+     * // Create many Governorates
+     * const governorate = await prisma.governorate.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends GovernorateCreateManyArgs>(args?: SelectSubset<T, GovernorateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Governorates and returns the data saved in the database.
+     * @param {GovernorateCreateManyAndReturnArgs} args - Arguments to create many Governorates.
+     * @example
+     * // Create many Governorates
+     * const governorate = await prisma.governorate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Governorates and only return the `id`
+     * const governorateWithIdOnly = await prisma.governorate.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends GovernorateCreateManyAndReturnArgs>(args?: SelectSubset<T, GovernorateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Governorate.
+     * @param {GovernorateDeleteArgs} args - Arguments to delete one Governorate.
+     * @example
+     * // Delete one Governorate
+     * const Governorate = await prisma.governorate.delete({
+     *   where: {
+     *     // ... filter to delete one Governorate
+     *   }
+     * })
+     * 
+     */
+    delete<T extends GovernorateDeleteArgs>(args: SelectSubset<T, GovernorateDeleteArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Governorate.
+     * @param {GovernorateUpdateArgs} args - Arguments to update one Governorate.
+     * @example
+     * // Update one Governorate
+     * const governorate = await prisma.governorate.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends GovernorateUpdateArgs>(args: SelectSubset<T, GovernorateUpdateArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Governorates.
+     * @param {GovernorateDeleteManyArgs} args - Arguments to filter Governorates to delete.
+     * @example
+     * // Delete a few Governorates
+     * const { count } = await prisma.governorate.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends GovernorateDeleteManyArgs>(args?: SelectSubset<T, GovernorateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Governorates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Governorates
+     * const governorate = await prisma.governorate.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends GovernorateUpdateManyArgs>(args: SelectSubset<T, GovernorateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Governorates and returns the data updated in the database.
+     * @param {GovernorateUpdateManyAndReturnArgs} args - Arguments to update many Governorates.
+     * @example
+     * // Update many Governorates
+     * const governorate = await prisma.governorate.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Governorates and only return the `id`
+     * const governorateWithIdOnly = await prisma.governorate.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends GovernorateUpdateManyAndReturnArgs>(args: SelectSubset<T, GovernorateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Governorate.
+     * @param {GovernorateUpsertArgs} args - Arguments to update or create a Governorate.
+     * @example
+     * // Update or create a Governorate
+     * const governorate = await prisma.governorate.upsert({
+     *   create: {
+     *     // ... data to create a Governorate
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Governorate we want to update
+     *   }
+     * })
+     */
+    upsert<T extends GovernorateUpsertArgs>(args: SelectSubset<T, GovernorateUpsertArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Governorates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateCountArgs} args - Arguments to filter Governorates to count.
+     * @example
+     * // Count the number of Governorates
+     * const count = await prisma.governorate.count({
+     *   where: {
+     *     // ... the filter for the Governorates we want to count
+     *   }
+     * })
+    **/
+    count<T extends GovernorateCountArgs>(
+      args?: Subset<T, GovernorateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], GovernorateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Governorate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends GovernorateAggregateArgs>(args: Subset<T, GovernorateAggregateArgs>): Prisma.PrismaPromise<GetGovernorateAggregateType<T>>
+
+    /**
+     * Group by Governorate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GovernorateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends GovernorateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: GovernorateGroupByArgs['orderBy'] }
+        : { orderBy?: GovernorateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, GovernorateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetGovernorateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Governorate model
+   */
+  readonly fields: GovernorateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Governorate.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__GovernorateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    cities<T extends Governorate$citiesArgs<ExtArgs> = {}>(args?: Subset<T, Governorate$citiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    users<T extends Governorate$usersArgs<ExtArgs> = {}>(args?: Subset<T, Governorate$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    requests<T extends Governorate$requestsArgs<ExtArgs> = {}>(args?: Subset<T, Governorate$requestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Governorate model
+   */
+  interface GovernorateFieldRefs {
+    readonly id: FieldRef<"Governorate", 'Int'>
+    readonly name: FieldRef<"Governorate", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Governorate findUnique
+   */
+  export type GovernorateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter, which Governorate to fetch.
+     */
+    where: GovernorateWhereUniqueInput
+  }
+
+  /**
+   * Governorate findUniqueOrThrow
+   */
+  export type GovernorateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter, which Governorate to fetch.
+     */
+    where: GovernorateWhereUniqueInput
+  }
+
+  /**
+   * Governorate findFirst
+   */
+  export type GovernorateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter, which Governorate to fetch.
+     */
+    where?: GovernorateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Governorates to fetch.
+     */
+    orderBy?: GovernorateOrderByWithRelationInput | GovernorateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Governorates.
+     */
+    cursor?: GovernorateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Governorates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Governorates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Governorates.
+     */
+    distinct?: GovernorateScalarFieldEnum | GovernorateScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate findFirstOrThrow
+   */
+  export type GovernorateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter, which Governorate to fetch.
+     */
+    where?: GovernorateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Governorates to fetch.
+     */
+    orderBy?: GovernorateOrderByWithRelationInput | GovernorateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Governorates.
+     */
+    cursor?: GovernorateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Governorates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Governorates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Governorates.
+     */
+    distinct?: GovernorateScalarFieldEnum | GovernorateScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate findMany
+   */
+  export type GovernorateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter, which Governorates to fetch.
+     */
+    where?: GovernorateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Governorates to fetch.
+     */
+    orderBy?: GovernorateOrderByWithRelationInput | GovernorateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Governorates.
+     */
+    cursor?: GovernorateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Governorates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Governorates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Governorates.
+     */
+    distinct?: GovernorateScalarFieldEnum | GovernorateScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate create
+   */
+  export type GovernorateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Governorate.
+     */
+    data: XOR<GovernorateCreateInput, GovernorateUncheckedCreateInput>
+  }
+
+  /**
+   * Governorate createMany
+   */
+  export type GovernorateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Governorates.
+     */
+    data: GovernorateCreateManyInput | GovernorateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Governorate createManyAndReturn
+   */
+  export type GovernorateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * The data used to create many Governorates.
+     */
+    data: GovernorateCreateManyInput | GovernorateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Governorate update
+   */
+  export type GovernorateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Governorate.
+     */
+    data: XOR<GovernorateUpdateInput, GovernorateUncheckedUpdateInput>
+    /**
+     * Choose, which Governorate to update.
+     */
+    where: GovernorateWhereUniqueInput
+  }
+
+  /**
+   * Governorate updateMany
+   */
+  export type GovernorateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Governorates.
+     */
+    data: XOR<GovernorateUpdateManyMutationInput, GovernorateUncheckedUpdateManyInput>
+    /**
+     * Filter which Governorates to update
+     */
+    where?: GovernorateWhereInput
+    /**
+     * Limit how many Governorates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Governorate updateManyAndReturn
+   */
+  export type GovernorateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * The data used to update Governorates.
+     */
+    data: XOR<GovernorateUpdateManyMutationInput, GovernorateUncheckedUpdateManyInput>
+    /**
+     * Filter which Governorates to update
+     */
+    where?: GovernorateWhereInput
+    /**
+     * Limit how many Governorates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Governorate upsert
+   */
+  export type GovernorateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Governorate to update in case it exists.
+     */
+    where: GovernorateWhereUniqueInput
+    /**
+     * In case the Governorate found by the `where` argument doesn't exist, create a new Governorate with this data.
+     */
+    create: XOR<GovernorateCreateInput, GovernorateUncheckedCreateInput>
+    /**
+     * In case the Governorate was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<GovernorateUpdateInput, GovernorateUncheckedUpdateInput>
+  }
+
+  /**
+   * Governorate delete
+   */
+  export type GovernorateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+    /**
+     * Filter which Governorate to delete.
+     */
+    where: GovernorateWhereUniqueInput
+  }
+
+  /**
+   * Governorate deleteMany
+   */
+  export type GovernorateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Governorates to delete
+     */
+    where?: GovernorateWhereInput
+    /**
+     * Limit how many Governorates to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Governorate.cities
+   */
+  export type Governorate$citiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    where?: CityWhereInput
+    orderBy?: CityOrderByWithRelationInput | CityOrderByWithRelationInput[]
+    cursor?: CityWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CityScalarFieldEnum | CityScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate.users
+   */
+  export type Governorate$usersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    cursor?: UserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate.requests
+   */
+  export type Governorate$requestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    where?: RequestWhereInput
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    cursor?: RequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RequestScalarFieldEnum | RequestScalarFieldEnum[]
+  }
+
+  /**
+   * Governorate without action
+   */
+  export type GovernorateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Governorate
+     */
+    select?: GovernorateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Governorate
+     */
+    omit?: GovernorateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GovernorateInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model City
+   */
+
+  export type AggregateCity = {
+    _count: CityCountAggregateOutputType | null
+    _avg: CityAvgAggregateOutputType | null
+    _sum: CitySumAggregateOutputType | null
+    _min: CityMinAggregateOutputType | null
+    _max: CityMaxAggregateOutputType | null
+  }
+
+  export type CityAvgAggregateOutputType = {
+    id: number | null
+    governorateId: number | null
+  }
+
+  export type CitySumAggregateOutputType = {
+    id: number | null
+    governorateId: number | null
+  }
+
+  export type CityMinAggregateOutputType = {
+    id: number | null
+    name: string | null
+    governorateId: number | null
+  }
+
+  export type CityMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+    governorateId: number | null
+  }
+
+  export type CityCountAggregateOutputType = {
+    id: number
+    name: number
+    governorateId: number
+    _all: number
+  }
+
+
+  export type CityAvgAggregateInputType = {
+    id?: true
+    governorateId?: true
+  }
+
+  export type CitySumAggregateInputType = {
+    id?: true
+    governorateId?: true
+  }
+
+  export type CityMinAggregateInputType = {
+    id?: true
+    name?: true
+    governorateId?: true
+  }
+
+  export type CityMaxAggregateInputType = {
+    id?: true
+    name?: true
+    governorateId?: true
+  }
+
+  export type CityCountAggregateInputType = {
+    id?: true
+    name?: true
+    governorateId?: true
+    _all?: true
+  }
+
+  export type CityAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which City to aggregate.
+     */
+    where?: CityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cities to fetch.
+     */
+    orderBy?: CityOrderByWithRelationInput | CityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Cities
+    **/
+    _count?: true | CityCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CityAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CitySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CityMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CityMaxAggregateInputType
+  }
+
+  export type GetCityAggregateType<T extends CityAggregateArgs> = {
+        [P in keyof T & keyof AggregateCity]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCity[P]>
+      : GetScalarType<T[P], AggregateCity[P]>
+  }
+
+
+
+
+  export type CityGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CityWhereInput
+    orderBy?: CityOrderByWithAggregationInput | CityOrderByWithAggregationInput[]
+    by: CityScalarFieldEnum[] | CityScalarFieldEnum
+    having?: CityScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CityCountAggregateInputType | true
+    _avg?: CityAvgAggregateInputType
+    _sum?: CitySumAggregateInputType
+    _min?: CityMinAggregateInputType
+    _max?: CityMaxAggregateInputType
+  }
+
+  export type CityGroupByOutputType = {
+    id: number
+    name: string
+    governorateId: number
+    _count: CityCountAggregateOutputType | null
+    _avg: CityAvgAggregateOutputType | null
+    _sum: CitySumAggregateOutputType | null
+    _min: CityMinAggregateOutputType | null
+    _max: CityMaxAggregateOutputType | null
+  }
+
+  type GetCityGroupByPayload<T extends CityGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CityGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CityGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CityGroupByOutputType[P]>
+            : GetScalarType<T[P], CityGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CitySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    governorateId?: boolean
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+    users?: boolean | City$usersArgs<ExtArgs>
+    requests?: boolean | City$requestsArgs<ExtArgs>
+    _count?: boolean | CityCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["city"]>
+
+  export type CitySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    governorateId?: boolean
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["city"]>
+
+  export type CitySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    governorateId?: boolean
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["city"]>
+
+  export type CitySelectScalar = {
+    id?: boolean
+    name?: boolean
+    governorateId?: boolean
+  }
+
+  export type CityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "governorateId", ExtArgs["result"]["city"]>
+  export type CityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+    users?: boolean | City$usersArgs<ExtArgs>
+    requests?: boolean | City$requestsArgs<ExtArgs>
+    _count?: boolean | CityCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CityIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+  }
+  export type CityIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    governorate?: boolean | GovernorateDefaultArgs<ExtArgs>
+  }
+
+  export type $CityPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "City"
+    objects: {
+      governorate: Prisma.$GovernoratePayload<ExtArgs>
+      users: Prisma.$UserPayload<ExtArgs>[]
+      requests: Prisma.$RequestPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      name: string
+      governorateId: number
+    }, ExtArgs["result"]["city"]>
+    composites: {}
+  }
+
+  type CityGetPayload<S extends boolean | null | undefined | CityDefaultArgs> = $Result.GetResult<Prisma.$CityPayload, S>
+
+  type CityCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CityFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CityCountAggregateInputType | true
+    }
+
+  export interface CityDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['City'], meta: { name: 'City' } }
+    /**
+     * Find zero or one City that matches the filter.
+     * @param {CityFindUniqueArgs} args - Arguments to find a City
+     * @example
+     * // Get one City
+     * const city = await prisma.city.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CityFindUniqueArgs>(args: SelectSubset<T, CityFindUniqueArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one City that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CityFindUniqueOrThrowArgs} args - Arguments to find a City
+     * @example
+     * // Get one City
+     * const city = await prisma.city.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CityFindUniqueOrThrowArgs>(args: SelectSubset<T, CityFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first City that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityFindFirstArgs} args - Arguments to find a City
+     * @example
+     * // Get one City
+     * const city = await prisma.city.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CityFindFirstArgs>(args?: SelectSubset<T, CityFindFirstArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first City that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityFindFirstOrThrowArgs} args - Arguments to find a City
+     * @example
+     * // Get one City
+     * const city = await prisma.city.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CityFindFirstOrThrowArgs>(args?: SelectSubset<T, CityFindFirstOrThrowArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Cities that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Cities
+     * const cities = await prisma.city.findMany()
+     * 
+     * // Get first 10 Cities
+     * const cities = await prisma.city.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const cityWithIdOnly = await prisma.city.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CityFindManyArgs>(args?: SelectSubset<T, CityFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a City.
+     * @param {CityCreateArgs} args - Arguments to create a City.
+     * @example
+     * // Create one City
+     * const City = await prisma.city.create({
+     *   data: {
+     *     // ... data to create a City
+     *   }
+     * })
+     * 
+     */
+    create<T extends CityCreateArgs>(args: SelectSubset<T, CityCreateArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Cities.
+     * @param {CityCreateManyArgs} args - Arguments to create many Cities.
+     * @example
+     * // Create many Cities
+     * const city = await prisma.city.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CityCreateManyArgs>(args?: SelectSubset<T, CityCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Cities and returns the data saved in the database.
+     * @param {CityCreateManyAndReturnArgs} args - Arguments to create many Cities.
+     * @example
+     * // Create many Cities
+     * const city = await prisma.city.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Cities and only return the `id`
+     * const cityWithIdOnly = await prisma.city.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CityCreateManyAndReturnArgs>(args?: SelectSubset<T, CityCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a City.
+     * @param {CityDeleteArgs} args - Arguments to delete one City.
+     * @example
+     * // Delete one City
+     * const City = await prisma.city.delete({
+     *   where: {
+     *     // ... filter to delete one City
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CityDeleteArgs>(args: SelectSubset<T, CityDeleteArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one City.
+     * @param {CityUpdateArgs} args - Arguments to update one City.
+     * @example
+     * // Update one City
+     * const city = await prisma.city.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CityUpdateArgs>(args: SelectSubset<T, CityUpdateArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Cities.
+     * @param {CityDeleteManyArgs} args - Arguments to filter Cities to delete.
+     * @example
+     * // Delete a few Cities
+     * const { count } = await prisma.city.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CityDeleteManyArgs>(args?: SelectSubset<T, CityDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Cities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Cities
+     * const city = await prisma.city.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CityUpdateManyArgs>(args: SelectSubset<T, CityUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Cities and returns the data updated in the database.
+     * @param {CityUpdateManyAndReturnArgs} args - Arguments to update many Cities.
+     * @example
+     * // Update many Cities
+     * const city = await prisma.city.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Cities and only return the `id`
+     * const cityWithIdOnly = await prisma.city.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CityUpdateManyAndReturnArgs>(args: SelectSubset<T, CityUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one City.
+     * @param {CityUpsertArgs} args - Arguments to update or create a City.
+     * @example
+     * // Update or create a City
+     * const city = await prisma.city.upsert({
+     *   create: {
+     *     // ... data to create a City
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the City we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CityUpsertArgs>(args: SelectSubset<T, CityUpsertArgs<ExtArgs>>): Prisma__CityClient<$Result.GetResult<Prisma.$CityPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Cities.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityCountArgs} args - Arguments to filter Cities to count.
+     * @example
+     * // Count the number of Cities
+     * const count = await prisma.city.count({
+     *   where: {
+     *     // ... the filter for the Cities we want to count
+     *   }
+     * })
+    **/
+    count<T extends CityCountArgs>(
+      args?: Subset<T, CityCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CityCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a City.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CityAggregateArgs>(args: Subset<T, CityAggregateArgs>): Prisma.PrismaPromise<GetCityAggregateType<T>>
+
+    /**
+     * Group by City.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CityGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CityGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CityGroupByArgs['orderBy'] }
+        : { orderBy?: CityGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CityGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCityGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the City model
+   */
+  readonly fields: CityFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for City.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CityClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    governorate<T extends GovernorateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, GovernorateDefaultArgs<ExtArgs>>): Prisma__GovernorateClient<$Result.GetResult<Prisma.$GovernoratePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    users<T extends City$usersArgs<ExtArgs> = {}>(args?: Subset<T, City$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    requests<T extends City$requestsArgs<ExtArgs> = {}>(args?: Subset<T, City$requestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the City model
+   */
+  interface CityFieldRefs {
+    readonly id: FieldRef<"City", 'Int'>
+    readonly name: FieldRef<"City", 'String'>
+    readonly governorateId: FieldRef<"City", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * City findUnique
+   */
+  export type CityFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter, which City to fetch.
+     */
+    where: CityWhereUniqueInput
+  }
+
+  /**
+   * City findUniqueOrThrow
+   */
+  export type CityFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter, which City to fetch.
+     */
+    where: CityWhereUniqueInput
+  }
+
+  /**
+   * City findFirst
+   */
+  export type CityFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter, which City to fetch.
+     */
+    where?: CityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cities to fetch.
+     */
+    orderBy?: CityOrderByWithRelationInput | CityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Cities.
+     */
+    cursor?: CityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Cities.
+     */
+    distinct?: CityScalarFieldEnum | CityScalarFieldEnum[]
+  }
+
+  /**
+   * City findFirstOrThrow
+   */
+  export type CityFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter, which City to fetch.
+     */
+    where?: CityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cities to fetch.
+     */
+    orderBy?: CityOrderByWithRelationInput | CityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Cities.
+     */
+    cursor?: CityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Cities.
+     */
+    distinct?: CityScalarFieldEnum | CityScalarFieldEnum[]
+  }
+
+  /**
+   * City findMany
+   */
+  export type CityFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter, which Cities to fetch.
+     */
+    where?: CityWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Cities to fetch.
+     */
+    orderBy?: CityOrderByWithRelationInput | CityOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Cities.
+     */
+    cursor?: CityWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Cities from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Cities.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Cities.
+     */
+    distinct?: CityScalarFieldEnum | CityScalarFieldEnum[]
+  }
+
+  /**
+   * City create
+   */
+  export type CityCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * The data needed to create a City.
+     */
+    data: XOR<CityCreateInput, CityUncheckedCreateInput>
+  }
+
+  /**
+   * City createMany
+   */
+  export type CityCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Cities.
+     */
+    data: CityCreateManyInput | CityCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * City createManyAndReturn
+   */
+  export type CityCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * The data used to create many Cities.
+     */
+    data: CityCreateManyInput | CityCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * City update
+   */
+  export type CityUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * The data needed to update a City.
+     */
+    data: XOR<CityUpdateInput, CityUncheckedUpdateInput>
+    /**
+     * Choose, which City to update.
+     */
+    where: CityWhereUniqueInput
+  }
+
+  /**
+   * City updateMany
+   */
+  export type CityUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Cities.
+     */
+    data: XOR<CityUpdateManyMutationInput, CityUncheckedUpdateManyInput>
+    /**
+     * Filter which Cities to update
+     */
+    where?: CityWhereInput
+    /**
+     * Limit how many Cities to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * City updateManyAndReturn
+   */
+  export type CityUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * The data used to update Cities.
+     */
+    data: XOR<CityUpdateManyMutationInput, CityUncheckedUpdateManyInput>
+    /**
+     * Filter which Cities to update
+     */
+    where?: CityWhereInput
+    /**
+     * Limit how many Cities to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * City upsert
+   */
+  export type CityUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * The filter to search for the City to update in case it exists.
+     */
+    where: CityWhereUniqueInput
+    /**
+     * In case the City found by the `where` argument doesn't exist, create a new City with this data.
+     */
+    create: XOR<CityCreateInput, CityUncheckedCreateInput>
+    /**
+     * In case the City was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CityUpdateInput, CityUncheckedUpdateInput>
+  }
+
+  /**
+   * City delete
+   */
+  export type CityDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+    /**
+     * Filter which City to delete.
+     */
+    where: CityWhereUniqueInput
+  }
+
+  /**
+   * City deleteMany
+   */
+  export type CityDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Cities to delete
+     */
+    where?: CityWhereInput
+    /**
+     * Limit how many Cities to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * City.users
+   */
+  export type City$usersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    cursor?: UserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * City.requests
+   */
+  export type City$requestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    where?: RequestWhereInput
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    cursor?: RequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: RequestScalarFieldEnum | RequestScalarFieldEnum[]
+  }
+
+  /**
+   * City without action
+   */
+  export type CityDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the City
+     */
+    select?: CitySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the City
+     */
+    omit?: CityOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CityInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -23283,6 +26157,8 @@ export namespace Prisma {
     isBlocked: 'isBlocked',
     walletBalance: 'walletBalance',
     fcmToken: 'fcmToken',
+    cityId: 'cityId',
+    governorateId: 'governorateId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23297,6 +26173,7 @@ export namespace Prisma {
     parentId: 'parentId',
     requiresBrand: 'requiresBrand',
     brandType: 'brandType',
+    type: 'type',
     createdAt: 'createdAt'
   };
 
@@ -23350,6 +26227,8 @@ export namespace Prisma {
     selectedBidId: 'selectedBidId',
     qrCode: 'qrCode',
     assignedDeliveryAgentId: 'assignedDeliveryAgentId',
+    cityId: 'cityId',
+    governorateId: 'governorateId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23403,6 +26282,9 @@ export namespace Prisma {
     id: 'id',
     requestId: 'requestId',
     status: 'status',
+    latitude: 'latitude',
+    longitude: 'longitude',
+    speed: 'speed',
     note: 'note',
     locationText: 'locationText',
     createdAt: 'createdAt'
@@ -23505,10 +26387,28 @@ export namespace Prisma {
     resolvedById: 'resolvedById',
     resolvedAt: 'resolvedAt',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    reportedUserId: 'reportedUserId'
   };
 
   export type ComplaintScalarFieldEnum = (typeof ComplaintScalarFieldEnum)[keyof typeof ComplaintScalarFieldEnum]
+
+
+  export const GovernorateScalarFieldEnum: {
+    id: 'id',
+    name: 'name'
+  };
+
+  export type GovernorateScalarFieldEnum = (typeof GovernorateScalarFieldEnum)[keyof typeof GovernorateScalarFieldEnum]
+
+
+  export const CityScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    governorateId: 'governorateId'
+  };
+
+  export type CityScalarFieldEnum = (typeof CityScalarFieldEnum)[keyof typeof CityScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -23631,6 +26531,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'CategoryType'
+   */
+  export type EnumCategoryTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoryType'>
+    
+
+
+  /**
+   * Reference to a field of type 'CategoryType[]'
+   */
+  export type ListEnumCategoryTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoryType[]'>
     
 
 
@@ -23778,8 +26692,12 @@ export namespace Prisma {
     isBlocked?: BoolFilter<"User"> | boolean
     walletBalance?: DecimalFilter<"User"> | Decimal | DecimalJsLike | number | string
     fcmToken?: StringNullableFilter<"User"> | string | null
+    cityId?: IntNullableFilter<"User"> | number | null
+    governorateId?: IntNullableFilter<"User"> | number | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    city?: XOR<CityNullableScalarRelationFilter, CityWhereInput> | null
+    governorate?: XOR<GovernorateNullableScalarRelationFilter, GovernorateWhereInput> | null
     clientRequests?: RequestListRelationFilter
     vendorBids?: BidListRelationFilter
     vendorCategories?: VendorCategoryListRelationFilter
@@ -23793,6 +26711,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewListRelationFilter
     reviewsReceived?: ReviewListRelationFilter
     complaints?: ComplaintListRelationFilter
+    complaintsReceived?: ComplaintListRelationFilter
     resolvedComplaints?: ComplaintListRelationFilter
     vendorBrands?: VendorBrandListRelationFilter
   }
@@ -23809,8 +26728,12 @@ export namespace Prisma {
     isBlocked?: SortOrder
     walletBalance?: SortOrder
     fcmToken?: SortOrderInput | SortOrder
+    cityId?: SortOrderInput | SortOrder
+    governorateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    city?: CityOrderByWithRelationInput
+    governorate?: GovernorateOrderByWithRelationInput
     clientRequests?: RequestOrderByRelationAggregateInput
     vendorBids?: BidOrderByRelationAggregateInput
     vendorCategories?: VendorCategoryOrderByRelationAggregateInput
@@ -23824,6 +26747,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewOrderByRelationAggregateInput
     reviewsReceived?: ReviewOrderByRelationAggregateInput
     complaints?: ComplaintOrderByRelationAggregateInput
+    complaintsReceived?: ComplaintOrderByRelationAggregateInput
     resolvedComplaints?: ComplaintOrderByRelationAggregateInput
     vendorBrands?: VendorBrandOrderByRelationAggregateInput
   }
@@ -23843,8 +26767,12 @@ export namespace Prisma {
     isBlocked?: BoolFilter<"User"> | boolean
     walletBalance?: DecimalFilter<"User"> | Decimal | DecimalJsLike | number | string
     fcmToken?: StringNullableFilter<"User"> | string | null
+    cityId?: IntNullableFilter<"User"> | number | null
+    governorateId?: IntNullableFilter<"User"> | number | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    city?: XOR<CityNullableScalarRelationFilter, CityWhereInput> | null
+    governorate?: XOR<GovernorateNullableScalarRelationFilter, GovernorateWhereInput> | null
     clientRequests?: RequestListRelationFilter
     vendorBids?: BidListRelationFilter
     vendorCategories?: VendorCategoryListRelationFilter
@@ -23858,6 +26786,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewListRelationFilter
     reviewsReceived?: ReviewListRelationFilter
     complaints?: ComplaintListRelationFilter
+    complaintsReceived?: ComplaintListRelationFilter
     resolvedComplaints?: ComplaintListRelationFilter
     vendorBrands?: VendorBrandListRelationFilter
   }, "id" | "email">
@@ -23874,6 +26803,8 @@ export namespace Prisma {
     isBlocked?: SortOrder
     walletBalance?: SortOrder
     fcmToken?: SortOrderInput | SortOrder
+    cityId?: SortOrderInput | SortOrder
+    governorateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -23898,6 +26829,8 @@ export namespace Prisma {
     isBlocked?: BoolWithAggregatesFilter<"User"> | boolean
     walletBalance?: DecimalWithAggregatesFilter<"User"> | Decimal | DecimalJsLike | number | string
     fcmToken?: StringNullableWithAggregatesFilter<"User"> | string | null
+    cityId?: IntNullableWithAggregatesFilter<"User"> | number | null
+    governorateId?: IntNullableWithAggregatesFilter<"User"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -23912,6 +26845,7 @@ export namespace Prisma {
     parentId?: IntNullableFilter<"Category"> | number | null
     requiresBrand?: BoolFilter<"Category"> | boolean
     brandType?: StringNullableFilter<"Category"> | string | null
+    type?: EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
     createdAt?: DateTimeFilter<"Category"> | Date | string
     parent?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     subcategories?: CategoryListRelationFilter
@@ -23926,6 +26860,7 @@ export namespace Prisma {
     parentId?: SortOrderInput | SortOrder
     requiresBrand?: SortOrder
     brandType?: SortOrderInput | SortOrder
+    type?: SortOrder
     createdAt?: SortOrder
     parent?: CategoryOrderByWithRelationInput
     subcategories?: CategoryOrderByRelationAggregateInput
@@ -23943,6 +26878,7 @@ export namespace Prisma {
     parentId?: IntNullableFilter<"Category"> | number | null
     requiresBrand?: BoolFilter<"Category"> | boolean
     brandType?: StringNullableFilter<"Category"> | string | null
+    type?: EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
     createdAt?: DateTimeFilter<"Category"> | Date | string
     parent?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     subcategories?: CategoryListRelationFilter
@@ -23957,6 +26893,7 @@ export namespace Prisma {
     parentId?: SortOrderInput | SortOrder
     requiresBrand?: SortOrder
     brandType?: SortOrderInput | SortOrder
+    type?: SortOrder
     createdAt?: SortOrder
     _count?: CategoryCountOrderByAggregateInput
     _avg?: CategoryAvgOrderByAggregateInput
@@ -23975,6 +26912,7 @@ export namespace Prisma {
     parentId?: IntNullableWithAggregatesFilter<"Category"> | number | null
     requiresBrand?: BoolWithAggregatesFilter<"Category"> | boolean
     brandType?: StringNullableWithAggregatesFilter<"Category"> | string | null
+    type?: EnumCategoryTypeWithAggregatesFilter<"Category"> | $Enums.CategoryType
     createdAt?: DateTimeWithAggregatesFilter<"Category"> | Date | string
   }
 
@@ -24169,8 +27107,12 @@ export namespace Prisma {
     selectedBidId?: IntNullableFilter<"Request"> | number | null
     qrCode?: StringNullableFilter<"Request"> | string | null
     assignedDeliveryAgentId?: IntNullableFilter<"Request"> | number | null
+    cityId?: IntNullableFilter<"Request"> | number | null
+    governorateId?: IntNullableFilter<"Request"> | number | null
     createdAt?: DateTimeFilter<"Request"> | Date | string
     updatedAt?: DateTimeFilter<"Request"> | Date | string
+    city?: XOR<CityNullableScalarRelationFilter, CityWhereInput> | null
+    governorate?: XOR<GovernorateNullableScalarRelationFilter, GovernorateWhereInput> | null
     client?: XOR<UserScalarRelationFilter, UserWhereInput>
     deliveryAgent?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     category?: XOR<CategoryScalarRelationFilter, CategoryWhereInput>
@@ -24200,8 +27142,12 @@ export namespace Prisma {
     selectedBidId?: SortOrderInput | SortOrder
     qrCode?: SortOrderInput | SortOrder
     assignedDeliveryAgentId?: SortOrderInput | SortOrder
+    cityId?: SortOrderInput | SortOrder
+    governorateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    city?: CityOrderByWithRelationInput
+    governorate?: GovernorateOrderByWithRelationInput
     client?: UserOrderByWithRelationInput
     deliveryAgent?: UserOrderByWithRelationInput
     category?: CategoryOrderByWithRelationInput
@@ -24234,8 +27180,12 @@ export namespace Prisma {
     status?: EnumRequestStatusFilter<"Request"> | $Enums.RequestStatus
     qrCode?: StringNullableFilter<"Request"> | string | null
     assignedDeliveryAgentId?: IntNullableFilter<"Request"> | number | null
+    cityId?: IntNullableFilter<"Request"> | number | null
+    governorateId?: IntNullableFilter<"Request"> | number | null
     createdAt?: DateTimeFilter<"Request"> | Date | string
     updatedAt?: DateTimeFilter<"Request"> | Date | string
+    city?: XOR<CityNullableScalarRelationFilter, CityWhereInput> | null
+    governorate?: XOR<GovernorateNullableScalarRelationFilter, GovernorateWhereInput> | null
     client?: XOR<UserScalarRelationFilter, UserWhereInput>
     deliveryAgent?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     category?: XOR<CategoryScalarRelationFilter, CategoryWhereInput>
@@ -24265,6 +27215,8 @@ export namespace Prisma {
     selectedBidId?: SortOrderInput | SortOrder
     qrCode?: SortOrderInput | SortOrder
     assignedDeliveryAgentId?: SortOrderInput | SortOrder
+    cityId?: SortOrderInput | SortOrder
+    governorateId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: RequestCountOrderByAggregateInput
@@ -24293,6 +27245,8 @@ export namespace Prisma {
     selectedBidId?: IntNullableWithAggregatesFilter<"Request"> | number | null
     qrCode?: StringNullableWithAggregatesFilter<"Request"> | string | null
     assignedDeliveryAgentId?: IntNullableWithAggregatesFilter<"Request"> | number | null
+    cityId?: IntNullableWithAggregatesFilter<"Request"> | number | null
+    governorateId?: IntNullableWithAggregatesFilter<"Request"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Request"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Request"> | Date | string
   }
@@ -24527,6 +27481,9 @@ export namespace Prisma {
     id?: IntFilter<"DeliveryTracking"> | number
     requestId?: IntFilter<"DeliveryTracking"> | number
     status?: EnumDeliveryStatusFilter<"DeliveryTracking"> | $Enums.DeliveryStatus
+    latitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    longitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    speed?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
     note?: StringNullableFilter<"DeliveryTracking"> | string | null
     locationText?: StringNullableFilter<"DeliveryTracking"> | string | null
     createdAt?: DateTimeFilter<"DeliveryTracking"> | Date | string
@@ -24537,6 +27494,9 @@ export namespace Prisma {
     id?: SortOrder
     requestId?: SortOrder
     status?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
+    speed?: SortOrderInput | SortOrder
     note?: SortOrderInput | SortOrder
     locationText?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -24550,6 +27510,9 @@ export namespace Prisma {
     NOT?: DeliveryTrackingWhereInput | DeliveryTrackingWhereInput[]
     requestId?: IntFilter<"DeliveryTracking"> | number
     status?: EnumDeliveryStatusFilter<"DeliveryTracking"> | $Enums.DeliveryStatus
+    latitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    longitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    speed?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
     note?: StringNullableFilter<"DeliveryTracking"> | string | null
     locationText?: StringNullableFilter<"DeliveryTracking"> | string | null
     createdAt?: DateTimeFilter<"DeliveryTracking"> | Date | string
@@ -24560,6 +27523,9 @@ export namespace Prisma {
     id?: SortOrder
     requestId?: SortOrder
     status?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
+    speed?: SortOrderInput | SortOrder
     note?: SortOrderInput | SortOrder
     locationText?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -24577,6 +27543,9 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter<"DeliveryTracking"> | number
     requestId?: IntWithAggregatesFilter<"DeliveryTracking"> | number
     status?: EnumDeliveryStatusWithAggregatesFilter<"DeliveryTracking"> | $Enums.DeliveryStatus
+    latitude?: DecimalNullableWithAggregatesFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    longitude?: DecimalNullableWithAggregatesFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    speed?: DecimalNullableWithAggregatesFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
     note?: StringNullableWithAggregatesFilter<"DeliveryTracking"> | string | null
     locationText?: StringNullableWithAggregatesFilter<"DeliveryTracking"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"DeliveryTracking"> | Date | string
@@ -25039,8 +28008,10 @@ export namespace Prisma {
     resolvedAt?: DateTimeNullableFilter<"Complaint"> | Date | string | null
     createdAt?: DateTimeFilter<"Complaint"> | Date | string
     updatedAt?: DateTimeFilter<"Complaint"> | Date | string
+    reportedUserId?: IntNullableFilter<"Complaint"> | number | null
     request?: XOR<RequestScalarRelationFilter, RequestWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    reportedUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     resolvedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
 
@@ -25056,8 +28027,10 @@ export namespace Prisma {
     resolvedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reportedUserId?: SortOrderInput | SortOrder
     request?: RequestOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
+    reportedUser?: UserOrderByWithRelationInput
     resolvedBy?: UserOrderByWithRelationInput
   }
 
@@ -25076,8 +28049,10 @@ export namespace Prisma {
     resolvedAt?: DateTimeNullableFilter<"Complaint"> | Date | string | null
     createdAt?: DateTimeFilter<"Complaint"> | Date | string
     updatedAt?: DateTimeFilter<"Complaint"> | Date | string
+    reportedUserId?: IntNullableFilter<"Complaint"> | number | null
     request?: XOR<RequestScalarRelationFilter, RequestWhereInput>
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    reportedUser?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     resolvedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id">
 
@@ -25093,6 +28068,7 @@ export namespace Prisma {
     resolvedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reportedUserId?: SortOrderInput | SortOrder
     _count?: ComplaintCountOrderByAggregateInput
     _avg?: ComplaintAvgOrderByAggregateInput
     _max?: ComplaintMaxOrderByAggregateInput
@@ -25115,6 +28091,108 @@ export namespace Prisma {
     resolvedAt?: DateTimeNullableWithAggregatesFilter<"Complaint"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Complaint"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Complaint"> | Date | string
+    reportedUserId?: IntNullableWithAggregatesFilter<"Complaint"> | number | null
+  }
+
+  export type GovernorateWhereInput = {
+    AND?: GovernorateWhereInput | GovernorateWhereInput[]
+    OR?: GovernorateWhereInput[]
+    NOT?: GovernorateWhereInput | GovernorateWhereInput[]
+    id?: IntFilter<"Governorate"> | number
+    name?: StringFilter<"Governorate"> | string
+    cities?: CityListRelationFilter
+    users?: UserListRelationFilter
+    requests?: RequestListRelationFilter
+  }
+
+  export type GovernorateOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    cities?: CityOrderByRelationAggregateInput
+    users?: UserOrderByRelationAggregateInput
+    requests?: RequestOrderByRelationAggregateInput
+  }
+
+  export type GovernorateWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    name?: string
+    AND?: GovernorateWhereInput | GovernorateWhereInput[]
+    OR?: GovernorateWhereInput[]
+    NOT?: GovernorateWhereInput | GovernorateWhereInput[]
+    cities?: CityListRelationFilter
+    users?: UserListRelationFilter
+    requests?: RequestListRelationFilter
+  }, "id" | "name">
+
+  export type GovernorateOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    _count?: GovernorateCountOrderByAggregateInput
+    _avg?: GovernorateAvgOrderByAggregateInput
+    _max?: GovernorateMaxOrderByAggregateInput
+    _min?: GovernorateMinOrderByAggregateInput
+    _sum?: GovernorateSumOrderByAggregateInput
+  }
+
+  export type GovernorateScalarWhereWithAggregatesInput = {
+    AND?: GovernorateScalarWhereWithAggregatesInput | GovernorateScalarWhereWithAggregatesInput[]
+    OR?: GovernorateScalarWhereWithAggregatesInput[]
+    NOT?: GovernorateScalarWhereWithAggregatesInput | GovernorateScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Governorate"> | number
+    name?: StringWithAggregatesFilter<"Governorate"> | string
+  }
+
+  export type CityWhereInput = {
+    AND?: CityWhereInput | CityWhereInput[]
+    OR?: CityWhereInput[]
+    NOT?: CityWhereInput | CityWhereInput[]
+    id?: IntFilter<"City"> | number
+    name?: StringFilter<"City"> | string
+    governorateId?: IntFilter<"City"> | number
+    governorate?: XOR<GovernorateScalarRelationFilter, GovernorateWhereInput>
+    users?: UserListRelationFilter
+    requests?: RequestListRelationFilter
+  }
+
+  export type CityOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    governorateId?: SortOrder
+    governorate?: GovernorateOrderByWithRelationInput
+    users?: UserOrderByRelationAggregateInput
+    requests?: RequestOrderByRelationAggregateInput
+  }
+
+  export type CityWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: CityWhereInput | CityWhereInput[]
+    OR?: CityWhereInput[]
+    NOT?: CityWhereInput | CityWhereInput[]
+    name?: StringFilter<"City"> | string
+    governorateId?: IntFilter<"City"> | number
+    governorate?: XOR<GovernorateScalarRelationFilter, GovernorateWhereInput>
+    users?: UserListRelationFilter
+    requests?: RequestListRelationFilter
+  }, "id">
+
+  export type CityOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    governorateId?: SortOrder
+    _count?: CityCountOrderByAggregateInput
+    _avg?: CityAvgOrderByAggregateInput
+    _max?: CityMaxOrderByAggregateInput
+    _min?: CityMinOrderByAggregateInput
+    _sum?: CitySumOrderByAggregateInput
+  }
+
+  export type CityScalarWhereWithAggregatesInput = {
+    AND?: CityScalarWhereWithAggregatesInput | CityScalarWhereWithAggregatesInput[]
+    OR?: CityScalarWhereWithAggregatesInput[]
+    NOT?: CityScalarWhereWithAggregatesInput | CityScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"City"> | number
+    name?: StringWithAggregatesFilter<"City"> | string
+    governorateId?: IntWithAggregatesFilter<"City"> | number
   }
 
   export type UserCreateInput = {
@@ -25130,6 +28208,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -25143,6 +28223,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -25159,6 +28240,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -25174,6 +28257,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -25191,6 +28275,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -25204,6 +28290,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -25220,6 +28307,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -25235,6 +28324,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -25251,6 +28341,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25282,6 +28374,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25291,6 +28385,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutSubcategoriesInput
     subcategories?: CategoryCreateNestedManyWithoutParentInput
@@ -25305,6 +28400,7 @@ export namespace Prisma {
     parentId?: number | null
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     subcategories?: CategoryUncheckedCreateNestedManyWithoutParentInput
     requests?: RequestUncheckedCreateNestedManyWithoutCategoryInput
@@ -25316,6 +28412,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutSubcategoriesNestedInput
     subcategories?: CategoryUpdateManyWithoutParentNestedInput
@@ -25330,6 +28427,7 @@ export namespace Prisma {
     parentId?: NullableIntFieldUpdateOperationsInput | number | null
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     subcategories?: CategoryUncheckedUpdateManyWithoutParentNestedInput
     requests?: RequestUncheckedUpdateManyWithoutCategoryNestedInput
@@ -25343,6 +28441,7 @@ export namespace Prisma {
     parentId?: number | null
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
   }
 
@@ -25351,6 +28450,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -25361,6 +28461,7 @@ export namespace Prisma {
     parentId?: NullableIntFieldUpdateOperationsInput | number | null
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -25528,6 +28629,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -25557,6 +28660,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -25581,6 +28686,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -25610,6 +28717,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -25637,6 +28746,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25672,6 +28783,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25900,6 +29013,9 @@ export namespace Prisma {
 
   export type DeliveryTrackingCreateInput = {
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -25910,6 +29026,9 @@ export namespace Prisma {
     id?: number
     requestId: number
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -25917,6 +29036,9 @@ export namespace Prisma {
 
   export type DeliveryTrackingUpdateInput = {
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25927,6 +29049,9 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     requestId?: IntFieldUpdateOperationsInput | number
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25936,6 +29061,9 @@ export namespace Prisma {
     id?: number
     requestId: number
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -25943,6 +29071,9 @@ export namespace Prisma {
 
   export type DeliveryTrackingUpdateManyMutationInput = {
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25952,6 +29083,9 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     requestId?: IntFieldUpdateOperationsInput | number
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -26393,6 +29527,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     request: RequestCreateNestedOneWithoutComplaintsInput
     user: UserCreateNestedOneWithoutComplaintsInput
+    reportedUser?: UserCreateNestedOneWithoutComplaintsReceivedInput
     resolvedBy?: UserCreateNestedOneWithoutResolvedComplaintsInput
   }
 
@@ -26408,6 +29543,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type ComplaintUpdateInput = {
@@ -26420,6 +29556,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     request?: RequestUpdateOneRequiredWithoutComplaintsNestedInput
     user?: UserUpdateOneRequiredWithoutComplaintsNestedInput
+    reportedUser?: UserUpdateOneWithoutComplaintsReceivedNestedInput
     resolvedBy?: UserUpdateOneWithoutResolvedComplaintsNestedInput
   }
 
@@ -26435,6 +29572,7 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ComplaintCreateManyInput = {
@@ -26449,6 +29587,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type ComplaintUpdateManyMutationInput = {
@@ -26473,6 +29612,97 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type GovernorateCreateInput = {
+    name: string
+    cities?: CityCreateNestedManyWithoutGovernorateInput
+    users?: UserCreateNestedManyWithoutGovernorateInput
+    requests?: RequestCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateUncheckedCreateInput = {
+    id?: number
+    name: string
+    cities?: CityUncheckedCreateNestedManyWithoutGovernorateInput
+    users?: UserUncheckedCreateNestedManyWithoutGovernorateInput
+    requests?: RequestUncheckedCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateUpdateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUpdateManyWithoutGovernorateNestedInput
+    users?: UserUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type GovernorateUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUncheckedUpdateManyWithoutGovernorateNestedInput
+    users?: UserUncheckedUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUncheckedUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type GovernorateCreateManyInput = {
+    id?: number
+    name: string
+  }
+
+  export type GovernorateUpdateManyMutationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type GovernorateUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type CityCreateInput = {
+    name: string
+    governorate: GovernorateCreateNestedOneWithoutCitiesInput
+    users?: UserCreateNestedManyWithoutCityInput
+    requests?: RequestCreateNestedManyWithoutCityInput
+  }
+
+  export type CityUncheckedCreateInput = {
+    id?: number
+    name: string
+    governorateId: number
+    users?: UserUncheckedCreateNestedManyWithoutCityInput
+    requests?: RequestUncheckedCreateNestedManyWithoutCityInput
+  }
+
+  export type CityUpdateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    governorate?: GovernorateUpdateOneRequiredWithoutCitiesNestedInput
+    users?: UserUpdateManyWithoutCityNestedInput
+    requests?: RequestUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    governorateId?: IntFieldUpdateOperationsInput | number
+    users?: UserUncheckedUpdateManyWithoutCityNestedInput
+    requests?: RequestUncheckedUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityCreateManyInput = {
+    id?: number
+    name: string
+    governorateId: number
+  }
+
+  export type CityUpdateManyMutationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type CityUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    governorateId?: IntFieldUpdateOperationsInput | number
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -26539,6 +29769,17 @@ export namespace Prisma {
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -26548,6 +29789,16 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type CityNullableScalarRelationFilter = {
+    is?: CityWhereInput | null
+    isNot?: CityWhereInput | null
+  }
+
+  export type GovernorateNullableScalarRelationFilter = {
+    is?: GovernorateWhereInput | null
+    isNot?: GovernorateWhereInput | null
   }
 
   export type RequestListRelationFilter = {
@@ -26667,6 +29918,8 @@ export namespace Prisma {
     isBlocked?: SortOrder
     walletBalance?: SortOrder
     fcmToken?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26674,6 +29927,8 @@ export namespace Prisma {
   export type UserAvgOrderByAggregateInput = {
     id?: SortOrder
     walletBalance?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -26688,6 +29943,8 @@ export namespace Prisma {
     isBlocked?: SortOrder
     walletBalance?: SortOrder
     fcmToken?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26704,6 +29961,8 @@ export namespace Prisma {
     isBlocked?: SortOrder
     walletBalance?: SortOrder
     fcmToken?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26711,6 +29970,8 @@ export namespace Prisma {
   export type UserSumOrderByAggregateInput = {
     id?: SortOrder
     walletBalance?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -26799,6 +30060,22 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -26813,15 +30090,11 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  export type EnumCategoryTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CategoryType | EnumCategoryTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCategoryTypeFilter<$PrismaModel> | $Enums.CategoryType
   }
 
   export type CategoryNullableScalarRelationFilter = {
@@ -26846,6 +30119,7 @@ export namespace Prisma {
     parentId?: SortOrder
     requiresBrand?: SortOrder
     brandType?: SortOrder
+    type?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -26861,6 +30135,7 @@ export namespace Prisma {
     parentId?: SortOrder
     requiresBrand?: SortOrder
     brandType?: SortOrder
+    type?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -26871,6 +30146,7 @@ export namespace Prisma {
     parentId?: SortOrder
     requiresBrand?: SortOrder
     brandType?: SortOrder
+    type?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -26879,20 +30155,14 @@ export namespace Prisma {
     parentId?: SortOrder
   }
 
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
+  export type EnumCategoryTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CategoryType | EnumCategoryTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCategoryTypeWithAggregatesFilter<$PrismaModel> | $Enums.CategoryType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCategoryTypeFilter<$PrismaModel>
+    _max?: NestedEnumCategoryTypeFilter<$PrismaModel>
   }
 
   export type BrandCountOrderByAggregateInput = {
@@ -27076,6 +30346,8 @@ export namespace Prisma {
     selectedBidId?: SortOrder
     qrCode?: SortOrder
     assignedDeliveryAgentId?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27089,6 +30361,8 @@ export namespace Prisma {
     longitude?: SortOrder
     selectedBidId?: SortOrder
     assignedDeliveryAgentId?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
   }
 
   export type RequestMaxOrderByAggregateInput = {
@@ -27107,6 +30381,8 @@ export namespace Prisma {
     selectedBidId?: SortOrder
     qrCode?: SortOrder
     assignedDeliveryAgentId?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27127,6 +30403,8 @@ export namespace Prisma {
     selectedBidId?: SortOrder
     qrCode?: SortOrder
     assignedDeliveryAgentId?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27140,6 +30418,8 @@ export namespace Prisma {
     longitude?: SortOrder
     selectedBidId?: SortOrder
     assignedDeliveryAgentId?: SortOrder
+    cityId?: SortOrder
+    governorateId?: SortOrder
   }
 
   export type EnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -27340,10 +30620,24 @@ export namespace Prisma {
     not?: NestedEnumDeliveryStatusFilter<$PrismaModel> | $Enums.DeliveryStatus
   }
 
+  export type DecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type DeliveryTrackingCountOrderByAggregateInput = {
     id?: SortOrder
     requestId?: SortOrder
     status?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+    speed?: SortOrder
     note?: SortOrder
     locationText?: SortOrder
     createdAt?: SortOrder
@@ -27352,12 +30646,18 @@ export namespace Prisma {
   export type DeliveryTrackingAvgOrderByAggregateInput = {
     id?: SortOrder
     requestId?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+    speed?: SortOrder
   }
 
   export type DeliveryTrackingMaxOrderByAggregateInput = {
     id?: SortOrder
     requestId?: SortOrder
     status?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+    speed?: SortOrder
     note?: SortOrder
     locationText?: SortOrder
     createdAt?: SortOrder
@@ -27367,6 +30667,9 @@ export namespace Prisma {
     id?: SortOrder
     requestId?: SortOrder
     status?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+    speed?: SortOrder
     note?: SortOrder
     locationText?: SortOrder
     createdAt?: SortOrder
@@ -27375,6 +30678,9 @@ export namespace Prisma {
   export type DeliveryTrackingSumOrderByAggregateInput = {
     id?: SortOrder
     requestId?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+    speed?: SortOrder
   }
 
   export type EnumDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -27385,6 +30691,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumDeliveryStatusFilter<$PrismaModel>
     _max?: NestedEnumDeliveryStatusFilter<$PrismaModel>
+  }
+
+  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type EnumTransactionTypeFilter<$PrismaModel = never> = {
@@ -27815,6 +31137,7 @@ export namespace Prisma {
     resolvedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reportedUserId?: SortOrder
   }
 
   export type ComplaintAvgOrderByAggregateInput = {
@@ -27822,6 +31145,7 @@ export namespace Prisma {
     requestId?: SortOrder
     userId?: SortOrder
     resolvedById?: SortOrder
+    reportedUserId?: SortOrder
   }
 
   export type ComplaintMaxOrderByAggregateInput = {
@@ -27836,6 +31160,7 @@ export namespace Prisma {
     resolvedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reportedUserId?: SortOrder
   }
 
   export type ComplaintMinOrderByAggregateInput = {
@@ -27850,6 +31175,7 @@ export namespace Prisma {
     resolvedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reportedUserId?: SortOrder
   }
 
   export type ComplaintSumOrderByAggregateInput = {
@@ -27857,6 +31183,7 @@ export namespace Prisma {
     requestId?: SortOrder
     userId?: SortOrder
     resolvedById?: SortOrder
+    reportedUserId?: SortOrder
   }
 
   export type EnumComplaintStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -27867,6 +31194,94 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumComplaintStatusFilter<$PrismaModel>
     _max?: NestedEnumComplaintStatusFilter<$PrismaModel>
+  }
+
+  export type CityListRelationFilter = {
+    every?: CityWhereInput
+    some?: CityWhereInput
+    none?: CityWhereInput
+  }
+
+  export type UserListRelationFilter = {
+    every?: UserWhereInput
+    some?: UserWhereInput
+    none?: UserWhereInput
+  }
+
+  export type CityOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UserOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type GovernorateCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+  }
+
+  export type GovernorateAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type GovernorateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+  }
+
+  export type GovernorateMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+  }
+
+  export type GovernorateSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type GovernorateScalarRelationFilter = {
+    is?: GovernorateWhereInput
+    isNot?: GovernorateWhereInput
+  }
+
+  export type CityCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    governorateId?: SortOrder
+  }
+
+  export type CityAvgOrderByAggregateInput = {
+    id?: SortOrder
+    governorateId?: SortOrder
+  }
+
+  export type CityMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    governorateId?: SortOrder
+  }
+
+  export type CityMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    governorateId?: SortOrder
+  }
+
+  export type CitySumOrderByAggregateInput = {
+    id?: SortOrder
+    governorateId?: SortOrder
+  }
+
+  export type CityCreateNestedOneWithoutUsersInput = {
+    create?: XOR<CityCreateWithoutUsersInput, CityUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: CityCreateOrConnectWithoutUsersInput
+    connect?: CityWhereUniqueInput
+  }
+
+  export type GovernorateCreateNestedOneWithoutUsersInput = {
+    create?: XOR<GovernorateCreateWithoutUsersInput, GovernorateUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutUsersInput
+    connect?: GovernorateWhereUniqueInput
   }
 
   export type RequestCreateNestedManyWithoutClientInput = {
@@ -27957,6 +31372,13 @@ export namespace Prisma {
     create?: XOR<ComplaintCreateWithoutUserInput, ComplaintUncheckedCreateWithoutUserInput> | ComplaintCreateWithoutUserInput[] | ComplaintUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ComplaintCreateOrConnectWithoutUserInput | ComplaintCreateOrConnectWithoutUserInput[]
     createMany?: ComplaintCreateManyUserInputEnvelope
+    connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+  }
+
+  export type ComplaintCreateNestedManyWithoutReportedUserInput = {
+    create?: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput> | ComplaintCreateWithoutReportedUserInput[] | ComplaintUncheckedCreateWithoutReportedUserInput[]
+    connectOrCreate?: ComplaintCreateOrConnectWithoutReportedUserInput | ComplaintCreateOrConnectWithoutReportedUserInput[]
+    createMany?: ComplaintCreateManyReportedUserInputEnvelope
     connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
   }
 
@@ -28065,6 +31487,13 @@ export namespace Prisma {
     connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
   }
 
+  export type ComplaintUncheckedCreateNestedManyWithoutReportedUserInput = {
+    create?: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput> | ComplaintCreateWithoutReportedUserInput[] | ComplaintUncheckedCreateWithoutReportedUserInput[]
+    connectOrCreate?: ComplaintCreateOrConnectWithoutReportedUserInput | ComplaintCreateOrConnectWithoutReportedUserInput[]
+    createMany?: ComplaintCreateManyReportedUserInputEnvelope
+    connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+  }
+
   export type ComplaintUncheckedCreateNestedManyWithoutResolvedByInput = {
     create?: XOR<ComplaintCreateWithoutResolvedByInput, ComplaintUncheckedCreateWithoutResolvedByInput> | ComplaintCreateWithoutResolvedByInput[] | ComplaintUncheckedCreateWithoutResolvedByInput[]
     connectOrCreate?: ComplaintCreateOrConnectWithoutResolvedByInput | ComplaintCreateOrConnectWithoutResolvedByInput[]
@@ -28105,6 +31534,26 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type CityUpdateOneWithoutUsersNestedInput = {
+    create?: XOR<CityCreateWithoutUsersInput, CityUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: CityCreateOrConnectWithoutUsersInput
+    upsert?: CityUpsertWithoutUsersInput
+    disconnect?: CityWhereInput | boolean
+    delete?: CityWhereInput | boolean
+    connect?: CityWhereUniqueInput
+    update?: XOR<XOR<CityUpdateToOneWithWhereWithoutUsersInput, CityUpdateWithoutUsersInput>, CityUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type GovernorateUpdateOneWithoutUsersNestedInput = {
+    create?: XOR<GovernorateCreateWithoutUsersInput, GovernorateUncheckedCreateWithoutUsersInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutUsersInput
+    upsert?: GovernorateUpsertWithoutUsersInput
+    disconnect?: GovernorateWhereInput | boolean
+    delete?: GovernorateWhereInput | boolean
+    connect?: GovernorateWhereUniqueInput
+    update?: XOR<XOR<GovernorateUpdateToOneWithWhereWithoutUsersInput, GovernorateUpdateWithoutUsersInput>, GovernorateUncheckedUpdateWithoutUsersInput>
   }
 
   export type RequestUpdateManyWithoutClientNestedInput = {
@@ -28289,6 +31738,20 @@ export namespace Prisma {
     deleteMany?: ComplaintScalarWhereInput | ComplaintScalarWhereInput[]
   }
 
+  export type ComplaintUpdateManyWithoutReportedUserNestedInput = {
+    create?: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput> | ComplaintCreateWithoutReportedUserInput[] | ComplaintUncheckedCreateWithoutReportedUserInput[]
+    connectOrCreate?: ComplaintCreateOrConnectWithoutReportedUserInput | ComplaintCreateOrConnectWithoutReportedUserInput[]
+    upsert?: ComplaintUpsertWithWhereUniqueWithoutReportedUserInput | ComplaintUpsertWithWhereUniqueWithoutReportedUserInput[]
+    createMany?: ComplaintCreateManyReportedUserInputEnvelope
+    set?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    disconnect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    delete?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    update?: ComplaintUpdateWithWhereUniqueWithoutReportedUserInput | ComplaintUpdateWithWhereUniqueWithoutReportedUserInput[]
+    updateMany?: ComplaintUpdateManyWithWhereWithoutReportedUserInput | ComplaintUpdateManyWithWhereWithoutReportedUserInput[]
+    deleteMany?: ComplaintScalarWhereInput | ComplaintScalarWhereInput[]
+  }
+
   export type ComplaintUpdateManyWithoutResolvedByNestedInput = {
     create?: XOR<ComplaintCreateWithoutResolvedByInput, ComplaintUncheckedCreateWithoutResolvedByInput> | ComplaintCreateWithoutResolvedByInput[] | ComplaintUncheckedCreateWithoutResolvedByInput[]
     connectOrCreate?: ComplaintCreateOrConnectWithoutResolvedByInput | ComplaintCreateOrConnectWithoutResolvedByInput[]
@@ -28319,6 +31782,14 @@ export namespace Prisma {
 
   export type IntFieldUpdateOperationsInput = {
     set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
@@ -28507,6 +31978,20 @@ export namespace Prisma {
     deleteMany?: ComplaintScalarWhereInput | ComplaintScalarWhereInput[]
   }
 
+  export type ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput = {
+    create?: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput> | ComplaintCreateWithoutReportedUserInput[] | ComplaintUncheckedCreateWithoutReportedUserInput[]
+    connectOrCreate?: ComplaintCreateOrConnectWithoutReportedUserInput | ComplaintCreateOrConnectWithoutReportedUserInput[]
+    upsert?: ComplaintUpsertWithWhereUniqueWithoutReportedUserInput | ComplaintUpsertWithWhereUniqueWithoutReportedUserInput[]
+    createMany?: ComplaintCreateManyReportedUserInputEnvelope
+    set?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    disconnect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    delete?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    connect?: ComplaintWhereUniqueInput | ComplaintWhereUniqueInput[]
+    update?: ComplaintUpdateWithWhereUniqueWithoutReportedUserInput | ComplaintUpdateWithWhereUniqueWithoutReportedUserInput[]
+    updateMany?: ComplaintUpdateManyWithWhereWithoutReportedUserInput | ComplaintUpdateManyWithWhereWithoutReportedUserInput[]
+    deleteMany?: ComplaintScalarWhereInput | ComplaintScalarWhereInput[]
+  }
+
   export type ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput = {
     create?: XOR<ComplaintCreateWithoutResolvedByInput, ComplaintUncheckedCreateWithoutResolvedByInput> | ComplaintCreateWithoutResolvedByInput[] | ComplaintUncheckedCreateWithoutResolvedByInput[]
     connectOrCreate?: ComplaintCreateOrConnectWithoutResolvedByInput | ComplaintCreateOrConnectWithoutResolvedByInput[]
@@ -28583,6 +32068,10 @@ export namespace Prisma {
     connect?: VendorCategoryWhereUniqueInput | VendorCategoryWhereUniqueInput[]
   }
 
+  export type EnumCategoryTypeFieldUpdateOperationsInput = {
+    set?: $Enums.CategoryType
+  }
+
   export type CategoryUpdateOneWithoutSubcategoriesNestedInput = {
     create?: XOR<CategoryCreateWithoutSubcategoriesInput, CategoryUncheckedCreateWithoutSubcategoriesInput>
     connectOrCreate?: CategoryCreateOrConnectWithoutSubcategoriesInput
@@ -28633,14 +32122,6 @@ export namespace Prisma {
     update?: VendorCategoryUpdateWithWhereUniqueWithoutCategoryInput | VendorCategoryUpdateWithWhereUniqueWithoutCategoryInput[]
     updateMany?: VendorCategoryUpdateManyWithWhereWithoutCategoryInput | VendorCategoryUpdateManyWithWhereWithoutCategoryInput[]
     deleteMany?: VendorCategoryScalarWhereInput | VendorCategoryScalarWhereInput[]
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type CategoryUncheckedUpdateManyWithoutParentNestedInput = {
@@ -28825,6 +32306,18 @@ export namespace Prisma {
     update?: XOR<XOR<CategoryUpdateToOneWithWhereWithoutVendorsInput, CategoryUpdateWithoutVendorsInput>, CategoryUncheckedUpdateWithoutVendorsInput>
   }
 
+  export type CityCreateNestedOneWithoutRequestsInput = {
+    create?: XOR<CityCreateWithoutRequestsInput, CityUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: CityCreateOrConnectWithoutRequestsInput
+    connect?: CityWhereUniqueInput
+  }
+
+  export type GovernorateCreateNestedOneWithoutRequestsInput = {
+    create?: XOR<GovernorateCreateWithoutRequestsInput, GovernorateUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutRequestsInput
+    connect?: GovernorateWhereUniqueInput
+  }
+
   export type UserCreateNestedOneWithoutClientRequestsInput = {
     create?: XOR<UserCreateWithoutClientRequestsInput, UserUncheckedCreateWithoutClientRequestsInput>
     connectOrCreate?: UserCreateOrConnectWithoutClientRequestsInput
@@ -28947,6 +32440,26 @@ export namespace Prisma {
 
   export type EnumRequestStatusFieldUpdateOperationsInput = {
     set?: $Enums.RequestStatus
+  }
+
+  export type CityUpdateOneWithoutRequestsNestedInput = {
+    create?: XOR<CityCreateWithoutRequestsInput, CityUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: CityCreateOrConnectWithoutRequestsInput
+    upsert?: CityUpsertWithoutRequestsInput
+    disconnect?: CityWhereInput | boolean
+    delete?: CityWhereInput | boolean
+    connect?: CityWhereUniqueInput
+    update?: XOR<XOR<CityUpdateToOneWithWhereWithoutRequestsInput, CityUpdateWithoutRequestsInput>, CityUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type GovernorateUpdateOneWithoutRequestsNestedInput = {
+    create?: XOR<GovernorateCreateWithoutRequestsInput, GovernorateUncheckedCreateWithoutRequestsInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutRequestsInput
+    upsert?: GovernorateUpsertWithoutRequestsInput
+    disconnect?: GovernorateWhereInput | boolean
+    delete?: GovernorateWhereInput | boolean
+    connect?: GovernorateWhereUniqueInput
+    update?: XOR<XOR<GovernorateUpdateToOneWithWhereWithoutRequestsInput, GovernorateUpdateWithoutRequestsInput>, GovernorateUncheckedUpdateWithoutRequestsInput>
   }
 
   export type UserUpdateOneRequiredWithoutClientRequestsNestedInput = {
@@ -29285,6 +32798,14 @@ export namespace Prisma {
     set?: $Enums.DeliveryStatus
   }
 
+  export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string | null
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
   export type RequestUpdateOneRequiredWithoutDeliveryTrackingNestedInput = {
     create?: XOR<RequestCreateWithoutDeliveryTrackingInput, RequestUncheckedCreateWithoutDeliveryTrackingInput>
     connectOrCreate?: RequestCreateOrConnectWithoutDeliveryTrackingInput
@@ -29481,6 +33002,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type UserCreateNestedOneWithoutComplaintsReceivedInput = {
+    create?: XOR<UserCreateWithoutComplaintsReceivedInput, UserUncheckedCreateWithoutComplaintsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutComplaintsReceivedInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type UserCreateNestedOneWithoutResolvedComplaintsInput = {
     create?: XOR<UserCreateWithoutResolvedComplaintsInput, UserUncheckedCreateWithoutResolvedComplaintsInput>
     connectOrCreate?: UserCreateOrConnectWithoutResolvedComplaintsInput
@@ -29507,6 +33034,16 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutComplaintsInput, UserUpdateWithoutComplaintsInput>, UserUncheckedUpdateWithoutComplaintsInput>
   }
 
+  export type UserUpdateOneWithoutComplaintsReceivedNestedInput = {
+    create?: XOR<UserCreateWithoutComplaintsReceivedInput, UserUncheckedCreateWithoutComplaintsReceivedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutComplaintsReceivedInput
+    upsert?: UserUpsertWithoutComplaintsReceivedInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutComplaintsReceivedInput, UserUpdateWithoutComplaintsReceivedInput>, UserUncheckedUpdateWithoutComplaintsReceivedInput>
+  }
+
   export type UserUpdateOneWithoutResolvedComplaintsNestedInput = {
     create?: XOR<UserCreateWithoutResolvedComplaintsInput, UserUncheckedCreateWithoutResolvedComplaintsInput>
     connectOrCreate?: UserCreateOrConnectWithoutResolvedComplaintsInput
@@ -29515,6 +33052,230 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutResolvedComplaintsInput, UserUpdateWithoutResolvedComplaintsInput>, UserUncheckedUpdateWithoutResolvedComplaintsInput>
+  }
+
+  export type CityCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput> | CityCreateWithoutGovernorateInput[] | CityUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: CityCreateOrConnectWithoutGovernorateInput | CityCreateOrConnectWithoutGovernorateInput[]
+    createMany?: CityCreateManyGovernorateInputEnvelope
+    connect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+  }
+
+  export type UserCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput> | UserCreateWithoutGovernorateInput[] | UserUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutGovernorateInput | UserCreateOrConnectWithoutGovernorateInput[]
+    createMany?: UserCreateManyGovernorateInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type RequestCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput> | RequestCreateWithoutGovernorateInput[] | RequestUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutGovernorateInput | RequestCreateOrConnectWithoutGovernorateInput[]
+    createMany?: RequestCreateManyGovernorateInputEnvelope
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+  }
+
+  export type CityUncheckedCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput> | CityCreateWithoutGovernorateInput[] | CityUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: CityCreateOrConnectWithoutGovernorateInput | CityCreateOrConnectWithoutGovernorateInput[]
+    createMany?: CityCreateManyGovernorateInputEnvelope
+    connect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+  }
+
+  export type UserUncheckedCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput> | UserCreateWithoutGovernorateInput[] | UserUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutGovernorateInput | UserCreateOrConnectWithoutGovernorateInput[]
+    createMany?: UserCreateManyGovernorateInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type RequestUncheckedCreateNestedManyWithoutGovernorateInput = {
+    create?: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput> | RequestCreateWithoutGovernorateInput[] | RequestUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutGovernorateInput | RequestCreateOrConnectWithoutGovernorateInput[]
+    createMany?: RequestCreateManyGovernorateInputEnvelope
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+  }
+
+  export type CityUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput> | CityCreateWithoutGovernorateInput[] | CityUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: CityCreateOrConnectWithoutGovernorateInput | CityCreateOrConnectWithoutGovernorateInput[]
+    upsert?: CityUpsertWithWhereUniqueWithoutGovernorateInput | CityUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: CityCreateManyGovernorateInputEnvelope
+    set?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    disconnect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    delete?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    connect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    update?: CityUpdateWithWhereUniqueWithoutGovernorateInput | CityUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: CityUpdateManyWithWhereWithoutGovernorateInput | CityUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: CityScalarWhereInput | CityScalarWhereInput[]
+  }
+
+  export type UserUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput> | UserCreateWithoutGovernorateInput[] | UserUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutGovernorateInput | UserCreateOrConnectWithoutGovernorateInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutGovernorateInput | UserUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: UserCreateManyGovernorateInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutGovernorateInput | UserUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutGovernorateInput | UserUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type RequestUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput> | RequestCreateWithoutGovernorateInput[] | RequestUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutGovernorateInput | RequestCreateOrConnectWithoutGovernorateInput[]
+    upsert?: RequestUpsertWithWhereUniqueWithoutGovernorateInput | RequestUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: RequestCreateManyGovernorateInputEnvelope
+    set?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    disconnect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    delete?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    update?: RequestUpdateWithWhereUniqueWithoutGovernorateInput | RequestUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: RequestUpdateManyWithWhereWithoutGovernorateInput | RequestUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: RequestScalarWhereInput | RequestScalarWhereInput[]
+  }
+
+  export type CityUncheckedUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput> | CityCreateWithoutGovernorateInput[] | CityUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: CityCreateOrConnectWithoutGovernorateInput | CityCreateOrConnectWithoutGovernorateInput[]
+    upsert?: CityUpsertWithWhereUniqueWithoutGovernorateInput | CityUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: CityCreateManyGovernorateInputEnvelope
+    set?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    disconnect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    delete?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    connect?: CityWhereUniqueInput | CityWhereUniqueInput[]
+    update?: CityUpdateWithWhereUniqueWithoutGovernorateInput | CityUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: CityUpdateManyWithWhereWithoutGovernorateInput | CityUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: CityScalarWhereInput | CityScalarWhereInput[]
+  }
+
+  export type UserUncheckedUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput> | UserCreateWithoutGovernorateInput[] | UserUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutGovernorateInput | UserCreateOrConnectWithoutGovernorateInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutGovernorateInput | UserUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: UserCreateManyGovernorateInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutGovernorateInput | UserUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutGovernorateInput | UserUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type RequestUncheckedUpdateManyWithoutGovernorateNestedInput = {
+    create?: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput> | RequestCreateWithoutGovernorateInput[] | RequestUncheckedCreateWithoutGovernorateInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutGovernorateInput | RequestCreateOrConnectWithoutGovernorateInput[]
+    upsert?: RequestUpsertWithWhereUniqueWithoutGovernorateInput | RequestUpsertWithWhereUniqueWithoutGovernorateInput[]
+    createMany?: RequestCreateManyGovernorateInputEnvelope
+    set?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    disconnect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    delete?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    update?: RequestUpdateWithWhereUniqueWithoutGovernorateInput | RequestUpdateWithWhereUniqueWithoutGovernorateInput[]
+    updateMany?: RequestUpdateManyWithWhereWithoutGovernorateInput | RequestUpdateManyWithWhereWithoutGovernorateInput[]
+    deleteMany?: RequestScalarWhereInput | RequestScalarWhereInput[]
+  }
+
+  export type GovernorateCreateNestedOneWithoutCitiesInput = {
+    create?: XOR<GovernorateCreateWithoutCitiesInput, GovernorateUncheckedCreateWithoutCitiesInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutCitiesInput
+    connect?: GovernorateWhereUniqueInput
+  }
+
+  export type UserCreateNestedManyWithoutCityInput = {
+    create?: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput> | UserCreateWithoutCityInput[] | UserUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutCityInput | UserCreateOrConnectWithoutCityInput[]
+    createMany?: UserCreateManyCityInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type RequestCreateNestedManyWithoutCityInput = {
+    create?: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput> | RequestCreateWithoutCityInput[] | RequestUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutCityInput | RequestCreateOrConnectWithoutCityInput[]
+    createMany?: RequestCreateManyCityInputEnvelope
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+  }
+
+  export type UserUncheckedCreateNestedManyWithoutCityInput = {
+    create?: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput> | UserCreateWithoutCityInput[] | UserUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutCityInput | UserCreateOrConnectWithoutCityInput[]
+    createMany?: UserCreateManyCityInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
+  export type RequestUncheckedCreateNestedManyWithoutCityInput = {
+    create?: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput> | RequestCreateWithoutCityInput[] | RequestUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutCityInput | RequestCreateOrConnectWithoutCityInput[]
+    createMany?: RequestCreateManyCityInputEnvelope
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+  }
+
+  export type GovernorateUpdateOneRequiredWithoutCitiesNestedInput = {
+    create?: XOR<GovernorateCreateWithoutCitiesInput, GovernorateUncheckedCreateWithoutCitiesInput>
+    connectOrCreate?: GovernorateCreateOrConnectWithoutCitiesInput
+    upsert?: GovernorateUpsertWithoutCitiesInput
+    connect?: GovernorateWhereUniqueInput
+    update?: XOR<XOR<GovernorateUpdateToOneWithWhereWithoutCitiesInput, GovernorateUpdateWithoutCitiesInput>, GovernorateUncheckedUpdateWithoutCitiesInput>
+  }
+
+  export type UserUpdateManyWithoutCityNestedInput = {
+    create?: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput> | UserCreateWithoutCityInput[] | UserUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutCityInput | UserCreateOrConnectWithoutCityInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutCityInput | UserUpsertWithWhereUniqueWithoutCityInput[]
+    createMany?: UserCreateManyCityInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutCityInput | UserUpdateWithWhereUniqueWithoutCityInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutCityInput | UserUpdateManyWithWhereWithoutCityInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type RequestUpdateManyWithoutCityNestedInput = {
+    create?: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput> | RequestCreateWithoutCityInput[] | RequestUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutCityInput | RequestCreateOrConnectWithoutCityInput[]
+    upsert?: RequestUpsertWithWhereUniqueWithoutCityInput | RequestUpsertWithWhereUniqueWithoutCityInput[]
+    createMany?: RequestCreateManyCityInputEnvelope
+    set?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    disconnect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    delete?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    update?: RequestUpdateWithWhereUniqueWithoutCityInput | RequestUpdateWithWhereUniqueWithoutCityInput[]
+    updateMany?: RequestUpdateManyWithWhereWithoutCityInput | RequestUpdateManyWithWhereWithoutCityInput[]
+    deleteMany?: RequestScalarWhereInput | RequestScalarWhereInput[]
+  }
+
+  export type UserUncheckedUpdateManyWithoutCityNestedInput = {
+    create?: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput> | UserCreateWithoutCityInput[] | UserUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutCityInput | UserCreateOrConnectWithoutCityInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutCityInput | UserUpsertWithWhereUniqueWithoutCityInput[]
+    createMany?: UserCreateManyCityInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutCityInput | UserUpdateWithWhereUniqueWithoutCityInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutCityInput | UserUpdateManyWithWhereWithoutCityInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
+  }
+
+  export type RequestUncheckedUpdateManyWithoutCityNestedInput = {
+    create?: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput> | RequestCreateWithoutCityInput[] | RequestUncheckedCreateWithoutCityInput[]
+    connectOrCreate?: RequestCreateOrConnectWithoutCityInput | RequestCreateOrConnectWithoutCityInput[]
+    upsert?: RequestUpsertWithWhereUniqueWithoutCityInput | RequestUpsertWithWhereUniqueWithoutCityInput[]
+    createMany?: RequestCreateManyCityInputEnvelope
+    set?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    disconnect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    delete?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    connect?: RequestWhereUniqueInput | RequestWhereUniqueInput[]
+    update?: RequestUpdateWithWhereUniqueWithoutCityInput | RequestUpdateWithWhereUniqueWithoutCityInput[]
+    updateMany?: RequestUpdateManyWithWhereWithoutCityInput | RequestUpdateManyWithWhereWithoutCityInput[]
+    deleteMany?: RequestScalarWhereInput | RequestScalarWhereInput[]
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -29577,6 +33338,17 @@ export namespace Prisma {
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -29651,17 +33423,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
     in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -29696,20 +33457,6 @@ export namespace Prisma {
     _max?: NestedDecimalFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -29735,6 +33482,37 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCategoryTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CategoryType | EnumCategoryTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCategoryTypeFilter<$PrismaModel> | $Enums.CategoryType
+  }
+
+  export type NestedEnumCategoryTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CategoryType | EnumCategoryTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CategoryType[] | ListEnumCategoryTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCategoryTypeWithAggregatesFilter<$PrismaModel> | $Enums.CategoryType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCategoryTypeFilter<$PrismaModel>
+    _max?: NestedEnumCategoryTypeFilter<$PrismaModel>
   }
 
   export type NestedEnumRequestStatusFilter<$PrismaModel = never> = {
@@ -29778,6 +33556,17 @@ export namespace Prisma {
     not?: NestedEnumDeliveryStatusFilter<$PrismaModel> | $Enums.DeliveryStatus
   }
 
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
   export type NestedEnumDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.DeliveryStatus | EnumDeliveryStatusFieldRefInput<$PrismaModel>
     in?: $Enums.DeliveryStatus[] | ListEnumDeliveryStatusFieldRefInput<$PrismaModel>
@@ -29786,6 +33575,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumDeliveryStatusFilter<$PrismaModel>
     _max?: NestedEnumDeliveryStatusFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumTransactionTypeFilter<$PrismaModel = never> = {
@@ -29904,6 +33709,42 @@ export namespace Prisma {
     _max?: NestedEnumComplaintStatusFilter<$PrismaModel>
   }
 
+  export type CityCreateWithoutUsersInput = {
+    name: string
+    governorate: GovernorateCreateNestedOneWithoutCitiesInput
+    requests?: RequestCreateNestedManyWithoutCityInput
+  }
+
+  export type CityUncheckedCreateWithoutUsersInput = {
+    id?: number
+    name: string
+    governorateId: number
+    requests?: RequestUncheckedCreateNestedManyWithoutCityInput
+  }
+
+  export type CityCreateOrConnectWithoutUsersInput = {
+    where: CityWhereUniqueInput
+    create: XOR<CityCreateWithoutUsersInput, CityUncheckedCreateWithoutUsersInput>
+  }
+
+  export type GovernorateCreateWithoutUsersInput = {
+    name: string
+    cities?: CityCreateNestedManyWithoutGovernorateInput
+    requests?: RequestCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateUncheckedCreateWithoutUsersInput = {
+    id?: number
+    name: string
+    cities?: CityUncheckedCreateNestedManyWithoutGovernorateInput
+    requests?: RequestUncheckedCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateCreateOrConnectWithoutUsersInput = {
+    where: GovernorateWhereUniqueInput
+    create: XOR<GovernorateCreateWithoutUsersInput, GovernorateUncheckedCreateWithoutUsersInput>
+  }
+
   export type RequestCreateWithoutClientInput = {
     title: string
     description: string
@@ -29917,6 +33758,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
     brand?: BrandCreateNestedOneWithoutRequestsInput
@@ -29944,6 +33787,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -30154,6 +33999,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     category: CategoryCreateNestedOneWithoutRequestsInput
     brand?: BrandCreateNestedOneWithoutRequestsInput
@@ -30181,6 +34028,8 @@ export namespace Prisma {
     status?: $Enums.RequestStatus
     selectedBidId?: number | null
     qrCode?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -30319,6 +34168,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     request: RequestCreateNestedOneWithoutComplaintsInput
+    reportedUser?: UserCreateNestedOneWithoutComplaintsReceivedInput
     resolvedBy?: UserCreateNestedOneWithoutResolvedComplaintsInput
   }
 
@@ -30333,6 +34183,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type ComplaintCreateOrConnectWithoutUserInput = {
@@ -30342,6 +34193,43 @@ export namespace Prisma {
 
   export type ComplaintCreateManyUserInputEnvelope = {
     data: ComplaintCreateManyUserInput | ComplaintCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComplaintCreateWithoutReportedUserInput = {
+    subject: string
+    description: string
+    status?: $Enums.ComplaintStatus
+    resolution?: string | null
+    resolvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    request: RequestCreateNestedOneWithoutComplaintsInput
+    user: UserCreateNestedOneWithoutComplaintsInput
+    resolvedBy?: UserCreateNestedOneWithoutResolvedComplaintsInput
+  }
+
+  export type ComplaintUncheckedCreateWithoutReportedUserInput = {
+    id?: number
+    requestId: number
+    userId: number
+    subject: string
+    description: string
+    status?: $Enums.ComplaintStatus
+    resolution?: string | null
+    resolvedById?: number | null
+    resolvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComplaintCreateOrConnectWithoutReportedUserInput = {
+    where: ComplaintWhereUniqueInput
+    create: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput>
+  }
+
+  export type ComplaintCreateManyReportedUserInputEnvelope = {
+    data: ComplaintCreateManyReportedUserInput | ComplaintCreateManyReportedUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -30355,6 +34243,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     request: RequestCreateNestedOneWithoutComplaintsInput
     user: UserCreateNestedOneWithoutComplaintsInput
+    reportedUser?: UserCreateNestedOneWithoutComplaintsReceivedInput
   }
 
   export type ComplaintUncheckedCreateWithoutResolvedByInput = {
@@ -30368,6 +34257,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type ComplaintCreateOrConnectWithoutResolvedByInput = {
@@ -30397,6 +34287,54 @@ export namespace Prisma {
   export type VendorBrandCreateManyVendorInputEnvelope = {
     data: VendorBrandCreateManyVendorInput | VendorBrandCreateManyVendorInput[]
     skipDuplicates?: boolean
+  }
+
+  export type CityUpsertWithoutUsersInput = {
+    update: XOR<CityUpdateWithoutUsersInput, CityUncheckedUpdateWithoutUsersInput>
+    create: XOR<CityCreateWithoutUsersInput, CityUncheckedCreateWithoutUsersInput>
+    where?: CityWhereInput
+  }
+
+  export type CityUpdateToOneWithWhereWithoutUsersInput = {
+    where?: CityWhereInput
+    data: XOR<CityUpdateWithoutUsersInput, CityUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type CityUpdateWithoutUsersInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    governorate?: GovernorateUpdateOneRequiredWithoutCitiesNestedInput
+    requests?: RequestUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityUncheckedUpdateWithoutUsersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    governorateId?: IntFieldUpdateOperationsInput | number
+    requests?: RequestUncheckedUpdateManyWithoutCityNestedInput
+  }
+
+  export type GovernorateUpsertWithoutUsersInput = {
+    update: XOR<GovernorateUpdateWithoutUsersInput, GovernorateUncheckedUpdateWithoutUsersInput>
+    create: XOR<GovernorateCreateWithoutUsersInput, GovernorateUncheckedCreateWithoutUsersInput>
+    where?: GovernorateWhereInput
+  }
+
+  export type GovernorateUpdateToOneWithWhereWithoutUsersInput = {
+    where?: GovernorateWhereInput
+    data: XOR<GovernorateUpdateWithoutUsersInput, GovernorateUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type GovernorateUpdateWithoutUsersInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type GovernorateUncheckedUpdateWithoutUsersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUncheckedUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUncheckedUpdateManyWithoutGovernorateNestedInput
   }
 
   export type RequestUpsertWithWhereUniqueWithoutClientInput = {
@@ -30434,6 +34372,8 @@ export namespace Prisma {
     selectedBidId?: IntNullableFilter<"Request"> | number | null
     qrCode?: StringNullableFilter<"Request"> | string | null
     assignedDeliveryAgentId?: IntNullableFilter<"Request"> | number | null
+    cityId?: IntNullableFilter<"Request"> | number | null
+    governorateId?: IntNullableFilter<"Request"> | number | null
     createdAt?: DateTimeFilter<"Request"> | Date | string
     updatedAt?: DateTimeFilter<"Request"> | Date | string
   }
@@ -30740,6 +34680,23 @@ export namespace Prisma {
     resolvedAt?: DateTimeNullableFilter<"Complaint"> | Date | string | null
     createdAt?: DateTimeFilter<"Complaint"> | Date | string
     updatedAt?: DateTimeFilter<"Complaint"> | Date | string
+    reportedUserId?: IntNullableFilter<"Complaint"> | number | null
+  }
+
+  export type ComplaintUpsertWithWhereUniqueWithoutReportedUserInput = {
+    where: ComplaintWhereUniqueInput
+    update: XOR<ComplaintUpdateWithoutReportedUserInput, ComplaintUncheckedUpdateWithoutReportedUserInput>
+    create: XOR<ComplaintCreateWithoutReportedUserInput, ComplaintUncheckedCreateWithoutReportedUserInput>
+  }
+
+  export type ComplaintUpdateWithWhereUniqueWithoutReportedUserInput = {
+    where: ComplaintWhereUniqueInput
+    data: XOR<ComplaintUpdateWithoutReportedUserInput, ComplaintUncheckedUpdateWithoutReportedUserInput>
+  }
+
+  export type ComplaintUpdateManyWithWhereWithoutReportedUserInput = {
+    where: ComplaintScalarWhereInput
+    data: XOR<ComplaintUpdateManyMutationInput, ComplaintUncheckedUpdateManyWithoutReportedUserInput>
   }
 
   export type ComplaintUpsertWithWhereUniqueWithoutResolvedByInput = {
@@ -30788,6 +34745,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutSubcategoriesInput
     requests?: RequestCreateNestedManyWithoutCategoryInput
@@ -30801,6 +34759,7 @@ export namespace Prisma {
     parentId?: number | null
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     requests?: RequestUncheckedCreateNestedManyWithoutCategoryInput
     vendors?: VendorCategoryUncheckedCreateNestedManyWithoutCategoryInput
@@ -30816,6 +34775,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     subcategories?: CategoryCreateNestedManyWithoutParentInput
     requests?: RequestCreateNestedManyWithoutCategoryInput
@@ -30828,6 +34788,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     subcategories?: CategoryUncheckedCreateNestedManyWithoutParentInput
     requests?: RequestUncheckedCreateNestedManyWithoutCategoryInput
@@ -30857,6 +34818,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     brand?: BrandCreateNestedOneWithoutRequestsInput
@@ -30884,6 +34847,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -30940,6 +34905,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutSubcategoriesNestedInput
     requests?: RequestUpdateManyWithoutCategoryNestedInput
@@ -30953,6 +34919,7 @@ export namespace Prisma {
     parentId?: NullableIntFieldUpdateOperationsInput | number | null
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     requests?: RequestUncheckedUpdateManyWithoutCategoryNestedInput
     vendors?: VendorCategoryUncheckedUpdateManyWithoutCategoryNestedInput
@@ -30984,6 +34951,7 @@ export namespace Prisma {
     parentId?: IntNullableFilter<"Category"> | number | null
     requiresBrand?: BoolFilter<"Category"> | boolean
     brandType?: StringNullableFilter<"Category"> | string | null
+    type?: EnumCategoryTypeFilter<"Category"> | $Enums.CategoryType
     createdAt?: DateTimeFilter<"Category"> | Date | string
   }
 
@@ -31051,6 +35019,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -31078,6 +35048,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -31144,6 +35116,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -31157,6 +35131,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
   }
 
@@ -31172,6 +35147,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -31187,6 +35164,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
   }
 
@@ -31245,6 +35223,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -31258,6 +35238,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
   }
 
@@ -31273,6 +35254,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -31288,6 +35271,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
   }
 
@@ -31336,6 +35320,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
@@ -31348,6 +35334,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -31364,6 +35351,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -31378,6 +35367,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -31392,6 +35382,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutSubcategoriesInput
     subcategories?: CategoryCreateNestedManyWithoutParentInput
@@ -31405,6 +35396,7 @@ export namespace Prisma {
     parentId?: number | null
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     subcategories?: CategoryUncheckedCreateNestedManyWithoutParentInput
     requests?: RequestUncheckedCreateNestedManyWithoutCategoryInput
@@ -31439,6 +35431,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
@@ -31451,6 +35445,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -31467,6 +35462,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -31481,6 +35478,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -31501,6 +35499,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutSubcategoriesNestedInput
     subcategories?: CategoryUpdateManyWithoutParentNestedInput
@@ -31514,9 +35513,46 @@ export namespace Prisma {
     parentId?: NullableIntFieldUpdateOperationsInput | number | null
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     subcategories?: CategoryUncheckedUpdateManyWithoutParentNestedInput
     requests?: RequestUncheckedUpdateManyWithoutCategoryNestedInput
+  }
+
+  export type CityCreateWithoutRequestsInput = {
+    name: string
+    governorate: GovernorateCreateNestedOneWithoutCitiesInput
+    users?: UserCreateNestedManyWithoutCityInput
+  }
+
+  export type CityUncheckedCreateWithoutRequestsInput = {
+    id?: number
+    name: string
+    governorateId: number
+    users?: UserUncheckedCreateNestedManyWithoutCityInput
+  }
+
+  export type CityCreateOrConnectWithoutRequestsInput = {
+    where: CityWhereUniqueInput
+    create: XOR<CityCreateWithoutRequestsInput, CityUncheckedCreateWithoutRequestsInput>
+  }
+
+  export type GovernorateCreateWithoutRequestsInput = {
+    name: string
+    cities?: CityCreateNestedManyWithoutGovernorateInput
+    users?: UserCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateUncheckedCreateWithoutRequestsInput = {
+    id?: number
+    name: string
+    cities?: CityUncheckedCreateNestedManyWithoutGovernorateInput
+    users?: UserUncheckedCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateCreateOrConnectWithoutRequestsInput = {
+    where: GovernorateWhereUniqueInput
+    create: XOR<GovernorateCreateWithoutRequestsInput, GovernorateUncheckedCreateWithoutRequestsInput>
   }
 
   export type UserCreateWithoutClientRequestsInput = {
@@ -31532,6 +35568,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
@@ -31544,6 +35582,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -31560,6 +35599,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     vendorBids?: BidUncheckedCreateNestedManyWithoutVendorInput
@@ -31574,6 +35615,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -31596,6 +35638,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -31608,6 +35652,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -31624,6 +35669,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -31638,6 +35685,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -31652,6 +35700,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     parent?: CategoryCreateNestedOneWithoutSubcategoriesInput
     subcategories?: CategoryCreateNestedManyWithoutParentInput
@@ -31665,6 +35714,7 @@ export namespace Prisma {
     parentId?: number | null
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
     subcategories?: CategoryUncheckedCreateNestedManyWithoutParentInput
     vendors?: VendorCategoryUncheckedCreateNestedManyWithoutCategoryInput
@@ -31765,6 +35815,9 @@ export namespace Prisma {
 
   export type DeliveryTrackingCreateWithoutRequestInput = {
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -31773,6 +35826,9 @@ export namespace Prisma {
   export type DeliveryTrackingUncheckedCreateWithoutRequestInput = {
     id?: number
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -31879,6 +35935,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutComplaintsInput
+    reportedUser?: UserCreateNestedOneWithoutComplaintsReceivedInput
     resolvedBy?: UserCreateNestedOneWithoutResolvedComplaintsInput
   }
 
@@ -31893,6 +35950,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type ComplaintCreateOrConnectWithoutRequestInput = {
@@ -31903,6 +35961,54 @@ export namespace Prisma {
   export type ComplaintCreateManyRequestInputEnvelope = {
     data: ComplaintCreateManyRequestInput | ComplaintCreateManyRequestInput[]
     skipDuplicates?: boolean
+  }
+
+  export type CityUpsertWithoutRequestsInput = {
+    update: XOR<CityUpdateWithoutRequestsInput, CityUncheckedUpdateWithoutRequestsInput>
+    create: XOR<CityCreateWithoutRequestsInput, CityUncheckedCreateWithoutRequestsInput>
+    where?: CityWhereInput
+  }
+
+  export type CityUpdateToOneWithWhereWithoutRequestsInput = {
+    where?: CityWhereInput
+    data: XOR<CityUpdateWithoutRequestsInput, CityUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type CityUpdateWithoutRequestsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    governorate?: GovernorateUpdateOneRequiredWithoutCitiesNestedInput
+    users?: UserUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityUncheckedUpdateWithoutRequestsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    governorateId?: IntFieldUpdateOperationsInput | number
+    users?: UserUncheckedUpdateManyWithoutCityNestedInput
+  }
+
+  export type GovernorateUpsertWithoutRequestsInput = {
+    update: XOR<GovernorateUpdateWithoutRequestsInput, GovernorateUncheckedUpdateWithoutRequestsInput>
+    create: XOR<GovernorateCreateWithoutRequestsInput, GovernorateUncheckedCreateWithoutRequestsInput>
+    where?: GovernorateWhereInput
+  }
+
+  export type GovernorateUpdateToOneWithWhereWithoutRequestsInput = {
+    where?: GovernorateWhereInput
+    data: XOR<GovernorateUpdateWithoutRequestsInput, GovernorateUncheckedUpdateWithoutRequestsInput>
+  }
+
+  export type GovernorateUpdateWithoutRequestsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUpdateManyWithoutGovernorateNestedInput
+    users?: UserUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type GovernorateUncheckedUpdateWithoutRequestsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    cities?: CityUncheckedUpdateManyWithoutGovernorateNestedInput
+    users?: UserUncheckedUpdateManyWithoutGovernorateNestedInput
   }
 
   export type UserUpsertWithoutClientRequestsInput = {
@@ -31929,6 +36035,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
@@ -31941,6 +36049,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -31957,6 +36066,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     vendorBids?: BidUncheckedUpdateManyWithoutVendorNestedInput
@@ -31971,6 +36082,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -31999,6 +36111,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -32011,6 +36125,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -32027,6 +36142,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -32041,6 +36158,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -32061,6 +36179,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: CategoryUpdateOneWithoutSubcategoriesNestedInput
     subcategories?: CategoryUpdateManyWithoutParentNestedInput
@@ -32074,6 +36193,7 @@ export namespace Prisma {
     parentId?: NullableIntFieldUpdateOperationsInput | number | null
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     subcategories?: CategoryUncheckedUpdateManyWithoutParentNestedInput
     vendors?: VendorCategoryUncheckedUpdateManyWithoutCategoryNestedInput
@@ -32179,6 +36299,9 @@ export namespace Prisma {
     id?: IntFilter<"DeliveryTracking"> | number
     requestId?: IntFilter<"DeliveryTracking"> | number
     status?: EnumDeliveryStatusFilter<"DeliveryTracking"> | $Enums.DeliveryStatus
+    latitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    longitude?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
+    speed?: DecimalNullableFilter<"DeliveryTracking"> | Decimal | DecimalJsLike | number | string | null
     note?: StringNullableFilter<"DeliveryTracking"> | string | null
     locationText?: StringNullableFilter<"DeliveryTracking"> | string | null
     createdAt?: DateTimeFilter<"DeliveryTracking"> | Date | string
@@ -32273,6 +36396,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -32301,6 +36426,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     bids?: BidUncheckedCreateNestedManyWithoutRequestInput
@@ -32340,6 +36467,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -32368,6 +36497,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bids?: BidUncheckedUpdateManyWithoutRequestNestedInput
@@ -32391,6 +36522,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -32419,6 +36552,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -32447,6 +36582,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
@@ -32459,6 +36596,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -32475,6 +36613,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -32489,6 +36629,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -32549,6 +36690,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -32577,6 +36720,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -32611,6 +36756,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
@@ -32623,6 +36770,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -32639,6 +36787,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -32653,6 +36803,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -32765,6 +36916,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -32793,6 +36946,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -32832,6 +36987,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -32860,6 +37017,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -32883,6 +37042,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -32895,6 +37056,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -32911,6 +37073,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -32925,6 +37089,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -32947,6 +37112,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -32975,6 +37142,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -33014,6 +37183,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33026,6 +37197,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33042,6 +37214,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33056,6 +37230,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33084,6 +37259,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -33112,6 +37289,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -33135,6 +37314,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33147,6 +37328,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -33163,6 +37345,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -33177,6 +37361,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -33199,6 +37384,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -33227,6 +37414,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -33266,6 +37455,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33278,6 +37469,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33294,6 +37486,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33308,6 +37502,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33336,6 +37531,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -33364,6 +37561,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -33387,6 +37586,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33399,6 +37600,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -33415,6 +37617,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -33429,6 +37633,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -33451,6 +37656,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33463,6 +37670,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -33479,6 +37687,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -33493,6 +37703,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -33526,6 +37737,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33538,6 +37751,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33554,6 +37768,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33568,6 +37784,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33596,6 +37813,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33608,6 +37827,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33624,6 +37844,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33638,6 +37860,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33655,6 +37878,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33667,6 +37892,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -33683,6 +37909,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -33697,6 +37925,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -33719,6 +37948,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33731,6 +37962,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -33747,6 +37979,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -33761,6 +37995,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -33794,6 +38029,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33806,6 +38043,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33822,6 +38060,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33836,6 +38076,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33864,6 +38105,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -33876,6 +38119,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -33892,6 +38136,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -33906,6 +38152,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -33923,6 +38170,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -33951,6 +38200,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -33979,6 +38230,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -33991,6 +38244,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -34007,6 +38261,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -34021,6 +38277,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -34043,6 +38300,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -34055,6 +38314,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -34071,6 +38331,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -34085,6 +38347,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -34118,6 +38381,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -34146,6 +38411,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -34180,6 +38447,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -34192,6 +38461,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -34208,6 +38478,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -34222,6 +38494,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -34250,6 +38523,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -34262,6 +38537,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -34278,6 +38554,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -34292,6 +38570,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -34309,6 +38588,8 @@ export namespace Prisma {
     qrCode?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
     client: UserCreateNestedOneWithoutClientRequestsInput
     deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
     category: CategoryCreateNestedOneWithoutRequestsInput
@@ -34337,6 +38618,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
@@ -34365,6 +38648,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -34377,6 +38662,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
@@ -34393,6 +38679,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -34407,6 +38695,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
@@ -34416,7 +38705,7 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutComplaintsInput, UserUncheckedCreateWithoutComplaintsInput>
   }
 
-  export type UserCreateWithoutResolvedComplaintsInput = {
+  export type UserCreateWithoutComplaintsReceivedInput = {
     fullName: string
     email: string
     password: string
@@ -34429,6 +38718,8 @@ export namespace Prisma {
     fcmToken?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
     clientRequests?: RequestCreateNestedManyWithoutClientInput
     vendorBids?: BidCreateNestedManyWithoutVendorInput
     vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
@@ -34442,10 +38733,11 @@ export namespace Prisma {
     reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintCreateNestedManyWithoutUserInput
+    resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
     vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
   }
 
-  export type UserUncheckedCreateWithoutResolvedComplaintsInput = {
+  export type UserUncheckedCreateWithoutComplaintsReceivedInput = {
     id?: number
     fullName: string
     email: string
@@ -34457,6 +38749,8 @@ export namespace Prisma {
     isBlocked?: boolean
     walletBalance?: Decimal | DecimalJsLike | number | string
     fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
@@ -34472,6 +38766,77 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
     reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
     complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+    vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserCreateOrConnectWithoutComplaintsReceivedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutComplaintsReceivedInput, UserUncheckedCreateWithoutComplaintsReceivedInput>
+  }
+
+  export type UserCreateWithoutResolvedComplaintsInput = {
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
+    clientRequests?: RequestCreateNestedManyWithoutClientInput
+    vendorBids?: BidCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
+    vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserUncheckedCreateWithoutResolvedComplaintsInput = {
+    id?: number
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    cityId?: number | null
+    governorateId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
+    vendorBids?: BidUncheckedCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryUncheckedCreateNestedManyWithoutVendorInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestUncheckedCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
     vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
   }
 
@@ -34504,6 +38869,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -34532,6 +38899,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -34566,6 +38935,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -34578,6 +38949,7 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
@@ -34594,6 +38966,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -34608,6 +38982,83 @@ export namespace Prisma {
     receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
+    resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUpsertWithoutComplaintsReceivedInput = {
+    update: XOR<UserUpdateWithoutComplaintsReceivedInput, UserUncheckedUpdateWithoutComplaintsReceivedInput>
+    create: XOR<UserCreateWithoutComplaintsReceivedInput, UserUncheckedCreateWithoutComplaintsReceivedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutComplaintsReceivedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutComplaintsReceivedInput, UserUncheckedUpdateWithoutComplaintsReceivedInput>
+  }
+
+  export type UserUpdateWithoutComplaintsReceivedInput = {
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
+    clientRequests?: RequestUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutComplaintsReceivedInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUncheckedUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUncheckedUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUncheckedUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
     resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
   }
@@ -34636,6 +39087,8 @@ export namespace Prisma {
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
     clientRequests?: RequestUpdateManyWithoutClientNestedInput
     vendorBids?: BidUpdateManyWithoutVendorNestedInput
     vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
@@ -34649,6 +39102,7 @@ export namespace Prisma {
     reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
     vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
   }
 
@@ -34664,6 +39118,8 @@ export namespace Prisma {
     isBlocked?: BoolFieldUpdateOperationsInput | boolean
     walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
@@ -34679,7 +39135,463 @@ export namespace Prisma {
     reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
     reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
     complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
     vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
+  }
+
+  export type CityCreateWithoutGovernorateInput = {
+    name: string
+    users?: UserCreateNestedManyWithoutCityInput
+    requests?: RequestCreateNestedManyWithoutCityInput
+  }
+
+  export type CityUncheckedCreateWithoutGovernorateInput = {
+    id?: number
+    name: string
+    users?: UserUncheckedCreateNestedManyWithoutCityInput
+    requests?: RequestUncheckedCreateNestedManyWithoutCityInput
+  }
+
+  export type CityCreateOrConnectWithoutGovernorateInput = {
+    where: CityWhereUniqueInput
+    create: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type CityCreateManyGovernorateInputEnvelope = {
+    data: CityCreateManyGovernorateInput | CityCreateManyGovernorateInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserCreateWithoutGovernorateInput = {
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutUsersInput
+    clientRequests?: RequestCreateNestedManyWithoutClientInput
+    vendorBids?: BidCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
+    resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
+    vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserUncheckedCreateWithoutGovernorateInput = {
+    id?: number
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    cityId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
+    vendorBids?: BidUncheckedCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryUncheckedCreateNestedManyWithoutVendorInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestUncheckedCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
+    resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+    vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserCreateOrConnectWithoutGovernorateInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type UserCreateManyGovernorateInputEnvelope = {
+    data: UserCreateManyGovernorateInput | UserCreateManyGovernorateInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type RequestCreateWithoutGovernorateInput = {
+    title: string
+    description: string
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    city?: CityCreateNestedOneWithoutRequestsInput
+    client: UserCreateNestedOneWithoutClientRequestsInput
+    deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
+    category: CategoryCreateNestedOneWithoutRequestsInput
+    brand?: BrandCreateNestedOneWithoutRequestsInput
+    images?: RequestImageCreateNestedManyWithoutRequestInput
+    bids?: BidCreateNestedManyWithoutRequestInput
+    deliveryTracking?: DeliveryTrackingCreateNestedManyWithoutRequestInput
+    transactions?: TransactionCreateNestedManyWithoutRequestInput
+    notifications?: NotificationCreateNestedManyWithoutRequestInput
+    review?: ReviewCreateNestedOneWithoutRequestInput
+    complaints?: ComplaintCreateNestedManyWithoutRequestInput
+  }
+
+  export type RequestUncheckedCreateWithoutGovernorateInput = {
+    id?: number
+    clientId: number
+    title: string
+    description: string
+    categoryId: number
+    brandId?: number | null
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
+    bids?: BidUncheckedCreateNestedManyWithoutRequestInput
+    deliveryTracking?: DeliveryTrackingUncheckedCreateNestedManyWithoutRequestInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutRequestInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutRequestInput
+    review?: ReviewUncheckedCreateNestedOneWithoutRequestInput
+    complaints?: ComplaintUncheckedCreateNestedManyWithoutRequestInput
+  }
+
+  export type RequestCreateOrConnectWithoutGovernorateInput = {
+    where: RequestWhereUniqueInput
+    create: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type RequestCreateManyGovernorateInputEnvelope = {
+    data: RequestCreateManyGovernorateInput | RequestCreateManyGovernorateInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CityUpsertWithWhereUniqueWithoutGovernorateInput = {
+    where: CityWhereUniqueInput
+    update: XOR<CityUpdateWithoutGovernorateInput, CityUncheckedUpdateWithoutGovernorateInput>
+    create: XOR<CityCreateWithoutGovernorateInput, CityUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type CityUpdateWithWhereUniqueWithoutGovernorateInput = {
+    where: CityWhereUniqueInput
+    data: XOR<CityUpdateWithoutGovernorateInput, CityUncheckedUpdateWithoutGovernorateInput>
+  }
+
+  export type CityUpdateManyWithWhereWithoutGovernorateInput = {
+    where: CityScalarWhereInput
+    data: XOR<CityUpdateManyMutationInput, CityUncheckedUpdateManyWithoutGovernorateInput>
+  }
+
+  export type CityScalarWhereInput = {
+    AND?: CityScalarWhereInput | CityScalarWhereInput[]
+    OR?: CityScalarWhereInput[]
+    NOT?: CityScalarWhereInput | CityScalarWhereInput[]
+    id?: IntFilter<"City"> | number
+    name?: StringFilter<"City"> | string
+    governorateId?: IntFilter<"City"> | number
+  }
+
+  export type UserUpsertWithWhereUniqueWithoutGovernorateInput = {
+    where: UserWhereUniqueInput
+    update: XOR<UserUpdateWithoutGovernorateInput, UserUncheckedUpdateWithoutGovernorateInput>
+    create: XOR<UserCreateWithoutGovernorateInput, UserUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type UserUpdateWithWhereUniqueWithoutGovernorateInput = {
+    where: UserWhereUniqueInput
+    data: XOR<UserUpdateWithoutGovernorateInput, UserUncheckedUpdateWithoutGovernorateInput>
+  }
+
+  export type UserUpdateManyWithWhereWithoutGovernorateInput = {
+    where: UserScalarWhereInput
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutGovernorateInput>
+  }
+
+  export type UserScalarWhereInput = {
+    AND?: UserScalarWhereInput | UserScalarWhereInput[]
+    OR?: UserScalarWhereInput[]
+    NOT?: UserScalarWhereInput | UserScalarWhereInput[]
+    id?: IntFilter<"User"> | number
+    fullName?: StringFilter<"User"> | string
+    email?: StringFilter<"User"> | string
+    password?: StringFilter<"User"> | string
+    phone?: StringNullableFilter<"User"> | string | null
+    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
+    isActive?: BoolFilter<"User"> | boolean
+    isVerified?: BoolFilter<"User"> | boolean
+    isBlocked?: BoolFilter<"User"> | boolean
+    walletBalance?: DecimalFilter<"User"> | Decimal | DecimalJsLike | number | string
+    fcmToken?: StringNullableFilter<"User"> | string | null
+    cityId?: IntNullableFilter<"User"> | number | null
+    governorateId?: IntNullableFilter<"User"> | number | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    updatedAt?: DateTimeFilter<"User"> | Date | string
+  }
+
+  export type RequestUpsertWithWhereUniqueWithoutGovernorateInput = {
+    where: RequestWhereUniqueInput
+    update: XOR<RequestUpdateWithoutGovernorateInput, RequestUncheckedUpdateWithoutGovernorateInput>
+    create: XOR<RequestCreateWithoutGovernorateInput, RequestUncheckedCreateWithoutGovernorateInput>
+  }
+
+  export type RequestUpdateWithWhereUniqueWithoutGovernorateInput = {
+    where: RequestWhereUniqueInput
+    data: XOR<RequestUpdateWithoutGovernorateInput, RequestUncheckedUpdateWithoutGovernorateInput>
+  }
+
+  export type RequestUpdateManyWithWhereWithoutGovernorateInput = {
+    where: RequestScalarWhereInput
+    data: XOR<RequestUpdateManyMutationInput, RequestUncheckedUpdateManyWithoutGovernorateInput>
+  }
+
+  export type GovernorateCreateWithoutCitiesInput = {
+    name: string
+    users?: UserCreateNestedManyWithoutGovernorateInput
+    requests?: RequestCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateUncheckedCreateWithoutCitiesInput = {
+    id?: number
+    name: string
+    users?: UserUncheckedCreateNestedManyWithoutGovernorateInput
+    requests?: RequestUncheckedCreateNestedManyWithoutGovernorateInput
+  }
+
+  export type GovernorateCreateOrConnectWithoutCitiesInput = {
+    where: GovernorateWhereUniqueInput
+    create: XOR<GovernorateCreateWithoutCitiesInput, GovernorateUncheckedCreateWithoutCitiesInput>
+  }
+
+  export type UserCreateWithoutCityInput = {
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    governorate?: GovernorateCreateNestedOneWithoutUsersInput
+    clientRequests?: RequestCreateNestedManyWithoutClientInput
+    vendorBids?: BidCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryCreateNestedManyWithoutVendorInput
+    transactions?: TransactionCreateNestedManyWithoutUserInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintCreateNestedManyWithoutReportedUserInput
+    resolvedComplaints?: ComplaintCreateNestedManyWithoutResolvedByInput
+    vendorBrands?: VendorBrandCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserUncheckedCreateWithoutCityInput = {
+    id?: number
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    governorateId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clientRequests?: RequestUncheckedCreateNestedManyWithoutClientInput
+    vendorBids?: BidUncheckedCreateNestedManyWithoutVendorInput
+    vendorCategories?: VendorCategoryUncheckedCreateNestedManyWithoutVendorInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutVendorInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedCreateNestedManyWithoutReviewedByInput
+    assignedDeliveries?: RequestUncheckedCreateNestedManyWithoutDeliveryAgentInput
+    sentMessages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+    receivedMessages?: ChatMessageUncheckedCreateNestedManyWithoutReceiverInput
+    reviewsGiven?: ReviewUncheckedCreateNestedManyWithoutReviewerInput
+    reviewsReceived?: ReviewUncheckedCreateNestedManyWithoutReviewedInput
+    complaints?: ComplaintUncheckedCreateNestedManyWithoutUserInput
+    complaintsReceived?: ComplaintUncheckedCreateNestedManyWithoutReportedUserInput
+    resolvedComplaints?: ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+    vendorBrands?: VendorBrandUncheckedCreateNestedManyWithoutVendorInput
+  }
+
+  export type UserCreateOrConnectWithoutCityInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput>
+  }
+
+  export type UserCreateManyCityInputEnvelope = {
+    data: UserCreateManyCityInput | UserCreateManyCityInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type RequestCreateWithoutCityInput = {
+    title: string
+    description: string
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    governorate?: GovernorateCreateNestedOneWithoutRequestsInput
+    client: UserCreateNestedOneWithoutClientRequestsInput
+    deliveryAgent?: UserCreateNestedOneWithoutAssignedDeliveriesInput
+    category: CategoryCreateNestedOneWithoutRequestsInput
+    brand?: BrandCreateNestedOneWithoutRequestsInput
+    images?: RequestImageCreateNestedManyWithoutRequestInput
+    bids?: BidCreateNestedManyWithoutRequestInput
+    deliveryTracking?: DeliveryTrackingCreateNestedManyWithoutRequestInput
+    transactions?: TransactionCreateNestedManyWithoutRequestInput
+    notifications?: NotificationCreateNestedManyWithoutRequestInput
+    review?: ReviewCreateNestedOneWithoutRequestInput
+    complaints?: ComplaintCreateNestedManyWithoutRequestInput
+  }
+
+  export type RequestUncheckedCreateWithoutCityInput = {
+    id?: number
+    clientId: number
+    title: string
+    description: string
+    categoryId: number
+    brandId?: number | null
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    assignedDeliveryAgentId?: number | null
+    governorateId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    images?: RequestImageUncheckedCreateNestedManyWithoutRequestInput
+    bids?: BidUncheckedCreateNestedManyWithoutRequestInput
+    deliveryTracking?: DeliveryTrackingUncheckedCreateNestedManyWithoutRequestInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutRequestInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutRequestInput
+    review?: ReviewUncheckedCreateNestedOneWithoutRequestInput
+    complaints?: ComplaintUncheckedCreateNestedManyWithoutRequestInput
+  }
+
+  export type RequestCreateOrConnectWithoutCityInput = {
+    where: RequestWhereUniqueInput
+    create: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput>
+  }
+
+  export type RequestCreateManyCityInputEnvelope = {
+    data: RequestCreateManyCityInput | RequestCreateManyCityInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type GovernorateUpsertWithoutCitiesInput = {
+    update: XOR<GovernorateUpdateWithoutCitiesInput, GovernorateUncheckedUpdateWithoutCitiesInput>
+    create: XOR<GovernorateCreateWithoutCitiesInput, GovernorateUncheckedCreateWithoutCitiesInput>
+    where?: GovernorateWhereInput
+  }
+
+  export type GovernorateUpdateToOneWithWhereWithoutCitiesInput = {
+    where?: GovernorateWhereInput
+    data: XOR<GovernorateUpdateWithoutCitiesInput, GovernorateUncheckedUpdateWithoutCitiesInput>
+  }
+
+  export type GovernorateUpdateWithoutCitiesInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    users?: UserUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type GovernorateUncheckedUpdateWithoutCitiesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    users?: UserUncheckedUpdateManyWithoutGovernorateNestedInput
+    requests?: RequestUncheckedUpdateManyWithoutGovernorateNestedInput
+  }
+
+  export type UserUpsertWithWhereUniqueWithoutCityInput = {
+    where: UserWhereUniqueInput
+    update: XOR<UserUpdateWithoutCityInput, UserUncheckedUpdateWithoutCityInput>
+    create: XOR<UserCreateWithoutCityInput, UserUncheckedCreateWithoutCityInput>
+  }
+
+  export type UserUpdateWithWhereUniqueWithoutCityInput = {
+    where: UserWhereUniqueInput
+    data: XOR<UserUpdateWithoutCityInput, UserUncheckedUpdateWithoutCityInput>
+  }
+
+  export type UserUpdateManyWithWhereWithoutCityInput = {
+    where: UserScalarWhereInput
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutCityInput>
+  }
+
+  export type RequestUpsertWithWhereUniqueWithoutCityInput = {
+    where: RequestWhereUniqueInput
+    update: XOR<RequestUpdateWithoutCityInput, RequestUncheckedUpdateWithoutCityInput>
+    create: XOR<RequestCreateWithoutCityInput, RequestUncheckedCreateWithoutCityInput>
+  }
+
+  export type RequestUpdateWithWhereUniqueWithoutCityInput = {
+    where: RequestWhereUniqueInput
+    data: XOR<RequestUpdateWithoutCityInput, RequestUncheckedUpdateWithoutCityInput>
+  }
+
+  export type RequestUpdateManyWithWhereWithoutCityInput = {
+    where: RequestScalarWhereInput
+    data: XOR<RequestUpdateManyMutationInput, RequestUncheckedUpdateManyWithoutCityInput>
   }
 
   export type RequestCreateManyClientInput = {
@@ -34697,6 +39609,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -34776,6 +39690,8 @@ export namespace Prisma {
     status?: $Enums.RequestStatus
     selectedBidId?: number | null
     qrCode?: string | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -34827,6 +39743,21 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
+  }
+
+  export type ComplaintCreateManyReportedUserInput = {
+    id?: number
+    requestId: number
+    userId: number
+    subject: string
+    description: string
+    status?: $Enums.ComplaintStatus
+    resolution?: string | null
+    resolvedById?: number | null
+    resolvedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type ComplaintCreateManyResolvedByInput = {
@@ -34840,6 +39771,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type VendorBrandCreateManyVendorInput = {
@@ -34860,6 +39792,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
     brand?: BrandUpdateOneWithoutRequestsNestedInput
@@ -34887,6 +39821,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -34913,6 +39849,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35106,6 +40044,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
     brand?: BrandUpdateOneWithoutRequestsNestedInput
@@ -35133,6 +40073,8 @@ export namespace Prisma {
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -35159,6 +40101,8 @@ export namespace Prisma {
     status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35276,6 +40220,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     request?: RequestUpdateOneRequiredWithoutComplaintsNestedInput
+    reportedUser?: UserUpdateOneWithoutComplaintsReceivedNestedInput
     resolvedBy?: UserUpdateOneWithoutResolvedComplaintsNestedInput
   }
 
@@ -35290,11 +40235,54 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ComplaintUncheckedUpdateManyWithoutUserInput = {
     id?: IntFieldUpdateOperationsInput | number
     requestId?: IntFieldUpdateOperationsInput | number
+    subject?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    status?: EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
+    resolution?: NullableStringFieldUpdateOperationsInput | string | null
+    resolvedById?: NullableIntFieldUpdateOperationsInput | number | null
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type ComplaintUpdateWithoutReportedUserInput = {
+    subject?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    status?: EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
+    resolution?: NullableStringFieldUpdateOperationsInput | string | null
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    request?: RequestUpdateOneRequiredWithoutComplaintsNestedInput
+    user?: UserUpdateOneRequiredWithoutComplaintsNestedInput
+    resolvedBy?: UserUpdateOneWithoutResolvedComplaintsNestedInput
+  }
+
+  export type ComplaintUncheckedUpdateWithoutReportedUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    subject?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    status?: EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
+    resolution?: NullableStringFieldUpdateOperationsInput | string | null
+    resolvedById?: NullableIntFieldUpdateOperationsInput | number | null
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComplaintUncheckedUpdateManyWithoutReportedUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
     subject?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     status?: EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
@@ -35315,6 +40303,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     request?: RequestUpdateOneRequiredWithoutComplaintsNestedInput
     user?: UserUpdateOneRequiredWithoutComplaintsNestedInput
+    reportedUser?: UserUpdateOneWithoutComplaintsReceivedNestedInput
   }
 
   export type ComplaintUncheckedUpdateWithoutResolvedByInput = {
@@ -35328,6 +40317,7 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ComplaintUncheckedUpdateManyWithoutResolvedByInput = {
@@ -35341,6 +40331,7 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type VendorBrandUpdateWithoutVendorInput = {
@@ -35363,6 +40354,7 @@ export namespace Prisma {
     slug: string
     requiresBrand?: boolean
     brandType?: string | null
+    type?: $Enums.CategoryType
     createdAt?: Date | string
   }
 
@@ -35381,6 +40373,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -35395,6 +40389,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     subcategories?: CategoryUpdateManyWithoutParentNestedInput
     requests?: RequestUpdateManyWithoutCategoryNestedInput
@@ -35407,6 +40402,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     subcategories?: CategoryUncheckedUpdateManyWithoutParentNestedInput
     requests?: RequestUncheckedUpdateManyWithoutCategoryNestedInput
@@ -35419,6 +40415,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     requiresBrand?: BoolFieldUpdateOperationsInput | boolean
     brandType?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: EnumCategoryTypeFieldUpdateOperationsInput | $Enums.CategoryType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35435,6 +40432,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     brand?: BrandUpdateOneWithoutRequestsNestedInput
@@ -35462,6 +40461,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -35488,6 +40489,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35526,6 +40529,8 @@ export namespace Prisma {
     selectedBidId?: number | null
     qrCode?: string | null
     assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    governorateId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -35557,6 +40562,8 @@ export namespace Prisma {
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
     client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
     deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
     category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
@@ -35584,6 +40591,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
@@ -35610,6 +40619,8 @@ export namespace Prisma {
     selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
     qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35638,6 +40649,9 @@ export namespace Prisma {
   export type DeliveryTrackingCreateManyRequestInput = {
     id?: number
     status: $Enums.DeliveryStatus
+    latitude?: Decimal | DecimalJsLike | number | string | null
+    longitude?: Decimal | DecimalJsLike | number | string | null
+    speed?: Decimal | DecimalJsLike | number | string | null
     note?: string | null
     locationText?: string | null
     createdAt?: Date | string
@@ -35675,6 +40689,7 @@ export namespace Prisma {
     resolvedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reportedUserId?: number | null
   }
 
   export type RequestImageUpdateWithoutRequestInput = {
@@ -35742,6 +40757,9 @@ export namespace Prisma {
 
   export type DeliveryTrackingUpdateWithoutRequestInput = {
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35750,6 +40768,9 @@ export namespace Prisma {
   export type DeliveryTrackingUncheckedUpdateWithoutRequestInput = {
     id?: IntFieldUpdateOperationsInput | number
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35758,6 +40779,9 @@ export namespace Prisma {
   export type DeliveryTrackingUncheckedUpdateManyWithoutRequestInput = {
     id?: IntFieldUpdateOperationsInput | number
     status?: EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
+    latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    speed?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
     locationText?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35833,6 +40857,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutComplaintsNestedInput
+    reportedUser?: UserUpdateOneWithoutComplaintsReceivedNestedInput
     resolvedBy?: UserUpdateOneWithoutResolvedComplaintsNestedInput
   }
 
@@ -35847,6 +40872,7 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ComplaintUncheckedUpdateManyWithoutRequestInput = {
@@ -35860,6 +40886,7 @@ export namespace Prisma {
     resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reportedUserId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type BidImageCreateManyBidInput = {
@@ -35895,6 +40922,421 @@ export namespace Prisma {
     mimeType?: StringFieldUpdateOperationsInput | string
     fileSize?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CityCreateManyGovernorateInput = {
+    id?: number
+    name: string
+  }
+
+  export type UserCreateManyGovernorateInput = {
+    id?: number
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    cityId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RequestCreateManyGovernorateInput = {
+    id?: number
+    clientId: number
+    title: string
+    description: string
+    categoryId: number
+    brandId?: number | null
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    assignedDeliveryAgentId?: number | null
+    cityId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CityUpdateWithoutGovernorateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    users?: UserUpdateManyWithoutCityNestedInput
+    requests?: RequestUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityUncheckedUpdateWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    users?: UserUncheckedUpdateManyWithoutCityNestedInput
+    requests?: RequestUncheckedUpdateManyWithoutCityNestedInput
+  }
+
+  export type CityUncheckedUpdateManyWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type UserUpdateWithoutGovernorateInput = {
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutUsersNestedInput
+    clientRequests?: RequestUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
+    resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUncheckedUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUncheckedUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUncheckedUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
+    resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUncheckedUpdateManyWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestUpdateWithoutGovernorateInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    city?: CityUpdateOneWithoutRequestsNestedInput
+    client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
+    deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
+    category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
+    brand?: BrandUpdateOneWithoutRequestsNestedInput
+    images?: RequestImageUpdateManyWithoutRequestNestedInput
+    bids?: BidUpdateManyWithoutRequestNestedInput
+    deliveryTracking?: DeliveryTrackingUpdateManyWithoutRequestNestedInput
+    transactions?: TransactionUpdateManyWithoutRequestNestedInput
+    notifications?: NotificationUpdateManyWithoutRequestNestedInput
+    review?: ReviewUpdateOneWithoutRequestNestedInput
+    complaints?: ComplaintUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RequestUncheckedUpdateWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clientId?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    categoryId?: IntFieldUpdateOperationsInput | number
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
+    bids?: BidUncheckedUpdateManyWithoutRequestNestedInput
+    deliveryTracking?: DeliveryTrackingUncheckedUpdateManyWithoutRequestNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutRequestNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutRequestNestedInput
+    review?: ReviewUncheckedUpdateOneWithoutRequestNestedInput
+    complaints?: ComplaintUncheckedUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RequestUncheckedUpdateManyWithoutGovernorateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clientId?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    categoryId?: IntFieldUpdateOperationsInput | number
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    cityId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserCreateManyCityInput = {
+    id?: number
+    fullName: string
+    email: string
+    password: string
+    phone?: string | null
+    role: $Enums.UserRole
+    isActive?: boolean
+    isVerified?: boolean
+    isBlocked?: boolean
+    walletBalance?: Decimal | DecimalJsLike | number | string
+    fcmToken?: string | null
+    governorateId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RequestCreateManyCityInput = {
+    id?: number
+    clientId: number
+    title: string
+    description: string
+    categoryId: number
+    brandId?: number | null
+    address: string
+    latitude: Decimal | DecimalJsLike | number | string
+    longitude: Decimal | DecimalJsLike | number | string
+    deliveryPhone: string
+    notes?: string | null
+    status?: $Enums.RequestStatus
+    selectedBidId?: number | null
+    qrCode?: string | null
+    assignedDeliveryAgentId?: number | null
+    governorateId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserUpdateWithoutCityInput = {
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    governorate?: GovernorateUpdateOneWithoutUsersNestedInput
+    clientRequests?: RequestUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUpdateManyWithoutReportedUserNestedInput
+    resolvedComplaints?: ComplaintUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCityInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clientRequests?: RequestUncheckedUpdateManyWithoutClientNestedInput
+    vendorBids?: BidUncheckedUpdateManyWithoutVendorNestedInput
+    vendorCategories?: VendorCategoryUncheckedUpdateManyWithoutVendorNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    vendorWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutVendorNestedInput
+    adminReviewedWithdrawals?: WithdrawalRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+    assignedDeliveries?: RequestUncheckedUpdateManyWithoutDeliveryAgentNestedInput
+    sentMessages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+    receivedMessages?: ChatMessageUncheckedUpdateManyWithoutReceiverNestedInput
+    reviewsGiven?: ReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    reviewsReceived?: ReviewUncheckedUpdateManyWithoutReviewedNestedInput
+    complaints?: ComplaintUncheckedUpdateManyWithoutUserNestedInput
+    complaintsReceived?: ComplaintUncheckedUpdateManyWithoutReportedUserNestedInput
+    resolvedComplaints?: ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+    vendorBrands?: VendorBrandUncheckedUpdateManyWithoutVendorNestedInput
+  }
+
+  export type UserUncheckedUpdateManyWithoutCityInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    fullName?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    walletBalance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    fcmToken?: NullableStringFieldUpdateOperationsInput | string | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestUpdateWithoutCityInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    governorate?: GovernorateUpdateOneWithoutRequestsNestedInput
+    client?: UserUpdateOneRequiredWithoutClientRequestsNestedInput
+    deliveryAgent?: UserUpdateOneWithoutAssignedDeliveriesNestedInput
+    category?: CategoryUpdateOneRequiredWithoutRequestsNestedInput
+    brand?: BrandUpdateOneWithoutRequestsNestedInput
+    images?: RequestImageUpdateManyWithoutRequestNestedInput
+    bids?: BidUpdateManyWithoutRequestNestedInput
+    deliveryTracking?: DeliveryTrackingUpdateManyWithoutRequestNestedInput
+    transactions?: TransactionUpdateManyWithoutRequestNestedInput
+    notifications?: NotificationUpdateManyWithoutRequestNestedInput
+    review?: ReviewUpdateOneWithoutRequestNestedInput
+    complaints?: ComplaintUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RequestUncheckedUpdateWithoutCityInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clientId?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    categoryId?: IntFieldUpdateOperationsInput | number
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    images?: RequestImageUncheckedUpdateManyWithoutRequestNestedInput
+    bids?: BidUncheckedUpdateManyWithoutRequestNestedInput
+    deliveryTracking?: DeliveryTrackingUncheckedUpdateManyWithoutRequestNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutRequestNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutRequestNestedInput
+    review?: ReviewUncheckedUpdateOneWithoutRequestNestedInput
+    complaints?: ComplaintUncheckedUpdateManyWithoutRequestNestedInput
+  }
+
+  export type RequestUncheckedUpdateManyWithoutCityInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clientId?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    categoryId?: IntFieldUpdateOperationsInput | number
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    longitude?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    deliveryPhone?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    selectedBidId?: NullableIntFieldUpdateOperationsInput | number | null
+    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedDeliveryAgentId?: NullableIntFieldUpdateOperationsInput | number | null
+    governorateId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

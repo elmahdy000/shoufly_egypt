@@ -17,7 +17,41 @@ const FILTERS = [
 
 export default function VendorRequestsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const { data, loading, error } = useAsyncData(() => listVendorOpenRequests(), []);
+  const [selectedGov, setSelectedGov] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  
+  const [governorates, setGovernorates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+
+  // Initial Fetch: Governorates
+  useState(() => {
+    fetch('/api/locations')
+      .then(res => res.json())
+      .then(data => setGovernorates(data))
+      .catch(err => console.error('Failed to load governorates', err));
+  });
+
+  // Fetch Cities when gov changes
+  const handleGovChange = (govId: string) => {
+    setSelectedGov(govId);
+    setSelectedCity("");
+    if (!govId) {
+      setCities([]);
+      return;
+    }
+    fetch(`/api/locations?type=cities&governorateId=${govId}`)
+      .then(res => res.json())
+      .then(data => setCities(data))
+      .catch(err => console.error('Failed to load cities', err));
+  };
+
+  const { data, loading, error } = useAsyncData(
+    () => listVendorOpenRequests({ 
+      governorateId: selectedGov ? Number(selectedGov) : undefined,
+      cityId: selectedCity ? Number(selectedCity) : undefined
+    }), 
+    [selectedGov, selectedCity]
+  );
 
   const rows = useMemo(() => {
     const list = data ?? [];
@@ -36,6 +70,38 @@ export default function VendorRequestsPage() {
             <p className="text-sm text-slate-500">
               {loading ? "جاري التحميل..." : `${data?.length ?? 0} طلب متاح`}
             </p>
+          </div>
+        </div>
+
+        {/* Location Filters */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative">
+            <select
+              value={selectedGov}
+              onChange={(e) => handleGovChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-primary transition-all appearance-none"
+            >
+              <option value="">كل المحافظات</option>
+              {governorates.map((gov: any) => (
+                <option key={gov.id} value={gov.id}>{gov.name}</option>
+              ))}
+            </select>
+            <FiMapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          </div>
+
+          <div className="relative">
+            <select
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-primary transition-all appearance-none"
+              disabled={!selectedGov}
+            >
+              <option value="">كل المدن</option>
+              {cities.map((city: any) => (
+                <option key={city.id} value={city.id}>{city.name}</option>
+              ))}
+            </select>
+            <FiFilter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           </div>
         </div>
 

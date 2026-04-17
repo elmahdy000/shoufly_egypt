@@ -20,13 +20,13 @@ function isValidForwardTransition(current: DeliveryStep, next: DeliveryStep) {
 
 export async function updateDeliveryStatus(params: {
   requestId: number;
-  vendorId: number;
+  userId: number; // Changed from vendorId for general use
   status: DeliveryStep;
   note?: string;
   locationText?: string;
 }) {
-  const { requestId, vendorId, status, note, locationText } = params;
-  logger.info('delivery.status_update.started', { requestId, vendorId, status });
+  const { requestId, userId, status, note, locationText } = params;
+  logger.info('delivery.status_update.started', { requestId, userId, status });
 
   return prisma.$transaction(async (tx) => {
     const request = await tx.request.findUnique({
@@ -45,29 +45,28 @@ export async function updateDeliveryStatus(params: {
     });
 
     if (!request) {
-      logger.warn('delivery.status_update.request_not_found', { requestId, vendorId, status });
       throw new Error('Request not found');
     }
 
     if (request.status !== 'ORDER_PAID_PENDING_DELIVERY') {
-      logger.warn('delivery.status_update.invalid_request_state', {
-        requestId,
-        vendorId,
-        status,
-        requestStatus: request.status,
-      });
       throw new Error('Delivery updates require paid request state');
     }
 
-    const acceptedBid = request.bids.find((b) => b.vendorId === vendorId);
-    if (!acceptedBid) {
-      logger.warn('delivery.status_update.vendor_not_owner', { requestId, vendorId, status });
-      throw new Error('Only vendor owning accepted bid can update delivery');
+    const isAcceptedVendor = request.bids.some((b) => b.vendorId === userId);
+    const isAssignedAgent = request.assignedDeliveryAgentId === userId;
+
+    if (!isAcceptedVendor && !isAssignedAgent) {
+      logger.warn('delivery.status_update.unauthorized', { requestId, userId, status });
+      throw new Error('Only the assigned vendor or delivery agent can update status');
     }
 
-    // Role-based status restrictions: Vendors can only set preparing or ready
-    if (status !== 'VENDOR_PREPARING' && status !== 'READY_FOR_PICKUP') {
-      throw new Error(`Vendors cannot update delivery to status: ${status}`);
+    // Role-based status restrictions
+    if (isAcceptedVendor && !['VENDOR_PREPARING', 'READY_FOR_PICKUP'].includes(status)) {
+      throw new Error(`Vendors can only set PREPARING or READY_FOR_PICKUP`);
+    }
+
+    if (isAssignedAgent && ['VENDOR_PREPARING', 'READY_FOR_PICKUP'].includes(status)) {
+      throw new Error(`Delivery agents cannot set vendor-specific statuses`);
     }
 
 
@@ -75,7 +74,7 @@ export async function updateDeliveryStatus(params: {
     if (!isValidForwardTransition(lastStatus, status)) {
       logger.warn('delivery.status_update.invalid_transition', {
         requestId,
-        vendorId,
+        userId,
         from: lastStatus,
         to: status,
       });
@@ -109,8 +108,8 @@ export async function updateDeliveryStatus(params: {
 
     logger.info('delivery.status_update.completed', {
       requestId,
-      vendorId,
-      status,
+      userId,
+      status: tracking.status,
       trackingId: tracking.id,
     });
 

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { listMessages } from '@/lib/services/chat/list-messages';
 import { sendMessage } from '@/lib/services/chat/send-message';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
+
+/**
+ * 💬 Partner-specific Messages API
+ * Standardized with pagination and unified error handling.
+ */
 
 export async function GET(
   req: NextRequest,
@@ -14,22 +20,18 @@ export async function GET(
     const { partnerId } = await params;
     const pid = parseInt(partnerId);
 
-    const messages = await prisma.chatMessage.findMany({
-      where: {
-        OR: [
-          { senderId: user.id, receiverId: pid },
-          { senderId: pid, receiverId: user.id }
-        ]
-      },
-      orderBy: { createdAt: 'asc' },
-      include: {
-          sender: { select: { id: true, fullName: true } }
-      }
-    });
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(Number(searchParams.get('limit')) || 50, 100);
+    const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
+
+    // Reuse the central service for consistency
+    const messages = await listMessages(user.id, pid, limit, offset);
 
     return NextResponse.json(messages);
   } catch (error: unknown) {
-    return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    logError('MESSAGES_PARTNER_GET', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }
 
@@ -53,6 +55,8 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error: unknown) {
-    return NextResponse.json({ error: 'Failed to send' }, { status: 500 });
+    logError('MESSAGES_PARTNER_POST', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }

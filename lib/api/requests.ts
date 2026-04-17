@@ -10,7 +10,8 @@ export type RequestCreatePayload = {
   longitude: number;
   deliveryPhone: string;
   budget?: number;
-  notes?: string;
+  governorateId: number;
+  cityId: number;
   images?: Array<{
     filePath: string;
     fileName: string;
@@ -31,8 +32,13 @@ export async function createClientRequest(payload: RequestCreatePayload) {
   return apiFetch<ApiRequestSummary>("/api/requests", "CLIENT", { method: "POST", body: payload });
 }
 
-export async function listVendorOpenRequests() {
-  return apiFetch<ApiRequestSummary[]>("/api/vendor/requests/open", "VENDOR");
+export async function listVendorOpenRequests(filters: { governorateId?: number, cityId?: number } = {}) {
+  const query = new URLSearchParams();
+  if (filters.governorateId) query.set("governorateId", filters.governorateId.toString());
+  if (filters.cityId) query.set("cityId", filters.cityId.toString());
+  
+  const endpoint = `/api/vendor/requests/open${query.toString() ? `?${query.toString()}` : ""}`;
+  return apiFetch<ApiRequestSummary[]>(endpoint, "VENDOR");
 }
 
 export async function listPendingAdminRequests() {

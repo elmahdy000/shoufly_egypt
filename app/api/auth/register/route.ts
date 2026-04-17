@@ -65,6 +65,8 @@ export async function POST(req: NextRequest) {
         password: hashed,
         phone: data.phone ?? null,
         role: data.role,
+        governorateId: data.governorateId ?? null,
+        cityId: data.cityId ?? null,
         isActive: !isProvider, // Clients are active immediately, providers need approval
       },
       select: { id: true, fullName: true, email: true, role: true, isActive: true },

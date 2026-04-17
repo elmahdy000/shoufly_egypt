@@ -73,7 +73,7 @@ async function runMasterSimulation() {
         await reviewRequest(r2.id, 'approve');
         const b2 = await createBid(vendor.id, { requestId: r2.id, description: 'B', netPrice: 50 });
         await prisma.request.update({ where: { id: r2.id }, data: { selectedBidId: b2.id, status: 'ORDER_PAID_PENDING_DELIVERY' } });
-        await updateDeliveryStatus({ requestId: r2.id, vendorId: vendor.id, status: 'DELIVERED' });
+        await updateDeliveryStatus({ requestId: r2.id, userId: vendor.id, status: 'DELIVERED' });
     });
 
     // --- SUCCESS SCENARIOS ---
@@ -87,8 +87,8 @@ async function runMasterSimulation() {
     await payRequest(rFinal.id, client.id);
     console.log('✅ Flow: Created -> Approved -> Bid -> Paid');
 
-    await updateDeliveryStatus({ requestId: rFinal.id, vendorId: vendor.id, status: 'VENDOR_PREPARING' });
-    await updateDeliveryStatus({ requestId: rFinal.id, vendorId: vendor.id, status: 'READY_FOR_PICKUP' });
+    await updateDeliveryStatus({ requestId: rFinal.id, userId: vendor.id, status: 'VENDOR_PREPARING' });
+    await updateDeliveryStatus({ requestId: rFinal.id, userId: vendor.id, status: 'READY_FOR_PICKUP' });
     const sFinal = await settleOrder(rFinal.id);
     console.log(`✅ Flow: Delivered -> Settled. Payout: ${sFinal.vendorPayout}`);
 

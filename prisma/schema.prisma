@@ -90,8 +90,13 @@ model User {
   isBlocked     Boolean  @default(false)
   walletBalance Decimal  @default(0) @db.Decimal(12, 2)
   fcmToken      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  cityId         Int?
+  governorateId  Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  city         City?        @relation(fields: [cityId], references: [id])
+  governorate  Governorate? @relation(fields: [governorateId], references: [id])
 
   clientRequests           Request[]           @relation("ClientRequests")
   vendorBids               Bid[]
@@ -106,6 +111,7 @@ model User {
   reviewsGiven             Review[]            @relation("ReviewsGiven")
   reviewsReceived          Review[]            @relation("ReviewsReceived")
   complaints               Complaint[]         @relation("UserComplaints")
+  complaintsReceived       Complaint[]         @relation("ReportedUserComplaints")
   resolvedComplaints       Complaint[]         @relation("AdminResolvedComplaints")
   vendorBrands             VendorBrand[]
 
@@ -114,14 +120,21 @@ model User {
   @@index([isActive])
 }
 
+enum CategoryType {
+  SERVICE     // Technician goes to client (e.g. Plumbing)
+  PRODUCT     // Needs delivery agent (e.g. Spare parts)
+  DIGITAL     // Online/Remote execution (e.g. Tutoring)
+}
+
 model Category {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique
-  slug          String   @unique
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  slug          String         @unique
   parentId      Int?
-  requiresBrand Boolean  @default(false)
+  requiresBrand Boolean        @default(false)
   brandType     String?
-  createdAt     DateTime @default(now())
+  type          CategoryType   @default(SERVICE)
+  createdAt     DateTime       @default(now())
 
   parent        Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
   subcategories Category[] @relation("CategoryToSubcategory")
@@ -132,6 +145,7 @@ model Category {
   @@index([slug])
   @@index([parentId])
   @@index([brandType])
+  @@index([type])
 }
 
 model Brand {
@@ -190,8 +204,13 @@ model Request {
   selectedBidId           Int?          @unique
   qrCode                  String?
   assignedDeliveryAgentId Int?
+  cityId                  Int?
+  governorateId           Int?
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
+
+  city         City?        @relation(fields: [cityId], references: [id])
+  governorate  Governorate? @relation(fields: [governorateId], references: [id])
 
   client           User               @relation("ClientRequests", fields: [clientId], references: [id], onDelete: Cascade)
   deliveryAgent    User?              @relation("DeliveryAgent", fields: [assignedDeliveryAgentId], references: [id], onDelete: SetNull)
@@ -268,6 +287,9 @@ model DeliveryTracking {
   id           Int            @id @default(autoincrement())
   requestId    Int
   status       DeliveryStatus
+  latitude     Decimal?       @db.Decimal(10, 7)
+  longitude    Decimal?       @db.Decimal(10, 7)
+  speed        Decimal?       @db.Decimal(5, 2)
   note         String?
   locationText String?
   createdAt    DateTime       @default(now())
@@ -393,10 +415,14 @@ model Complaint {
 
   request    Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
   user       User    @relation("UserComplaints", fields: [userId], references: [id], onDelete: Cascade)
+  reportedUser User?  @relation("ReportedUserComplaints", fields: [reportedUserId], references: [id], onDelete: SetNull)
   resolvedBy User?   @relation("AdminResolvedComplaints", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  reportedUserId Int?
 
   @@index([requestId])
   @@index([userId])
+  @@index([reportedUserId])
   @@index([status])
 }
 
@@ -405,4 +431,23 @@ enum ComplaintStatus {
   IN_PROGRESS
   RESOLVED
   REJECTED
+}
+
+model Governorate {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  cities City[]
+  users  User[]
+  requests Request[]
+}
+
+model City {
+  id            Int         @id @default(autoincrement())
+  name          String
+  governorateId Int
+  governorate   Governorate @relation(fields: [governorateId], references: [id])
+  users         User[]
+  requests      Request[]
+
+  @@index([governorateId])
 }

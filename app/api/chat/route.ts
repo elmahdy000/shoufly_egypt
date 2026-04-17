@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
     const otherId = parseInt(searchParams.get('otherId') || '0');
     if (!otherId) throw new Error('Other user ID is required');
 
-    const messages = await listMessages(user.id, otherId);
+    const limit = Math.min(Number(searchParams.get('limit')) || 50, 100);
+    const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
+
+    const messages = await listMessages(user.id, otherId, limit, offset);
     return NextResponse.json(messages);
   } catch (error: unknown) {
     logError('CHAT_GET', error);

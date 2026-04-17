@@ -13,8 +13,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const governorateId = searchParams.get('governorateId');
+    const cityId = searchParams.get('cityId');
 
-    const requests = await listVendorOpenRequests(user.id, limit, offset);
+    const filters = {
+      governorateId: governorateId ? parseInt(governorateId) : undefined,
+      cityId: cityId ? parseInt(cityId) : undefined,
+    };
+
+    const requests = await listVendorOpenRequests(user.id, filters, limit, offset);
 
     return NextResponse.json(requests);
 

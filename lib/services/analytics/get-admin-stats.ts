@@ -81,46 +81,49 @@ export async function getAdminStats() {
       take: 5
   });
 
-  // 7. Trends (Last 7 Days)
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      return {
-          start: startOfDay(d),
-          end: endOfDay(d),
-          label: d.toLocaleDateString('en-US', { weekday: 'short' })
-      };
-  }).reverse();
+  // 7. Trends (Last 7 Days) - OPTIMIZED: Fetch in bulk and aggregate in memory
+  const last7DaysStart = startOfDay(subMonths(now, 0)); // Simplified: actually we want last 7 days from now
+  const weekStart = startOfDay(new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000));
 
-  const trends = await Promise.all(last7Days.map(async (day) => {
-      const [count, revenue, dayRefunds] = await Promise.all([
-          prisma.request.count({
-              where: { createdAt: { gte: day.start, lte: day.end } }
-          }),
-          prisma.transaction.aggregate({
-              _sum: { amount: true },
-              where: { 
-                  type: 'ADMIN_COMMISSION',
-                  createdAt: { gte: day.start, lte: day.end }
-              }
-          }),
-          prisma.transaction.aggregate({
-              _sum: { amount: true },
-              where: { 
-                  type: 'REFUND',
-                  createdAt: { gte: day.start, lte: day.end }
-              }
-          })
-      ]);
+  const [allWeekRequests, allWeekTransactions] = await Promise.all([
+      prisma.request.findMany({
+          where: { createdAt: { gte: weekStart } },
+          select: { createdAt: true }
+      }),
+      prisma.transaction.findMany({
+          where: { 
+              createdAt: { gte: weekStart },
+              type: { in: ['ADMIN_COMMISSION', 'REFUND'] }
+          },
+          select: { createdAt: true, type: true, amount: true }
+      })
+  ]);
+
+  const trends = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      const dStart = startOfDay(d);
+      const dEnd = endOfDay(d);
+      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+      const dayRequests = allWeekRequests.filter(r => r.createdAt >= dStart && r.createdAt <= dEnd).length;
       
-      const netRevenue = Decimal.max(0, new Decimal(revenue._sum.amount?.toString() || '0').minus(new Decimal(dayRefunds._sum.amount?.toString() || '0')));
-      
+      const dayCommissions = allWeekTransactions
+          .filter(t => t.type === 'ADMIN_COMMISSION' && t.createdAt >= dStart && t.createdAt <= dEnd)
+          .reduce((sum, t) => sum.plus(t.amount.toString()), new Decimal(0));
+          
+      const dayRefunds = allWeekTransactions
+          .filter(t => t.type === 'REFUND' && t.createdAt >= dStart && t.createdAt <= dEnd)
+          .reduce((sum, t) => sum.plus(t.amount.toString()), new Decimal(0));
+
+      const netRevenue = Decimal.max(0, dayCommissions.minus(dayRefunds));
+
       return {
-          day: day.label,
-          requests: count,
+          day: label,
+          requests: dayRequests,
           revenue: netRevenue.toNumber()
       };
-  }));
+  });
 
   return {
     overview: {

@@ -46,8 +46,37 @@ export default function NewRequestPage() {
   const [longitude, setLongitude] = useState("31.2357");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // Locations State
+  const [governorates, setGovernorates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedGov, setSelectedGov] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [brandOptions, setBrandOptions] = useState<any[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState("");
+
+  // Fetch Brands when categoryId changes
+  useEffect(() => {
+    if (!categoryId) {
+      setBrandOptions([]);
+      setSelectedBrand("");
+      return;
+    }
+    const flatSubs = categoryList.flatMap((c: any) => c.subcategories || []);
+    const sub = flatSubs.find((s: any) => s.id === categoryId);
+    if (sub?.requiresBrand && sub?.brandType) {
+      fetch(`/api/brands?type=${sub.brandType}`)
+        .then(res => res.json())
+        .then(data => setBrandOptions(data))
+        .catch(err => console.error('Failed to load brands', err));
+    } else {
+      setBrandOptions([]);
+      setSelectedBrand("");
+    }
+  }, [categoryId, categoryList]);
 
   useEffect(() => {
+    // Categories Fetch
     fetch('/api/categories', { credentials: 'include' })
       .then(r => r.json())
       .then((cats: any[]) => {
@@ -59,7 +88,25 @@ export default function NewRequestPage() {
           }
         }
       }).catch(err => setError("فشل تحميل الفئات. يرجى التحديث."));
+
+    // Locations Initial Fetch
+    fetch('/api/locations')
+      .then(res => res.json())
+      .then(data => setGovernorates(data))
+      .catch(err => console.error('Failed to load governorates', err));
   }, []);
+
+  // Fetch Cities when gov changes
+  useEffect(() => {
+    if (!selectedGov) {
+      setCities([]);
+      return;
+    }
+    fetch(`/api/locations?type=cities&governorateId=${selectedGov}`)
+      .then(res => res.json())
+      .then(data => setCities(data))
+      .catch(err => console.error('Failed to load cities', err));
+  }, [selectedGov]);
 
   const currentParent = useMemo(() => 
     categoryList.find(c => c.id === selectedParentId), 
@@ -155,6 +202,9 @@ export default function NewRequestPage() {
         notes: notes || undefined,
         categoryId: categoryId,
         images: uploadedImages,
+        governorateId: Number(selectedGov),
+        cityId: Number(selectedCity),
+        brandId: selectedBrand ? Number(selectedBrand) : undefined,
       });
       router.push(`/client/requests/${created.id}?new=true`);
     } catch (err: any) {
@@ -280,6 +330,30 @@ export default function NewRequestPage() {
                       </select>
                     </div>
                   )}
+
+                  {/* Brand Selection UI */}
+                  {brandOptions.length > 0 && (
+                    <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+                       <label className="text-sm font-black text-slate-900">الماركة / النوع</label>
+                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {brandOptions.map((brand: any) => {
+                            const isSel = selectedBrand === brand.id.toString();
+                            return (
+                              <button
+                                key={brand.id}
+                                type="button"
+                                onClick={() => setSelectedBrand(brand.id.toString())}
+                                className={`px-4 py-3 rounded-2xl text-xs font-black border-2 transition-all ${
+                                  isSel ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "bg-white border-border text-slate-500 hover:border-primary/30"
+                                }`}
+                              >
+                                {brand.name}
+                              </button>
+                            );
+                          })}
+                       </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -381,6 +455,38 @@ export default function NewRequestPage() {
                          className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none"
                        />
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                          <label className="text-sm font-black text-slate-900">المحافظة</label>
+                          <select 
+                            value={selectedGov}
+                            onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(''); }}
+                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none appearance-none"
+                            required
+                          >
+                             <option value="">اختر المحافظة</option>
+                             {governorates.map((gov: any) => (
+                               <option key={gov.id} value={gov.id}>{gov.name}</option>
+                             ))}
+                          </select>
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-sm font-black text-slate-900">المدينة</label>
+                          <select 
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none appearance-none"
+                            disabled={!selectedGov}
+                            required
+                          >
+                             <option value="">اختر المدينة</option>
+                             {cities.map((city: any) => (
+                               <option key={city.id} value={city.id}>{city.name}</option>
+                             ))}
+                          </select>
+                       </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        <div className="space-y-2">
                           <label className="text-sm font-black text-slate-900">رقم الهاتف للتواصل</label>

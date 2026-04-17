@@ -7,6 +7,7 @@ const UpdateProfileSchema = z.object({
   fullName: z.string().min(3).optional(),
   phone: z.string().min(10).optional(),
   categoryIds: z.array(z.number()).optional(),
+  brandIds: z.array(z.number()).optional(),
 });
 
 export async function PATCH(req: NextRequest) {

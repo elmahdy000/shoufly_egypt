@@ -132,6 +132,8 @@ exports.Prisma.UserScalarFieldEnum = {
   isBlocked: 'isBlocked',
   walletBalance: 'walletBalance',
   fcmToken: 'fcmToken',
+  cityId: 'cityId',
+  governorateId: 'governorateId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -143,6 +145,7 @@ exports.Prisma.CategoryScalarFieldEnum = {
   parentId: 'parentId',
   requiresBrand: 'requiresBrand',
   brandType: 'brandType',
+  type: 'type',
   createdAt: 'createdAt'
 };
 
@@ -184,6 +187,8 @@ exports.Prisma.RequestScalarFieldEnum = {
   selectedBidId: 'selectedBidId',
   qrCode: 'qrCode',
   assignedDeliveryAgentId: 'assignedDeliveryAgentId',
+  cityId: 'cityId',
+  governorateId: 'governorateId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -225,6 +230,9 @@ exports.Prisma.DeliveryTrackingScalarFieldEnum = {
   id: 'id',
   requestId: 'requestId',
   status: 'status',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  speed: 'speed',
   note: 'note',
   locationText: 'locationText',
   createdAt: 'createdAt'
@@ -306,7 +314,19 @@ exports.Prisma.ComplaintScalarFieldEnum = {
   resolvedById: 'resolvedById',
   resolvedAt: 'resolvedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  reportedUserId: 'reportedUserId'
+};
+
+exports.Prisma.GovernorateScalarFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.CityScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  governorateId: 'governorateId'
 };
 
 exports.Prisma.SortOrder = {
@@ -339,6 +359,12 @@ exports.UserRole = exports.$Enums.UserRole = {
   VENDOR: 'VENDOR',
   ADMIN: 'ADMIN',
   DELIVERY: 'DELIVERY'
+};
+
+exports.CategoryType = exports.$Enums.CategoryType = {
+  SERVICE: 'SERVICE',
+  PRODUCT: 'PRODUCT',
+  DIGITAL: 'DIGITAL'
 };
 
 exports.RequestStatus = exports.$Enums.RequestStatus = {
@@ -428,7 +454,9 @@ exports.Prisma.ModelName = {
   WithdrawalRequest: 'WithdrawalRequest',
   PlatformSetting: 'PlatformSetting',
   Review: 'Review',
-  Complaint: 'Complaint'
+  Complaint: 'Complaint',
+  Governorate: 'Governorate',
+  City: 'City'
 };
 
 /**

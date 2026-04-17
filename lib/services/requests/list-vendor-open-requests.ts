@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 
-export async function listVendorOpenRequests(vendorId: number, limit = 20, offset = 0) {
+export async function listVendorOpenRequests(vendorId: number, filters: { governorateId?: number, cityId?: number } = {}, limit = 20, offset = 0) {
   // Filter by vendor's categories
   const vendorData = await prisma.user.findUnique({
     where: { id: vendorId },
@@ -19,6 +19,8 @@ export async function listVendorOpenRequests(vendorId: number, limit = 20, offse
       categoryId: {
         in: categoryIds,
       },
+      ...(filters.governorateId ? { governorateId: filters.governorateId } : {}),
+      ...(filters.cityId ? { cityId: filters.cityId } : {}),
     },
     include: {
       category: true,

@@ -1,86 +1,90 @@
-import { Redis } from "ioredis";
+import { Redis } from 'ioredis';
 
 /**
- * 🚀 MockRedis: In-Memory fallback for development
- * Ensures the app works even if Redis is not installed/running locally.
+ * 🚀 High-Availability Redis Client with Singleton Pattern
+ * Prevents multiple connections during Next.js Hot Module Replacement (HMR).
  */
+
+const MOCK_STORAGE = new Map<string, string>();
+
 class MockRedis {
-  private storage = new Map<string, string>();
-  status = "ready";
+  status = 'ready';
 
-  async get(key: string) {
-    return this.storage.get(key) || null;
-  }
-
+  async get(key: string) { return MOCK_STORAGE.get(key) || null; }
   async set(key: string, value: string, mode?: string, duration?: number) {
-    this.storage.set(key, value);
-    if (mode === "EX" && duration) {
-      setTimeout(() => this.storage.delete(key), duration * 1000);
+    MOCK_STORAGE.set(key, value);
+    if (mode === 'EX' && duration) {
+      setTimeout(() => MOCK_STORAGE.delete(key), duration * 1000);
     }
-    return "OK";
+    return 'OK';
   }
-
-  async del(key: string) {
-    this.storage.delete(key);
-    return 1;
-  }
-
-  async keys(pattern: string) {
-    const regex = new RegExp(pattern.replace("*", ".*"));
-    return Array.from(this.storage.keys()).filter((k) => regex.test(k));
-  }
-
-  async zremrangebyscore(key: string, min: any, max: any) { return 0; }
-  async zcard(key: string) { return 0; }
-  async zrange(key: string, min: any, max: any, mode?: string) { return []; }
-  async zadd(key: string, score: number, member: string) { return 1; }
-  async expire(key: string, seconds: number) { return 1; }
-
-  async quit() {
-    return "OK";
-  }
-
+  async del(key: string) { return MOCK_STORAGE.delete(key) ? 1 : 0; }
+  async exists(key: string) { return MOCK_STORAGE.has(key) ? 1 : 0; }
+  async quit() { return 'OK'; }
   on() { return this; }
+  once() { return this; }
   disconnect() {}
 }
 
-const redis = (() => {
-  if (process.env.NODE_ENV === "test") return new MockRedis() as any;
+// 🛡️ TypeScript Global Declaration
+declare global {
+  var redis: Redis | MockRedis | undefined;
+}
 
-  try {
-    const client = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
-      maxRetriesPerRequest: 1,
-      retryStrategy: (times) => {
-        if (times > 1) {
-          console.warn("⚠️ Redis connection failed. Falling back to MockRedis.");
-          return null; // Stop retrying to trigger fallback
-        }
-        return 100;
-      },
-    });
+let currentClient: any;
 
-    client.on("error", (err) => {
-      // Sliently handle connection errors to prevent app crash
-    });
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
-    return client;
-  } catch (e) {
-    return new MockRedis() as any;
-  }
-})();
-
-export const getRedisClient = () => redis;
-export const isRedisAvailable = redis.status === "ready";
-
-// Wrap redis to auto-fallback if connection is lost
-const redisProxy = new Proxy(redis, {
-  get(target, prop) {
-    if (redis.status === "ready" || typeof prop !== "string") {
-      return Reflect.get(target, prop);
+const createRealClient = () => {
+  const client = new Redis(REDIS_URL, {
+    maxRetriesPerRequest: 0,
+    connectTimeout: 1000,
+    lazyConnect: true,
+  });
+  
+  client.on('error', () => {
+    if (!(currentClient instanceof MockRedis)) {
+        console.warn('⚠️ Redis unreachable, using in-memory fallback.');
+        currentClient = new MockRedis();
     }
-    const mock = new MockRedis();
-    return (mock as any)[prop] || (() => Promise.resolve(null));
-  },
+  });
+
+  return client;
+};
+
+// Use existing global instance if available, otherwise create new
+currentClient = global.redis || (process.env.NODE_ENV === 'test' ? new MockRedis() : createRealClient());
+
+/**
+ * 🛡️ The Ultimate Redis Proxy
+ */
+const redisProxy = new Proxy({} as any, {
+  get(_, prop) {
+    return async (...args: any[]) => {
+      let callTarget = currentClient;
+      try {
+        if (typeof callTarget[prop] !== 'function') return undefined;
+        return await callTarget[prop].apply(callTarget, args);
+      } catch (err) {
+        if (!(currentClient instanceof MockRedis)) {
+          console.error('❌ Redis failover triggered during:', prop);
+          currentClient = new MockRedis();
+        }
+        
+        const mockTarget = currentClient;
+        if (typeof mockTarget[prop] === 'function') {
+          return await mockTarget[prop].apply(mockTarget, args);
+        }
+        return null;
+      }
+    };
+  }
 });
 
+// Save to global in development
+if (process.env.NODE_ENV !== 'production') {
+  global.redis = currentClient;
+}
+
+export const getRedisClient = () => redisProxy;
 export default redisProxy;

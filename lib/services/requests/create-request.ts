@@ -39,6 +39,8 @@ export async function createRequest(clientId: number, data: CreateRequestInput &
         longitude: data.longitude,
         deliveryPhone: data.deliveryPhone,
         notes: data.notes || null,
+        governorateId: data.governorateId,
+        cityId: data.cityId,
         status: 'PENDING_ADMIN_REVISION',
       },
     });
