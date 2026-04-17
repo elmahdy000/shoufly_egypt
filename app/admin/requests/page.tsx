@@ -174,6 +174,8 @@ export default function AdminRequestsPage() {
 
 function StatusBadge({ status, large }: { status: string; large?: boolean }) {
   const configs: any = {
+    "PENDING_ADMIN_REVISION": "bg-amber-500 text-slate-950 border-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)]",
+    "OPEN_FOR_BIDDING": "bg-sky-500 text-white border-slate-950",
     "قيد التوصيل": "bg-emerald-500 text-white border-slate-950",
     "قيد التحضير": "bg-amber-400 text-slate-950 border-slate-950",
     "جاهز للاستلام": "bg-indigo-500 text-white border-slate-950",

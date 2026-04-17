@@ -1,39 +1,40 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../prisma";
 
 export async function getPlatformStats() {
   const [
     totalUsers,
     totalVendors,
     openRequests,
-    totalTransactions,
-    pendingWithdrawals,
+    pendingAiReview, // Requests flagged by Watchtower
+    activeDeliveries, // Pilots currently moving
+    totalGMVResult,
+    recentRequests,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: 'VENDOR' } }),
     prisma.request.count({ where: { status: 'OPEN_FOR_BIDDING' } }),
-    prisma.transaction.count(),
-    prisma.withdrawalRequest.count({ where: { status: 'PENDING' } }),
+    prisma.request.count({ where: { status: 'PENDING_ADMIN_REVISION' } }),
+    prisma.request.count({ where: { status: 'OUT_FOR_DELIVERY' } }),
+    prisma.transaction.aggregate({
+      _sum: { amount: true }
+    }),
+    prisma.request.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { client: { select: { fullName: true } } }
+    })
   ]);
-
-  // Calculate platform revenue (sum of ADMIN_COMMISSION transactions)
-  const revenueResult = await prisma.transaction.aggregate({
-    where: { type: 'ADMIN_COMMISSION' },
-    _sum: { amount: true },
-  });
-
-  // Calculate total liquidity (sum of all user wallet balances)
-  const liquidityResult = await prisma.user.aggregate({
-    _sum: { walletBalance: true },
-  });
 
   return {
     totalUsers,
     totalVendors,
     openRequests,
-    totalTransactions,
-    pendingWithdrawals,
-    revenue: Number(revenueResult._sum.amount || 0),
-    liquidity: Number(liquidityResult._sum.walletBalance || 0),
-    growthRate: 12.5, // Mocked for now
+    pendingAiReview,
+    activeDeliveries,
+    totalGMV: Number(totalGMVResult._sum.amount || 0),
+    todayRequests: await prisma.request.count({
+        where: { createdAt: { gte: new Date(new Date().setHours(0,0,0,0)) } }
+    }),
+    recentRequests
   };
 }

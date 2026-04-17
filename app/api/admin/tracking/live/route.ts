@@ -45,6 +45,9 @@ export async function GET(req: NextRequest) {
         riderPhone: order.deliveryAgent?.phone,
         client: order.client?.fullName,
         location: latestTracking?.locationText || order.address,
+        latitude: latestTracking?.latitude ? Number(latestTracking.latitude) : Number(order.latitude),
+        longitude: latestTracking?.longitude ? Number(latestTracking.longitude) : Number(order.longitude),
+        speed: latestTracking?.speed ? Number(latestTracking.speed) : 0,
         updatedAt: latestTracking?.createdAt || order.updatedAt
       };
     });

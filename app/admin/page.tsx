@@ -68,10 +68,10 @@ export default function AdminDashboard() {
         
         {/* 📊 High-Contrast KPI Cluster */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-           <AnMetric label="إجمالي المعاملات" val={formatCurrency(stats?.totalGMV ?? 0).split('.')[0]} icon={CreditCard} color="bg-primary" light delay={0.1} />
-           <AnMetric label="طلبات قيد المتابعة" val={stats?.openRequests ?? 0} icon={Package} color="bg-slate-900" delay={0.2} />
-           <AnMetric label="قاعدة المستخدمين" val={stats?.totalUsers ?? 0} icon={Users} color="bg-indigo-600" delay={0.3} />
-           <AnMetric label="الشركاء التجاريين" val={stats?.totalVendors ?? 0} icon={Briefcase} color="bg-emerald-600" delay={0.4} />
+            <AnMetric label="إجمالي المعاملات" val={formatCurrency(stats?.totalGMV ?? 0).split('.')[0]} icon={CreditCard} color="bg-primary" light delay={0.1} />
+            <AnMetric label="طلبات الـ AI للمراجعة" val={stats?.pendingAiReview ?? 0} icon={AlertCircle} color="bg-amber-600" delay={0.2} />
+            <AnMetric label="طلبات قيد المتابعة" val={stats?.openRequests ?? 0} icon={Package} color="bg-slate-900" delay={0.3} />
+            <AnMetric label="قاعدة المستخدمين" val={stats?.totalUsers ?? 0} icon={Users} color="bg-indigo-600" delay={0.4} />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
