@@ -86,19 +86,23 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-border/50 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 dir-rtl">
-        <div className="flex items-center gap-4 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
-            <Zap size={22} strokeWidth={2.5} />
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+      {/* Main Header */}
+      <div className="mx-auto flex h-16 sm:h-18 md:h-20 max-w-[1440px] items-center justify-between gap-2 sm:gap-3 md:gap-4 px-3 sm:px-4 md:px-6 lg:px-8 dir-rtl">
+        {/* Logo & Title */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-lg sm:rounded-xl bg-primary text-white shadow-sm transition-transform hover:rotate-12">
+            <Zap size={18} className="sm:hidden" strokeWidth={2.5} />
+            <Zap size={20} className="hidden sm:block" strokeWidth={2.5} />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-lg font-black leading-none text-slate-900 sm:text-xl tracking-tight">{title}</h1>
-            {subtitle && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{subtitle}</p>}
+          <div className="space-y-0.5 min-w-0">
+            <h1 className="text-sm sm:text-base md:text-lg font-bold leading-tight text-gray-900 truncate">{title}</h1>
+            {subtitle && <p className="text-[9px] sm:text-[10px] font-semibold text-gray-500 uppercase tracking-wide truncate">{subtitle}</p>}
           </div>
         </div>
 
-        <nav className="hidden xl:flex items-center gap-1.5 rounded-[20px] bg-muted/30 p-1.5 border border-border/40 backdrop-blur-sm">
+        {/* Desktop Navigation */}
+        <nav className="hidden xl:flex items-center gap-1.5 rounded-lg bg-gray-50 p-1 border border-gray-200">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -106,59 +110,67 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex items-center gap-2.5 rounded-xl px-5 py-2.5 text-xs font-black transition-all ${
+                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap ${
                   active
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                    : "text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900"
+                    ? "bg-gray-900 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-white hover:text-gray-900"
                 }`}
               >
-                <Icon size={16} />
+                <Icon size={14} strokeWidth={2} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-2.5">
-          <div className="hidden sm:flex items-center gap-2.5">
-            <Link
-              href="/messages"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-slate-400 transition-all hover:border-primary hover:text-primary hover:shadow-lg hover:shadow-primary/5 active:scale-90"
-              title="الرسائل"
-            >
-              <MessageSquare size={18} />
-            </Link>
+        {/* Actions & Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Messages - Hidden on small screens */}
+          <Link
+            href="/messages"
+            className="hidden sm:inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl border border-gray-200 bg-white text-gray-400 transition-all hover:border-primary hover:text-primary hover:shadow-sm active:scale-90"
+            title="الرسائل"
+          >
+            <MessageSquare size={16} className="sm:hidden" strokeWidth={2} />
+            <MessageSquare size={18} className="hidden sm:block" strokeWidth={2} />
+          </Link>
 
+          {/* Notifications */}
+          <div className="hidden sm:block">
             <NotificationDropdown />
           </div>
 
+          {/* Profile Button */}
           <Link
             href={navConfig.profileHref}
-            className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all active:scale-90 ${
+            className={`inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl border-2 transition-all active:scale-90 ${
               isActivePath(pathname, navConfig.profileHref)
-                ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
-                : "border-border bg-white text-slate-400 hover:border-primary hover:text-primary"
+                ? "border-primary bg-primary text-white shadow-sm"
+                : "border-gray-200 bg-white text-gray-400 hover:border-primary hover:text-primary"
             }`}
             title="الملف الشخصي"
           >
-            <User size={18} />
+            <User size={16} className="sm:hidden" strokeWidth={2} />
+            <User size={18} className="hidden sm:block" strokeWidth={2} />
           </Link>
 
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-500 transition-all hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-100 active:scale-90"
+            className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl border border-red-200 bg-red-50 text-red-500 transition-all hover:bg-red-500 hover:text-white hover:shadow-sm active:scale-90"
             title="تسجيل الخروج"
           >
-            <LogOut size={18} />
+            <LogOut size={16} className="sm:hidden" strokeWidth={2} />
+            <LogOut size={18} className="hidden sm:block" strokeWidth={2} />
           </button>
 
           {actions}
         </div>
       </div>
 
-      {/* Mobile Sub-Nav: High Fidelity Glass */}
-      <div className="xl:hidden border-t border-border/30 bg-white/40 px-4 py-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+      {/* Mobile Sub-Nav */}
+      <div className="xl:hidden border-t border-gray-200 bg-white overflow-x-auto">
+        <div className="mx-auto max-w-[1440px] px-3 sm:px-4 md:px-6 flex items-center gap-2 py-2">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -166,13 +178,13 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black transition-all ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                   active
-                    ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
-                    : "bg-white border border-border/60 text-slate-500"
+                    ? "bg-gray-900 text-white shadow-sm"
+                    : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-white"
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={14} strokeWidth={2} />
                 {item.label}
               </Link>
             );

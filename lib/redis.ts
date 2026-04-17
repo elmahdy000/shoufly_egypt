@@ -96,4 +96,5 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const getRedisClient = () => redisProxy;
+export const isRedisAvailable = !(currentClient instanceof MockRedis);
 export default redisProxy;

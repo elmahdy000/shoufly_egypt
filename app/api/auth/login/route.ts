@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const secret = process.env.SESSION_SECRET!;
+    const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("SESSION_SECRET or JWT_SECRET environment variable is required");
+    }
     const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 days
     const token = await createSessionToken(
       { userId: user.id, role: user.role, exp },
@@ -77,34 +80,34 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
-    const isReplit = !!process.env.REPLIT_DOMAINS;
-    const isProduction = process.env.NODE_ENV === "production";
     const maxAge = 60 * 60 * 24 * 7;
 
-    // Cookie settings based on environment
-    // - Replit: Requires SameSite=None + Secure + Partitioned for iframe support
-    // - Production: SameSite=Lax + Secure
-    // - Local dev: SameSite=Lax (no Secure for HTTP localhost)
-    const cookieOptions = {
-      httpOnly: true,
-      secure: isReplit || isProduction,
-      sameSite: isReplit ? ("none" as const) : ("lax" as const),
-      maxAge,
-      path: "/",
-    };
+    // Cookie settings for iframe compatibility (v0 preview, Replit, etc.)
+    // Use SameSite=None; Secure; Partitioned for cross-site iframe support
+    // This works for normal browsing AND iframe contexts
+    const sessionCookie = [
+      `session_token=${token}`,
+      `Max-Age=${maxAge}`,
+      `Path=/`,
+      `HttpOnly`,
+      `Secure`,
+      `SameSite=None`,
+      `Partitioned`,
+    ].join("; ");
 
-    // Set the session cookie
-    res.cookies.set("session_token", token, cookieOptions);
-
-    // Set CSRF token cookie for subsequent requests
     const csrfToken = generateCsrfToken();
-    res.cookies.set("csrf_token", csrfToken, {
-      httpOnly: false, // Must be readable by JavaScript
-      secure: isReplit || isProduction,
-      sameSite: isReplit ? "none" : "lax",
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: "/",
-    });
+    const csrfCookie = [
+      `csrf_token=${csrfToken}`,
+      `Max-Age=${60 * 60 * 24}`,
+      `Path=/`,
+      `Secure`,
+      `SameSite=None`,
+      `Partitioned`,
+    ].join("; ");
+
+    // Append both cookies - using append to support multiple Set-Cookie headers
+    res.headers.append("Set-Cookie", sessionCookie);
+    res.headers.append("Set-Cookie", csrfCookie);
 
     return res;
   } catch (e: unknown) {

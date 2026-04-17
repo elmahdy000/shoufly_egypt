@@ -36,7 +36,7 @@ async function resolveUserBySessionToken(
     return null;
   }
 
-  const sessionSecret = process.env.SESSION_SECRET;
+  const sessionSecret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
   if (!sessionSecret) {
     return null;
   }
@@ -62,9 +62,15 @@ async function resolveUserBySessionToken(
 export async function getCurrentUser(
   headers: Headers,
 ): Promise<CurrentUser | null> {
+  // In API routes, headers parameter is provided, so use that first
+  const userFromHeaders = await resolveUserBySessionToken(headers);
+  if (userFromHeaders) return userFromHeaders;
+  
+  // Fallback to cookie store only if headers didn't have session (Server Components context)
   const cookieUser = await getCurrentUserFromCookie();
   if (cookieUser) return cookieUser;
-  return resolveUserBySessionToken(headers);
+  
+  return null;
 }
 
 /**
@@ -99,7 +105,7 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUser | null> {
   const token = cookieStore.get("session_token")?.value;
   if (!token) return null;
 
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
   if (!secret) return null;
 
   const payload = await verifySessionToken(token, secret);

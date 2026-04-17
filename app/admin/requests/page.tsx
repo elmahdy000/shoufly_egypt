@@ -3,203 +3,281 @@
 import { useState, useMemo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
-import { formatDate, formatCurrency } from "@/lib/formatters";
-import {
-  Package, Search, Filter, RefreshCw,
-  Eye, Truck, CheckCircle2, AlertCircle,
-  X, MapPin, Calendar, User, Phone,
-  ChevronLeft, History, Box, ArrowUpRight
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { formatDate } from "@/lib/formatters";
+import { Search, Package, Clock, CheckCircle2, AlertCircle, Activity, ChevronLeft, Circle, Zap, XCircle } from "lucide-react";
 
-interface OrderRequest {
+interface Request {
   id: number;
   title: string;
   status: string;
-  total: number;
   createdAt: string;
-  client?: { fullName?: string; phone?: string };
-  items: any[];
+  client?: { fullName?: string };
 }
 
-export default function AdminRequestsPage() {
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<OrderRequest | null>(null);
+const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: React.ElementType }> = {
+  PENDING_ADMIN_REVISION:      { label: "قيد المراجعة",            cls: "bg-amber-50 text-amber-700 border border-amber-200",   icon: Clock        },
+  OPEN_FOR_BIDDING:            { label: "مفتوح للعروض",            cls: "bg-blue-50 text-blue-700 border border-blue-200",      icon: Activity     },
+  BIDS_RECEIVED:               { label: "عروض واردة",              cls: "bg-purple-50 text-purple-700 border border-purple-200",icon: Activity     },
+  OFFERS_FORWARDED:            { label: "عروض محولة",              cls: "bg-indigo-50 text-indigo-700 border border-indigo-200",icon: ChevronLeft  },
+  ORDER_PAID_PENDING_DELIVERY: { label: "مدفوع - ينتظر التوصيل",  cls: "bg-orange-50 text-orange-700 border border-orange-200",icon: Circle       },
+  CLOSED_SUCCESS:              { label: "مكتمل",                   cls: "bg-green-50 text-green-700 border border-green-200",   icon: CheckCircle2 },
+  CLOSED_CANCELLED:            { label: "ملغى",                    cls: "bg-red-50 text-red-600 border border-red-200",         icon: AlertCircle  },
+  REJECTED:                    { label: "مرفوض",                   cls: "bg-gray-100 text-gray-500 border border-gray-200",     icon: AlertCircle  },
+};
 
-  const { data: requests, loading, refresh } = useAsyncData<OrderRequest[]>(
-    () => apiFetch("/api/admin/requests", "ADMIN"),
-    []
-  );
+const STATUS_FILTER_OPTIONS = [
+  { value: "all",                         label: "الكل" },
+  { value: "PENDING_ADMIN_REVISION",       label: "قيد المراجعة" },
+  { value: "OPEN_FOR_BIDDING",             label: "مفتوح للعروض" },
+  { value: "BIDS_RECEIVED",               label: "عروض واردة" },
+  { value: "ORDER_PAID_PENDING_DELIVERY",  label: "ينتظر التوصيل" },
+  { value: "CLOSED_SUCCESS",              label: "مكتمل" },
+  { value: "CLOSED_CANCELLED",            label: "ملغى" },
+];
 
-  const filtered = useMemo(() => {
-    return (requests ?? []).filter(r => 
-      r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.client?.fullName?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [requests, search]);
-
+function StatusPill({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] ?? { label: status, cls: "bg-gray-100 text-gray-500 border border-gray-200", icon: Circle };
+  const Icon = cfg.icon;
   return (
-    <div className="min-h-full bg-[#F1F5F9] pb-32 font-sans text-right" dir="rtl">
-      
-      {/* 🚀 Header: Tactical Control */}
-      <section className="bg-slate-950 text-white border-b-8 border-emerald-500 sticky top-0 z-40 shadow-2xl overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] -mr-40 -mt-40 opacity-50" />
-        <div className="w-full px-8 lg:px-12 py-10 relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
-          <div className="space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
-                <span className="text-[11px] font-black tracking-[0.4em] text-emerald-400 uppercase">نظام إدارة تدفقات اللوجستيات</span>
-             </div>
-             <h1 className="text-4xl lg:text-5xl font-black tracking-tighter">سجل <span className="text-emerald-400 italic">الطلبات</span></h1>
-             <p className="text-lg text-slate-400 font-bold max-w-2xl leading-relaxed">متابعة فورية لجميع الطلبات الصادرة، مراجعة حالات التوصيل، وحل مشكلات الشحنات.</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-             <div className="relative group w-full sm:w-[500px]">
-                <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-all" size={24} />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="بحث برقم الطلب أو اسم العميل..."
-                  className="w-full pr-16 pl-6 h-16 bg-white/10 border-4 border-white/10 rounded-2xl text-xl font-bold text-white focus:bg-white focus:text-slate-950 focus:border-emerald-600 outline-none transition-all placeholder:text-slate-600"
-                />
-             </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="w-full px-8 lg:px-12 py-12 space-y-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-           
-           {/* 📋 Order Ledger: High Contrast / Large Detail */}
-           <div className="lg:col-span-8 bg-white border-4 border-slate-950 rounded-[3rem] shadow-[25px_25px_0px_rgba(15,23,42,0.04)] overflow-hidden font-bold">
-              <div className="overflow-x-auto">
-                 <table className="w-full text-right">
-                    <thead>
-                       <tr className="bg-slate-50 border-b-4 border-slate-100 italic">
-                          <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-slate-500">الطلب</th>
-                          <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-center text-slate-500">الحالة</th>
-                          <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-slate-500">المرسل إليه</th>
-                          <th className="px-10 py-8 text-xs font-black uppercase tracking-widest text-left text-slate-500">المبلغ</th>
-                       </tr>
-                    </thead>
-                    <tbody className="divide-y-2 divide-slate-50">
-                       {loading ? (
-                         [1,2,3,4,5].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-28 bg-slate-50/50" /></tr>)
-                       ) : filtered.map(req => (
-                         <tr 
-                          key={req.id} 
-                          onClick={() => setSelected(req)}
-                          className={`group cursor-pointer transition-all ${selected?.id === req.id ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}
-                         >
-                            <td className="px-10 py-8">
-                               <div className="flex items-center gap-6">
-                                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${selected?.id === req.id ? 'bg-slate-950 text-white rotate-6' : 'bg-slate-100 text-slate-400 group-hover:rotate-6 group-hover:bg-slate-950 group-hover:text-white'}`}>
-                                     <Box size={32} />
-                                  </div>
-                                  <div>
-                                     <p className="text-xl font-black text-slate-950 leading-tight">#{req.id}</p>
-                                     <p className="text-sm font-bold text-slate-400 mt-1">{formatDate(req.createdAt)}</p>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="px-10 py-8 text-center">
-                               <StatusBadge status={req.status} />
-                            </td>
-                            <td className="px-10 py-8">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-black text-xs">{req.client?.fullName?.charAt(0) || "U"}</div>
-                                  <span className="text-base font-black text-slate-700">{req.client?.fullName || "عميل النظام"}</span>
-                               </div>
-                            </td>
-                            <td className="px-10 py-8 text-left font-jakarta text-2xl font-black text-slate-950 tracking-tighter italic">
-                               {formatCurrency(req.total)}
-                            </td>
-                         </tr>
-                       ))}
-                    </tbody>
-                 </table>
-              </div>
-           </div>
-
-           {/* 🛡️ Order Inspector: Heavy Duty Detail Panel */}
-           <AnimatePresence mode="wait">
-              {selected && (
-                 <motion.aside
-                    initial={{ x: 60, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 60, opacity: 0 }}
-                    className="lg:col-span-4 bg-slate-950 rounded-[4rem] p-12 shadow-3xl text-white sticky top-40 border-l-8 border-emerald-500 overflow-hidden"
-                 >
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[150px] -mr-48 -mt-48" />
-                    
-                    <div className="flex items-center justify-between relative z-10 mb-12">
-                       <h2 className="text-3xl font-black tracking-tight">تفاصيل الشحنة</h2>
-                       <button onClick={() => setSelected(null)} className="p-5 bg-white/5 hover:bg-rose-500 rounded-3xl text-white transition-all shadow-xl"><X size={32} /></button>
-                    </div>
-
-                    <div className="space-y-10 relative z-10">
-                       <div className="p-10 bg-white/5 border-2 border-white/10 rounded-[3.5rem] space-y-6">
-                          <p className="text-[12px] font-black text-white/30 uppercase tracking-[0.4em]">الحالة اللوجستية</p>
-                          <div className="flex flex-col gap-4">
-                             <h3 className="text-4xl font-black leading-tight italic underline decoration-emerald-500 underline-offset-[10px]">{selected.title}</h3>
-                             <StatusBadge status={selected.status} large />
-                          </div>
-                       </div>
-
-                       <div className="grid grid-cols-1 gap-6">
-                          <DetailBox icon={<User size={24} />} label="صاحب الطلب" value={selected.client?.fullName || 'غير محدد'} />
-                          <DetailBox icon={<Phone size={24} />} label="هاتف التواصل" value={selected.client?.phone || 'غير مسجل'} />
-                          <DetailBox icon={<Calendar size={24} />} label="توقيت الإنشاء" value={formatDate(selected.createdAt)} />
-                          <DetailBox icon={<ArrowUpRight size={24} />} label="القيمة الإجمالية" value={formatCurrency(selected.total)} highlight />
-                       </div>
-                    </div>
-
-                    <div className="pt-12 border-t-8 border-white/5 space-y-6 relative z-10">
-                       <button className="w-full h-24 bg-emerald-500 text-slate-950 rounded-[2.5rem] font-black text-2xl border-4 border-slate-950 shadow-3xl hover:translate-y-[-4px] transition-all active:scale-95 flex items-center justify-center gap-6 uppercase tracking-tighter">
-                          <Truck size={36} /> تحديث مسار التوصيل
-                       </button>
-                       <button className="w-full h-16 bg-white/5 text-white/40 rounded-[1.5rem] font-black text-xs hover:text-white transition-all flex items-center justify-center gap-4 uppercase tracking-[0.2em]">
-                          <History size={20} /> عرض سجل التغييرات
-                       </button>
-                    </div>
-                 </motion.aside>
-              )}
-           </AnimatePresence>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusBadge({ status, large }: { status: string; large?: boolean }) {
-  const configs: any = {
-    "PENDING_ADMIN_REVISION": "bg-amber-500 text-slate-950 border-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)]",
-    "OPEN_FOR_BIDDING": "bg-sky-500 text-white border-slate-950",
-    "قيد التوصيل": "bg-emerald-500 text-white border-slate-950",
-    "قيد التحضير": "bg-amber-400 text-slate-950 border-slate-950",
-    "جاهز للاستلام": "bg-indigo-500 text-white border-slate-950",
-    "تم التوصيل": "bg-slate-950 text-emerald-400 border-emerald-500",
-    default: "bg-slate-100 text-slate-400 border-slate-200"
-  };
-  const cls = configs[status] || configs.default;
-  return (
-    <span className={`inline-flex items-center gap-3 rounded-2xl border-4 font-black transition-all ${cls} ${large ? 'px-10 py-4 text-xl shadow-xl' : 'px-6 py-2 text-xs uppercase'}`}>
-       {status}
-       {status === "تم التوصيل" && <CheckCircle2 size={large ? 24 : 14} />}
-       {status === "قيد التحضير" && <RefreshCw size={large ? 24 : 14} className="animate-spin text-slate-950/30" />}
+    <span className={`inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-semibold whitespace-nowrap ${cfg.cls}`}>
+      <Icon size={8} className="hidden sm:block" />
+      <Icon size={6} className="sm:hidden" />
+      {cfg.label}
     </span>
   );
 }
 
-function DetailBox({ icon, label, value, highlight }: any) {
+export default function AdminRequestsPage() {
+  const [search,       setSearch]       = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const { data: requests, loading } = useAsyncData<Request[]>(
+    () => apiFetch("/api/admin/requests", "ADMIN"),
+    []
+  );
+
+  const filtered = useMemo(() => (requests ?? []).filter(r => {
+    const q = search.toLowerCase();
+    const matchSearch = r.title?.toLowerCase().includes(q) || r.client?.fullName?.toLowerCase().includes(q);
+    const matchStatus = statusFilter === "all" || r.status === statusFilter;
+    return matchSearch && matchStatus;
+  }), [requests, search, statusFilter]);
+
+  const counts = useMemo(() => ({
+    total:    requests?.length ?? 0,
+    open:     requests?.filter(r => r.status === "PENDING_ADMIN_REVISION" || r.status === "OPEN_FOR_BIDDING").length ?? 0,
+    active:   requests?.filter(r => r.status === "BIDS_RECEIVED" || r.status === "ORDER_PAID_PENDING_DELIVERY").length ?? 0,
+    done:     requests?.filter(r => r.status === "CLOSED_SUCCESS").length ?? 0,
+    cancelled:requests?.filter(r => r.status === "CLOSED_CANCELLED" || r.status === "REJECTED").length ?? 0,
+  }), [requests]);
+
   return (
-    <div className="flex items-center justify-between p-8 bg-white/5 border-2 border-white/5 rounded-[2.5rem] group hover:border-white/20 transition-all">
-       <div className="flex items-center gap-6">
-          <span className="text-white/20 group-hover:text-emerald-400 transition-colors">{icon}</span>
-          <span className="text-[12px] font-black text-white/30 uppercase tracking-widest">{label}</span>
-       </div>
-       <span className={`text-lg font-black ${highlight ? 'text-emerald-400' : 'text-white/90'} font-jakarta`}>{value}</span>
+    <div className="space-y-6 min-h-screen" dir="rtl">
+
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">الطلبات والعمليات</h1>
+          <p className="text-sm text-gray-500 mt-2">إدارة ومتابعة جميع طلبات المنصة بكفاءة</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
+            {loading ? "—" : `${counts.total} طلب`}
+          </span>
+        </div>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        {[
+          { label: "الإجمالي",      count: counts.total,     icon: Package,      color: "from-gray-50 to-white",     iconBg: "bg-gray-100",    iconColor: "text-gray-700",   accentBg: "bg-gray-100",   accentBorder: "border-gray-200"   },
+          { label: "مفتوح",         count: counts.open,      icon: Clock,        color: "from-amber-50 to-white",   iconBg: "bg-amber-100",   iconColor: "text-amber-700",  accentBg: "bg-amber-100",  accentBorder: "border-amber-200"  },
+          { label: "نشط",           count: counts.active,    icon: Zap,          color: "from-blue-50 to-white",    iconBg: "bg-blue-100",    iconColor: "text-blue-700",   accentBg: "bg-blue-100",   accentBorder: "border-blue-200"   },
+          { label: "مكتمل",         count: counts.done,      icon: CheckCircle,  color: "from-green-50 to-white",   iconBg: "bg-green-100",   iconColor: "text-green-700",  accentBg: "bg-green-100",  accentBorder: "border-green-200"  },
+          { label: "ملغى",          count: counts.cancelled, icon: XCircle,      color: "from-red-50 to-white",     iconBg: "bg-red-100",     iconColor: "text-red-700",    accentBg: "bg-red-100",    accentBorder: "border-red-200"    },
+        ].map(s => {
+          const Icon = s.icon;
+          return (
+            <div
+              key={s.label}
+              className={`relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br ${s.color} shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300 p-5 flex flex-col justify-between min-h-[140px] group`}
+            >
+              {/* Accent line */}
+              <div className={`absolute top-0 left-0 right-0 h-1 ${s.accentBg}`} />
+              
+              {/* Icon */}
+              <div className={`${s.iconBg} w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                <Icon size={20} className={`${s.iconColor}`} strokeWidth={2} />
+              </div>
+
+              {/* Content */}
+              <div>
+                <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">{s.label}</p>
+                <p className="text-3xl md:text-4xl font-black text-gray-900 tabular-nums leading-none">
+                  {loading ? "—" : s.count.toLocaleString("ar-EG")}
+                </p>
+              </div>
+
+              {/* Animated accent */}
+              <div className={`absolute -bottom-8 -right-8 w-24 h-24 ${s.accentBg} opacity-10 rounded-full group-hover:opacity-20 transition-opacity duration-300`} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Filter & Search Section */}
+      <div className="space-y-4 bg-white rounded-2xl border border-gray-200 p-5 md:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="ابحث بعنوان الطلب أو اسم العميل..."
+              className="w-full h-11 bg-white border border-gray-200 rounded-lg pr-10 pl-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="h-11 bg-white border border-gray-200 rounded-lg px-4 text-sm text-gray-900 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all font-medium"
+          >
+            {STATUS_FILTER_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Active Filters Display */}
+        {(search || statusFilter !== "all") && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-semibold text-gray-500">الفلاتر النشطة:</span>
+            {search && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
+                <span className="text-xs font-medium text-orange-700">{search}</span>
+                <button
+                  onClick={() => setSearch("")}
+                  className="text-orange-400 hover:text-orange-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {statusFilter !== "all" && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-xs font-medium text-blue-700">
+                  {STATUS_FILTER_OPTIONS.find(o => o.value === statusFilter)?.label}
+                </span>
+                <button
+                  onClick={() => setStatusFilter("all")}
+                  className="text-blue-400 hover:text-blue-600 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Data Table */}
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/50">
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">رقم الطلب</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">العنوان</th>
+                <th className="hidden sm:table-cell px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">العميل</th>
+                <th className="px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">الحالة</th>
+                <th className="hidden md:table-cell px-4 md:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">التاريخ</th>
+                <th className="px-4 md:px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">إجراء</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                      <td colSpan={6} className="px-4 md:px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded-md animate-pulse" style={{ width: `${40 + i * 6}%` }} />
+                      </td>
+                    </tr>
+                  ))
+                : filtered.length === 0
+                  ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 md:px-6 py-16 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center">
+                            <Package className="text-gray-300" size={28} />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-700 mb-1">لا توجد طلبات مطابقة</h3>
+                            <p className="text-sm text-gray-500">حاول تعديل الفلاتر أو البحث</p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                  : filtered.map((req, idx) => (
+                    <tr key={req.id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer border-b last:border-0">
+                      <td className="px-4 md:px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-xs">
+                            {idx + 1}
+                          </div>
+                          <span className="font-mono text-sm font-semibold text-gray-700">#{req.id}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 md:px-6 py-4">
+                        <p className="font-semibold text-gray-900 text-sm truncate max-w-xs group-hover:text-orange-600 transition-colors">
+                          {req.title}
+                        </p>
+                      </td>
+                      <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-sm text-gray-600">
+                        {req.client?.fullName || "—"}
+                      </td>
+                      <td className="px-4 md:px-6 py-4">
+                        <StatusPill status={req.status} />
+                      </td>
+                      <td className="hidden md:table-cell px-4 md:px-6 py-4 text-sm text-gray-500">
+                        {formatDate(req.createdAt)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-center">
+                        <button className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100">
+                          <ChevronLeft size={16} className="rotate-180" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Footer Stats */}
+      {!loading && filtered.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-600">
+          <p>
+            عرض <span className="font-bold text-gray-900">{filtered.length}</span> من{" "}
+            <span className="font-bold text-gray-900">{counts.total}</span> طلب
+          </p>
+          <div className="flex gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>مكتمل: {counts.done}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>نشط: {counts.active}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,26 +2,10 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { StatCard } from "@/components/shoofly/stat-card";
-import { Button } from "@/components/shoofly/button";
-import { StatusBadge } from "@/components/shoofly/status-badge";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listClientRequests } from "@/lib/api/requests";
 import { formatCurrency } from "@/lib/formatters";
-import { 
-  FiPlus, 
-  FiGrid, 
-  FiArrowLeft, 
-  FiClock,
-  FiMessageSquare,
-  FiAlertCircle,
-  FiCheckCircle, 
-  FiBox,
-  FiMapPin,
-  FiTrendingUp,
-  FiDollarSign,
-  FiPackage
-} from "react-icons/fi";
+import { Plus, Clock, DollarSign, Package, MapPin, ArrowLeft, MessageSquare, AlertCircle } from "lucide-react";
 
 export default function ClientHomePage() {
   const { data, loading, error } = useAsyncData(() => listClientRequests(), []);
@@ -37,245 +21,156 @@ export default function ClientHomePage() {
   }, [data]);
 
   return (
-    <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-8 font-sans dir-rtl text-right pb-24 lg:pb-10">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">لوحة التحكم</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">تابع طلباتك وإدارة حسابك</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/client/wallet">
-            <Button variant="secondary" className="h-11 px-4 text-sm font-medium gap-2">
-              <FiDollarSign size={16} /> المحفظة
-            </Button>
-          </Link>
-          <Link href="/client/requests/new">
-            <Button className="h-11 px-6 text-sm font-medium gap-2 bg-primary text-white hover:bg-primary/90">
-              <FiPlus size={16} /> طلب جديد
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-              <FiGrid size={20} />
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans" dir="rtl">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">لوحة التحكم</h1>
+              <p className="text-sm text-slate-500 mt-1">تابع طلباتك والعروض الجديدة</p>
             </div>
-            <p className="text-xs text-slate-500 font-medium">كل الطلبات</p>
+            <div className="flex items-center gap-3">
+              <Link href="/client/wallet">
+                <button className="px-4 py-2.5 rounded-lg bg-slate-100 text-slate-900 hover:bg-slate-200 transition text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" /> المحفظة
+                </button>
+              </Link>
+              <Link href="/client/requests/new">
+                <button className="px-5 py-2.5 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 transition text-sm font-bold flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> طلب جديد
+                </button>
+              </Link>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
         </div>
-        
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-              <FiClock size={20} />
-            </div>
-            <p className="text-xs text-slate-500 font-medium">قيد التنفيذ</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.open}</p>
-        </div>
-        
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-              <FiCheckCircle size={20} />
-            </div>
-            <p className="text-xs text-slate-500 font-medium">مكتملة</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.completed}</p>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: "كل الطلبات", value: stats.total, icon: Package, color: "bg-blue-500" },
+            { label: "قيد التنفيذ", value: stats.open, icon: Clock, color: "bg-amber-500" },
+            { label: "مكتملة", value: stats.completed, icon: Package, color: "bg-emerald-500" },
+            { label: "عروض جديدة", value: stats.hasOffers, icon: AlertCircle, color: "bg-purple-500" },
+          ].map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={i}
+                className="bg-white border-2 border-slate-200 rounded-xl p-4 hover:border-cyan-500 hover:shadow-md transition-all"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`${stat.color} text-white p-2.5 rounded-lg`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 font-bold mb-1">{stat.label}</p>
+                <p className="text-2xl font-bold text-slate-900">{loading ? "..." : stat.value}</p>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-              <FiTrendingUp size={20} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Requests */}
+          <div className="lg:col-span-2 bg-white border-2 border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-slate-50 border-b-2 border-slate-200 px-6 py-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-cyan-600" />
+                  أحدث الطلبات
+                </h2>
+                <Link href="/client/requests" className="text-sm text-cyan-600 hover:text-cyan-700 font-bold">
+                  عرض الكل
+                </Link>
+              </div>
             </div>
-            <p className="text-xs text-slate-500 font-medium">عروض جديدة</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.hasOffers}</p>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Requests */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">أحدث الطلبات</h2>
-            <Link href="/client/requests">
-              <Button variant="ghost" className="text-sm font-medium text-primary hover:text-primary/80 gap-1">
-                عرض الكل <FiArrowLeft size={14} />
-              </Button>
-            </Link>
-          </div>
+            {loading && (
+              <div className="p-12 text-center">
+                <p className="text-slate-400 font-bold">جاري تحميل الطلبات...</p>
+              </div>
+            )}
 
-          {loading && (
-            <div className="text-center py-12 text-slate-400">
-              <FiBox size={32} className="mx-auto mb-3 opacity-50 animate-pulse" />
-              <p className="text-sm font-medium">جاري تحميل الطلبات...</p>
-            </div>
-          )}
+            {error && (
+              <div className="p-4 m-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm">
-              {error}
-            </div>
-          )}
-          
-          <div className="space-y-3">
-            {(data ?? []).slice(0, 5).map((request: any) => {
-              const hasOffers = request.status === 'OFFERS_FORWARDED';
-              return (
-                <Link 
-                  key={request.id} 
-                  href={`/client/requests/${request.id}`} 
-                  className="bg-white rounded-2xl border border-slate-200 p-5 block hover:shadow-md hover:border-primary/30 transition-all group"
+            <div className="divide-y divide-slate-100">
+              {(data ?? []).slice(0, 5).map((request: any) => (
+                <Link
+                  key={request.id}
+                  href={`/client/requests/${request.id}`}
+                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
-                          <FiPackage size={16} />
-                        </div>
-                        <h3 className="font-semibold text-slate-900 truncate">
-                          {request.title}
-                        </h3>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-slate-900 text-sm mb-1">{request.title}</h3>
+                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {request.address}
+                    </p>
+                  </div>
+                  <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:text-cyan-600" />
+                </Link>
+              ))}
+
+              {!loading && !error && (data?.length ?? 0) === 0 && (
+                <div className="p-12 text-center">
+                  <Package className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                  <p className="text-slate-500 font-bold mb-3">لا توجد طلبات</p>
+                  <Link href="/client/requests/new">
+                    <button className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-bold hover:bg-cyan-700">
+                      إنشاء طلب جديد
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">إجراءات سريعة</h3>
+
+            {[
+              { label: "طلب خدمة جديدة", icon: Plus, href: "/client/requests/new", color: "bg-blue-50 text-blue-600" },
+              { label: "شحن المحفظة", icon: DollarSign, href: "/client/wallet", color: "bg-emerald-50 text-emerald-600" },
+              { label: "طلباتي", icon: Package, href: "/client/requests", color: "bg-amber-50 text-amber-600" },
+              { label: "المحادثات", icon: MessageSquare, href: "/client/chat", color: "bg-purple-50 text-purple-600" },
+            ].map((action, i) => {
+              const Icon = action.icon;
+              return (
+                <Link key={i} href={action.href}>
+                  <div className="bg-white border-2 border-slate-200 rounded-lg p-4 hover:border-cyan-500 hover:shadow-md transition-all group cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className={`${action.color} p-2.5 rounded-lg`}>
+                        <Icon className="w-5 h-5" />
                       </div>
-                      <p className="text-sm text-slate-500 flex items-center gap-2 mb-2">
-                        <FiMapPin size={14} className="shrink-0" />
-                        <span className="truncate">{request.address}</span>
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400">#{request.id}</span>
-                        {hasOffers && (
-                          <span className="text-xs font-medium px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">
-                            عروض متاحة
-                          </span>
-                        )}
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-900 text-sm">{action.label}</p>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 shrink-0">
-                      <StatusBadge 
-                        status={hasOffers ? 'pending' : request.status === 'CLOSED_SUCCESS' ? 'completed' : 'active'} 
-                        label={hasOffers ? 'عروض جديدة' : request.status === 'OPEN_FOR_BIDDING' ? 'مفتوح للعروض' : request.status === 'CLOSED_SUCCESS' ? 'مكتمل' : request.status === 'ORDER_PAID_PENDING_DELIVERY' ? 'جاري التنفيذ' : request.status === 'PENDING_ADMIN_REVISION' ? 'قيد المراجعة' : "طلب نشط"} 
-                      />
-                      <FiArrowLeft className="text-slate-300 group-hover:text-primary group-hover:-translate-x-1 transition-all" size={18} />
+                      <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:text-cyan-600" />
                     </div>
                   </div>
                 </Link>
               );
             })}
-          </div>
 
-          {!loading && !error && (data?.length ?? 0) === 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
-                <FiBox size={28} />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">لا توجد طلبات</h3>
-              <p className="text-sm text-slate-500 mb-6">قم بإنشاء أول طلب لك الآن</p>
-              <Link href="/client/requests/new">
-                <Button className="bg-primary text-white px-6 py-2.5 text-sm font-medium rounded-xl">
-                  إنشاء طلب جديد
-                </Button>
-              </Link>
+            {/* Tip Card */}
+            <div className="bg-cyan-600 text-white rounded-lg p-5 mt-6">
+              <h4 className="font-bold mb-2 text-sm">نصيحة اليوم</h4>
+              <p className="text-xs leading-relaxed opacity-90">
+                اكتب وصفاً تفصيلياً لمشكلتك وأضف صور واضحة. الموردون يفضلون الطلبات المفصلة.
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Quick Actions & Info */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-900 pb-2 border-b border-slate-200">
-            إجراءات سريعة
-          </h2>
-          
-          <div className="space-y-3">
-            <Link href="/client/requests/new" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-primary/30 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                  <FiPlus size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">طلب خدمة جديدة</p>
-                  <p className="text-xs text-slate-500">أضف طلب صيانة أو خدمة</p>
-                </div>
-                <FiArrowLeft className="text-slate-300" size={16} />
-              </div>
-            </Link>
-
-            <Link href="/client/wallet" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-primary/30 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                  <FiDollarSign size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">شحن المحفظة</p>
-                  <p className="text-xs text-slate-500">أضف رصيد لدفع الطلبات</p>
-                </div>
-                <FiArrowLeft className="text-slate-300" size={16} />
-              </div>
-            </Link>
-
-            <Link href="/client/requests" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-primary/30 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                  <FiClock size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">طلباتي</p>
-                  <p className="text-xs text-slate-500">عرض جميع الطلبات</p>
-                </div>
-                <FiArrowLeft className="text-slate-300" size={16} />
-              </div>
-            </Link>
-
-            <Link href="/client/chat" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-primary/30 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 group-hover:bg-violet-500 group-hover:text-white transition-colors">
-                  <FiMessageSquare size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">المحادثات</p>
-                  <p className="text-xs text-slate-500">رسائلك مع التجار</p>
-                </div>
-                <FiArrowLeft className="text-slate-300" size={16} />
-              </div>
-            </Link>
-
-            <Link href="/client/complaints" className="bg-white rounded-2xl border border-slate-200 p-4 block hover:shadow-md hover:border-rose-200 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                  <FiAlertCircle size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">تقديم شكوى</p>
-                  <p className="text-xs text-slate-500">الإبلاغ عن مشكلة</p>
-                </div>
-                <FiArrowLeft className="text-slate-300" size={16} />
-              </div>
-            </Link>
-          </div>
-
-          {/* Tip Card */}
-          <div className="bg-primary rounded-2xl p-5 text-white">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <FiTrendingUp size={16} />
-              </div>
-              <p className="text-xs font-medium opacity-90">نصيحة اليوم</p>
-            </div>
-            <h4 className="font-semibold text-sm mb-2">كيف تحصل على أفضل العروض؟</h4>
-            <p className="text-xs leading-relaxed opacity-90">
-              اكتب وصفاً تفصيلياً لمشكلتك وأضف صور واضحة. الموردون يفضلون الطلبات المفصلة.
-            </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
