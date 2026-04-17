@@ -85,10 +85,11 @@ export async function POST(req: NextRequest) {
     const maxAge = 60 * 60 * 24 * 7;
 
     // Cookie settings based on environment
+    // Always use secure=true and sameSite=lax for Vercel preview (HTTPS)
     const cookieOptions = {
       httpOnly: true,
-      secure: isReplit || isProduction,
-      sameSite: (isReplit ? "none" : "lax") as const,
+      secure: true, // Vercel preview and production are HTTPS
+      sameSite: "lax" as const,
       maxAge,
       path: "/",
     };
@@ -100,8 +101,8 @@ export async function POST(req: NextRequest) {
     const csrfToken = generateCsrfToken();
     res.cookies.set("csrf_token", csrfToken, {
       httpOnly: false, // Must be readable by JavaScript
-      secure: isReplit || isProduction,
-      sameSite: (isReplit ? "none" : "lax") as const,
+      secure: true, // Vercel preview and production are HTTPS
+      sameSite: "lax" as const,
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     });

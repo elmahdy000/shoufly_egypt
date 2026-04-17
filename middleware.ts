@@ -42,8 +42,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Admin Route Protection
-  if (pathname.startsWith("/admin")) {
+  // 3. Role-based Route Protection
+  const protectedRoutes = ["/admin", "/client", "/vendor", "/delivery"];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  
+  if (isProtectedRoute) {
     const token = request.cookies.get("session_token")?.value;
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -54,5 +57,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/client/:path*", 
+    "/vendor/:path*",
+    "/delivery/:path*",
+    "/api/:path*",
+  ],
 };
