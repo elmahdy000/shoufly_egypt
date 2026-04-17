@@ -1,2 +1,9 @@
 {"ts":"2026-04-15T00:11:07.080Z","level":"error","event":"payment.paymob.initiate_error","error":"Failed to get Paymob auth token"}
 {"ts":"2026-04-15T00:11:24.405Z","level":"error","event":"payment.paymob.initiate_error","error":"Failed to get Paymob auth token"}
+{"ts":"2026-04-17T01:45:36.552Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.556Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.557Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.554Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.558Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.557Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}
+{"ts":"2026-04-17T01:45:36.555Z","level":"error","event":"security.ratelimit.error","key":"test_user_1776390336536","error":"multi.incr is not a function"}

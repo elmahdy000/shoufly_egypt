@@ -19,7 +19,16 @@ class MockRedis {
     return 'OK';
   }
   async del(key: string) { return MOCK_STORAGE.delete(key) ? 1 : 0; }
-  async exists(key: string) { return MOCK_STORAGE.has(key) ? 1 : 0; }
+  async incr(key: string) {
+    const val = parseInt(MOCK_STORAGE.get(key) || '0') + 1;
+    MOCK_STORAGE.set(key, val.toString());
+    return val;
+  }
+  async expire(key: string, seconds: number) {
+    setTimeout(() => MOCK_STORAGE.delete(key), seconds * 1000);
+    return 1;
+  }
+  async ttl(key: string) { return 60; } // Mock TTL
   async quit() { return 'OK'; }
   on() { return this; }
   once() { return this; }
