@@ -222,7 +222,7 @@ export default function AdminDashboard() {
                     <div className={`w-2 h-2 rounded-full ${item.color}`} />
                     <span className="text-sm font-medium text-gray-700">{item.label}</span>
                   </div>
-                  <span className="text-base font-bold text-gray-900 tabular-nums">
+                  <span className="text-lg font-bold text-gray-900 tabular-nums">
                     {loading ? "—" : item.value.toLocaleString("ar-EG")}
                   </span>
                 </div>
