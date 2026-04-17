@@ -55,35 +55,50 @@ function KpiCard({
   title: string; value: string | number; delta?: string; deltaLabel?: string;
   icon: React.ElementType; highlight?: boolean; loading?: boolean;
 }) {
+  if (highlight) {
+    return (
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 border border-orange-400/20 text-white shadow-lg shadow-orange-200/30 hover:shadow-xl hover:shadow-orange-200/40 transition-all hover:-translate-y-0.5">
+        <div className="flex items-start justify-between mb-5">
+          <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center">
+            <Icon size={20} className="text-white" />
+          </div>
+          {delta && (
+            <span className="flex items-center gap-1 text-[13px] font-bold px-3 py-1.5 bg-white/10 text-white rounded-full backdrop-blur-sm border border-white/20">
+              <TrendingUp size={12} />
+              {delta}
+            </span>
+          )}
+        </div>
+        <div className="space-y-2">
+          <p className="text-4xl font-bold tracking-tight leading-none">
+            {loading ? <span className="inline-block w-24 h-8 rounded-lg animate-pulse bg-white/20" /> : value}
+          </p>
+          <p className="text-sm font-semibold text-orange-100">{title}</p>
+          {deltaLabel && <p className="text-[12px] font-medium text-orange-200/90">{deltaLabel}</p>}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`rounded-2xl p-6 flex flex-col gap-5 border transition-all hover:shadow-lg ${
-      highlight
-        ? "bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400/30 text-white shadow-md shadow-orange-200"
-        : "bg-white border-gray-200 text-gray-900"
-    }`}>
-      <div className="flex items-center justify-between">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-          highlight ? "bg-white/20 backdrop-blur-sm" : "bg-orange-50"
-        }`}>
-          <Icon size={20} className={highlight ? "text-white" : "text-orange-500"} />
+    <div className="rounded-2xl p-6 bg-white border border-gray-100 hover:border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5">
+      <div className="flex items-start justify-between mb-5">
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-100 flex items-center justify-center">
+          <Icon size={20} className="text-orange-500" />
         </div>
         {delta && (
-          <span className={`flex items-center gap-1 text-[12px] font-bold px-3 py-1.5 rounded-full ${
-            highlight ? "bg-white/20 text-white backdrop-blur-sm" : "bg-green-50 text-green-600"
-          }`}>
+          <span className="flex items-center gap-1 text-[13px] font-bold px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">
             <TrendingUp size={12} />
             {delta}
           </span>
         )}
       </div>
-      <div className="space-y-1">
-        <p className={`text-4xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
-          {loading ? <span className="inline-block w-24 h-8 rounded-lg animate-pulse" style={{ background: highlight ? 'rgba(255,255,255,0.2)' : '#f3f4f6' }} /> : value}
+      <div className="space-y-2">
+        <p className="text-4xl font-bold tracking-tight leading-none text-gray-900">
+          {loading ? <span className="inline-block w-24 h-8 rounded-lg animate-pulse bg-gray-100" /> : value}
         </p>
-        <p className={`text-sm font-semibold ${highlight ? "text-orange-100" : "text-gray-600"}`}>{title}</p>
-        {deltaLabel && (
-          <p className={`text-[13px] font-medium ${highlight ? "text-orange-200" : "text-gray-500"}`}>{deltaLabel}</p>
-        )}
+        <p className="text-sm font-semibold text-gray-700">{title}</p>
+        {deltaLabel && <p className="text-[12px] font-medium text-gray-500">{deltaLabel}</p>}
       </div>
     </div>
   );
