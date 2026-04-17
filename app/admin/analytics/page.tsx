@@ -123,22 +123,22 @@ export default function AnalyticsPage() {
   }, [analytics, dateRange, filteredTransactions.length, selectedRange.days]);
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 min-h-screen" dir="rtl">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 min-h-screen" dir="rtl">
 
       {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">التحليلات والبيانات</h1>
-          <p className="text-sm text-gray-500 mt-1">آخر تحديث: {lastUpdated.toLocaleString("ar-EG")}</p>
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">التحليلات والبيانات</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">آخر تحديث: {lastUpdated.toLocaleString("ar-EG")}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg border border-gray-200 bg-white p-0.5 sm:p-1">
             {RANGE_OPTIONS.map((range) => (
               <button
                 key={range.key}
                 onClick={() => setDateRange(range.key)}
-                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-all ${
+                className={`rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                   dateRange === range.key 
                     ? "bg-orange-50 text-orange-600" 
                     : "text-gray-600 hover:text-gray-900"
@@ -151,24 +151,32 @@ export default function AnalyticsPage() {
 
           <button
             onClick={handleRefresh}
-            className="w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+            className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
             title="تحديث البيانات"
           >
-            <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+            <RefreshCw size={14} className={`${isRefreshing ? "animate-spin" : ""} sm:block hidden`} />
+            <RefreshCw size={12} className={`${isRefreshing ? "animate-spin" : ""} block sm:hidden`} />
           </button>
 
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-orange-500 text-white font-semibold text-xs sm:text-sm hover:bg-orange-600 transition-colors shrink-0"
           >
-            <Download size={14} />
+            <Download size={12} className="hidden sm:block" />
+            <Download size={10} className="block sm:hidden" />
             تصدير
+          </button>
+          <button
+            onClick={handleExportCsv}
+            className="sm:hidden w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors shrink-0"
+          >
+            <Download size={12} />
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
         <MetricCard
           title="إجمالي المبيعات"
           value={loadingAnalytics ? "—" : formatCurrency(analytics?.overview.totalGMV ?? 0)}
@@ -192,30 +200,30 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Trends Chart */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">اتجاه الطلبات</h3>
-          <div className="h-64 flex items-end gap-2" dir="ltr">
+        <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm overflow-x-auto">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6">اتجاه الطلبات</h3>
+          <div className="h-48 sm:h-56 lg:h-64 flex items-end gap-1 sm:gap-2 min-w-max sm:min-w-full" dir="ltr">
             {trends.length > 0 ? trends.map((item, idx) => {
               const pct = Math.max((item.requests / maxTrendRequests) * 100, 5);
               return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full h-48 flex items-end justify-center">
+                <div key={idx} className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[30px] sm:min-w-[40px]">
+                  <div className="w-full h-40 sm:h-48 lg:h-48 flex items-end justify-center">
                     <div className="w-full rounded-t-md bg-orange-500/70 hover:bg-orange-500 transition-colors" style={{ height: `${pct}%` }} />
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">{item.day}</span>
+                  <span className="text-[9px] sm:text-xs text-gray-500 font-medium">{item.day}</span>
                 </div>
               );
             }) : (
-              <div className="flex items-center justify-center w-full text-gray-400">لا توجد بيانات</div>
+              <div className="flex items-center justify-center w-full text-gray-400 text-xs sm:text-sm">لا توجد بيانات</div>
             )}
           </div>
         </div>
 
         {/* Transaction Types */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">أنواع المعاملات</h3>
+        <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6">أنواع المعاملات</h3>
           {loadingTx ? (
             <div className="space-y-3">
               {Array(4).fill(0).map((_, i) => (
@@ -316,12 +324,14 @@ function MetricCard({
   icon: ElementType;
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-gray-200 transition-all">
-      <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-3">
-        <Icon size={18} className="text-orange-500" />
+    <div className="bg-white border border-gray-100 rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-md hover:border-gray-200 transition-all">
+      <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-2 sm:mb-3">
+        <Icon size={14} className="text-orange-500 sm:hidden" />
+        <Icon size={16} className="text-orange-500 hidden sm:block lg:hidden" />
+        <Icon size={18} className="text-orange-500 hidden lg:block" />
       </div>
-      <p className="text-sm font-medium text-gray-600 mb-2">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
+      <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">{title}</p>
+      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 tabular-nums truncate">{value}</p>
     </div>
   );
 }
