@@ -56,24 +56,23 @@ function KpiCard({
   icon: React.ElementType; loading?: boolean;
 }) {
   return (
-    <div className="rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 bg-white border border-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]">
-      <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 md:mb-3 lg:mb-4">
-        <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+    <div className="card-container card-pad card-min-h flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 md:mb-3">
+        <div className="icon-box bg-orange-100">
           <Icon size={16} className="text-orange-700" strokeWidth={2} />
         </div>
         {delta && (
-          <span className="flex items-center gap-1 text-xs md:text-sm font-bold px-2 sm:px-3 py-0.5 sm:py-1 md:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 flex-shrink-0 whitespace-nowrap">
-            <TrendingUp size={12} className="md:hidden" strokeWidth={2} />
-            <TrendingUp size={14} className="hidden md:block" strokeWidth={2} />
+          <span className="flex items-center gap-1 text-xs md:text-sm font-bold px-2 sm:px-3 py-0.5 sm:py-1 bg-green-50 text-green-700 rounded-lg border border-green-200 flex-shrink-0 whitespace-nowrap">
+            <TrendingUp size={12} strokeWidth={2} />
             {delta}
           </span>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight leading-none text-gray-900 mb-1 tabular-nums break-words line-clamp-1">
+        <p className="text-metric break-words line-clamp-1 mb-1">
           {loading ? <span className="inline-block w-20 sm:w-24 h-6 sm:h-7 rounded-lg animate-pulse bg-gray-200" /> : value}
         </p>
-        <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{title}</p>
+        <p className="text-label text-gray-600 truncate">{title}</p>
         {deltaLabel && <p className="text-xs text-gray-500 mt-0.5 truncate">{deltaLabel}</p>}
       </div>
     </div>

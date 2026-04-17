@@ -48,16 +48,16 @@ export default function AdminUsersPage() {
   }), [users]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 min-h-screen" dir="rtl">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6 min-h-screen" dir="rtl">
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">إدارة المستخدمين</h1>
-        <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">إدارة جميع حسابات المنصة</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">إدارة المستخدمين</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">إدارة جميع حسابات المنصة</p>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 safe-gap">
         {[
           { label: "إجمالي",        count: counts.all,      icon: Users,         bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-gray-100",     iconColor: "text-gray-700"     },
           { label: "العملاء",       count: counts.client,   icon: ShoppingCart,  bg: "bg-white",   color: "text-gray-900",   iconBg: "bg-blue-100",     iconColor: "text-blue-700"     },
@@ -68,16 +68,16 @@ export default function AdminUsersPage() {
           return (
             <div
               key={s.label}
-              className={`${s.bg} border border-gray-200 rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]`}
+              className="card-container card-pad card-min-h flex flex-col justify-between"
             >
-              <div className={`${s.iconBg} w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center mb-2 md:mb-3 flex-shrink-0`}>
+              <div className={`icon-box ${s.iconBg} mb-2 md:mb-3`}>
                 <Icon size={16} className={`${s.iconColor}`} strokeWidth={2} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${s.color} break-words tracking-tight tabular-nums line-clamp-1`}>
+                <p className={`text-metric ${s.color} line-clamp-1`}>
                   {loading ? "—" : s.count.toLocaleString("ar-EG")}
                 </p>
-                <p className="text-xs md:text-sm text-gray-600 font-medium truncate">{s.label}</p>
+                <p className="text-label text-gray-600 truncate">{s.label}</p>
               </div>
             </div>
           );
@@ -109,23 +109,23 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="card-container overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-right text-sm">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-gray-100 bg-gray-50">
                 {["المستخدم", "البريد الإلكتروني", "الدور", "المدينة", "تاريخ الانضمام", ""].map(h => (
-                  <th key={h} className="px-3 sm:px-5 py-2.5 sm:py-3 text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60 whitespace-nowrap">
+                  <th key={h} className="px-3 sm:px-5 py-2.5 sm:py-3 text-[9px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i} className="border-b border-gray-50">
-                      <td colSpan={6} className="px-3 sm:px-5 py-2 sm:py-4">
+                    <tr key={i} className="hover:bg-gray-50 transition-colors">
+                      <td colSpan={6} className="px-3 sm:px-5 py-2.5 sm:py-3">
                         <div className="h-3 sm:h-4 bg-gray-100 rounded-md animate-pulse" style={{ width: `${50 + i * 8}%` }} />
                       </td>
                     </tr>
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
                 : filtered.length === 0
                   ? (
                     <tr>
-                      <td colSpan={6} className="px-3 sm:px-5 py-6 sm:py-8 lg:py-14 text-center text-xs sm:text-sm text-gray-400">
+                      <td colSpan={6} className="px-3 sm:px-5 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-400">
                         لا يوجد مستخدمين مطابقين للبحث
                       </td>
                     </tr>
@@ -142,10 +142,10 @@ export default function AdminUsersPage() {
                       const role = ROLE_CONFIG[user.role?.toLowerCase()] ?? { label: user.role, cls: "bg-gray-100 text-gray-600 border border-gray-200", icon: Users };
                       const RoleIcon = role.icon;
                       return (
-                        <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors group">
-                          <td className="px-3 sm:px-5 py-2 sm:py-3.5">
-                            <div className="flex items-center gap-1.5 sm:gap-2.5">
-                              <div className="w-7 sm:w-8 h-7 sm:h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-[11px] sm:text-[13px] font-bold shrink-0 shadow-sm">
+                        <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-[11px] sm:text-[13px] font-bold shrink-0 shadow-sm">
                                 {user.fullName?.charAt(0) ?? "U"}
                               </div>
                               <div className="min-w-0">
@@ -154,19 +154,19 @@ export default function AdminUsersPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="hidden md:table-cell px-3 sm:px-5 py-2 sm:py-3.5 text-[12px] sm:text-[13px] text-gray-600 truncate">{user.email}</td>
-                          <td className="px-3 sm:px-5 py-2 sm:py-3.5">
+                          <td className="hidden md:table-cell px-3 sm:px-5 py-2.5 sm:py-3 text-[12px] sm:text-[13px] text-gray-600 truncate">{user.email}</td>
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3">
                             <span className={`inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-semibold whitespace-nowrap ${role.cls}`}>
                               <RoleIcon size={8} className="hidden sm:block" />
                               <RoleIcon size={6} className="sm:hidden" />
                               {role.label}
                             </span>
                           </td>
-                          <td className="hidden lg:table-cell px-3 sm:px-5 py-2 sm:py-3.5 text-[12px] sm:text-[13px] text-gray-500">{user.city ?? "—"}</td>
-                          <td className="hidden md:table-cell px-3 sm:px-5 py-2 sm:py-3.5 text-[10px] sm:text-[12px] text-gray-400 whitespace-nowrap">
+                          <td className="hidden lg:table-cell px-3 sm:px-5 py-2.5 sm:py-3 text-[12px] sm:text-[13px] text-gray-500">{user.city ?? "—"}</td>
+                          <td className="hidden md:table-cell px-3 sm:px-5 py-2.5 sm:py-3 text-[10px] sm:text-[12px] text-gray-400 whitespace-nowrap">
                             {new Date(user.createdAt).toLocaleDateString("ar-EG")}
                           </td>
-                          <td className="px-5 py-3.5">
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3">
                             <button className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100">
                               <MoreVertical size={14} />
                             </button>
@@ -178,8 +178,8 @@ export default function AdminUsersPage() {
           </table>
         </div>
         {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-            <p className="text-xs text-gray-500">
+          <div className="px-3 sm:px-5 py-2.5 sm:py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+            <p className="text-xs sm:text-sm text-gray-600">
               عرض <span className="font-semibold text-gray-900">{filtered.length}</span> من{" "}
               <span className="font-semibold text-gray-900">{users?.length ?? 0}</span> مستخدم
             </p>

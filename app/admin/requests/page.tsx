@@ -72,16 +72,16 @@ export default function AdminRequestsPage() {
   }), [requests]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 min-h-screen" dir="rtl">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6 min-h-screen" dir="rtl">
 
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">الطلبات والعمليات</h1>
-        <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">إدارة ومتابعة جميع طلبات المنصة</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">الطلبات والعمليات</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">إدارة ومتابعة جميع طلبات المنصة</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 safe-gap">
         {[
           { label: "الإجمالي",      count: counts.total,    icon: Package,     bg: "bg-white",   text: "text-gray-900",   iconBg: "bg-gray-100",    iconColor: "text-gray-700"   },
           { label: "مفتوح",         count: counts.open,     icon: Clock,       bg: "bg-white",   text: "text-gray-900",   iconBg: "bg-amber-100",   iconColor: "text-amber-700"  },
@@ -93,26 +93,16 @@ export default function AdminRequestsPage() {
           return (
             <div
               key={s.label}
-              className={`${s.bg} border border-gray-200 rounded-lg md:rounded-xl lg:rounded-2xl p-2.5 sm:p-3 md:p-4 lg:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between min-h-[100px] md:min-h-[110px]`}
+              className="card-container card-pad card-min-h flex flex-col justify-between"
             >
-              <div className={`${s.iconBg} w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center mb-2 md:mb-3 flex-shrink-0`}>
+              <div className={`icon-box ${s.iconBg} mb-2 md:mb-3`}>
                 <Icon size={16} className={`${s.iconColor}`} strokeWidth={2} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${s.text} break-words tracking-tight tabular-nums line-clamp-1`}>
+                <p className={`text-metric ${s.text} line-clamp-1`}>
                   {loading ? "—" : s.count.toLocaleString("ar-EG")}
                 </p>
-                <p className="text-xs md:text-sm text-gray-600 font-medium truncate">{s.label}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-              <div>
-                <p className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${s.text} mb-1 tracking-tight tabular-nums`}>
-                  {loading ? "—" : s.count.toLocaleString("ar-EG")}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-600 font-medium">{s.label}</p>
+                <p className="text-label text-gray-600 truncate">{s.label}</p>
               </div>
             </div>
           );
@@ -142,11 +132,11 @@ export default function AdminRequestsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="card-container overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-right text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
+              <tr className="border-b border-gray-100 bg-gray-50">
                 {["#", "العنوان", "العميل", "الحالة", "التاريخ"].map(h => (
                   <th key={h} className="px-2.5 sm:px-4 lg:px-6 py-2.5 sm:py-3 text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {h}
@@ -166,7 +156,7 @@ export default function AdminRequestsPage() {
                 : filtered.length === 0
                   ? (
                     <tr>
-                      <td colSpan={5} className="px-2.5 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12 text-center text-xs sm:text-sm text-gray-400 font-medium">
+                      <td colSpan={5} className="px-2.5 sm:px-4 lg:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-gray-400 font-medium">
                         لا توجد طلبات مطابقة
                       </td>
                     </tr>

@@ -54,10 +54,16 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 640px) {
+    body {
+      font-size: 14px;
+    }
   }
 
   ::-webkit-scrollbar {
@@ -71,4 +77,120 @@
   input, textarea, select, button { font-family: inherit; }
   button { cursor: pointer; }
   a { text-decoration: none; }
+}
+
+@layer components {
+  /* Responsive spacing utilities */
+  .safe-pad-x {
+    @apply px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  .safe-pad-y {
+    @apply py-3 sm:py-4 md:py-6;
+  }
+
+  .safe-pad {
+    @apply px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6;
+  }
+
+  /* Responsive gap utilities */
+  .safe-gap {
+    @apply gap-2 sm:gap-3 md:gap-4;
+  }
+
+  /* Card container utilities */
+  .card-container {
+    @apply rounded-lg md:rounded-xl lg:rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .card-pad {
+    @apply p-2.5 sm:p-3 md:p-4 lg:p-5;
+  }
+
+  .card-min-h {
+    @apply min-h-fit;
+  }
+
+  /* Icon box utilities */
+  .icon-box {
+    @apply w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0;
+  }
+
+  .icon-sm {
+    @apply size-4 sm:size-[18px] md:size-5;
+  }
+
+  .icon-md {
+    @apply size-5 sm:size-[20px] md:size-6;
+  }
+
+  .icon-lg {
+    @apply size-6 sm:size-[24px] md:size-7;
+  }
+
+  /* Text utilities for responsive sizing */
+  .text-heading {
+    @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bold;
+  }
+
+  .text-metric {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tabular-nums tracking-tight;
+  }
+
+  .text-label {
+    @apply text-xs md:text-sm font-medium;
+  }
+
+  /* Overflow protection */
+  .truncate-1 {
+    @apply truncate;
+  }
+
+  .line-clamp-1 {
+    @apply line-clamp-1;
+  }
+
+  .line-clamp-2 {
+    @apply line-clamp-2;
+  }
+
+  .break-words-safe {
+    @apply break-words overflow-hidden;
+  }
+
+  /* Flexbox utilities */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  /* Grid utilities */
+  .grid-auto-fit {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4;
+  }
+
+  /* No scrollbar */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  /* Table utilities */
+  .table-container {
+    @apply overflow-x-auto;
+  }
+
+  .table-header {
+    @apply px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 text-[9px] sm:text-[10px] md:text-[11px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap;
+  }
+
+  .table-cell {
+    @apply px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 text-[11px] sm:text-sm;
+  }
+
+  .table-cell-small {
+    @apply px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 text-[10px] sm:text-[11px];
+  }
 }
