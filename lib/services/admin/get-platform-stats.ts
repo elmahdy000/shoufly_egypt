@@ -14,7 +14,7 @@ export async function getPlatformStats() {
     prisma.user.count({ where: { role: 'VENDOR' } }),
     prisma.request.count({ where: { status: 'OPEN_FOR_BIDDING' } }),
     prisma.request.count({ where: { status: 'PENDING_ADMIN_REVISION' } }),
-    prisma.request.count({ where: { status: 'OUT_FOR_DELIVERY' } }),
+    prisma.request.count({ where: { status: 'ORDER_PAID_PENDING_DELIVERY' } }),
     prisma.transaction.aggregate({
       _sum: { amount: true }
     }),
