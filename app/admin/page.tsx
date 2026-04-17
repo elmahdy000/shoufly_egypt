@@ -5,17 +5,9 @@ import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-  Users,
-  Package,
-  CreditCard,
-  ChevronLeft,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  TrendingUp,
+  Activity, ArrowUpRight, Users, Package,
+  CreditCard, TrendingUp, ChevronLeft,
+  Clock, CheckCircle2, AlertCircle, Circle,
 } from "lucide-react";
 
 interface RecentRequest {
@@ -35,116 +27,65 @@ interface DashboardStats {
   recentRequests: RecentRequest[];
 }
 
-function StatCard({
-  title,
-  value,
-  sub,
-  icon: Icon,
-  trend,
-  trendUp,
-  accent = false,
+const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: React.ElementType }> = {
+  PENDING_ADMIN_REVISION:      { label: "قيد المراجعة",       cls: "bg-amber-50 text-amber-700",  icon: Clock },
+  OPEN_FOR_BIDDING:            { label: "مفتوح للعروض",       cls: "bg-blue-50 text-blue-700",    icon: Activity },
+  BIDS_RECEIVED:               { label: "عروض واردة",         cls: "bg-purple-50 text-purple-700",icon: Activity },
+  OFFERS_FORWARDED:            { label: "عروض محولة",         cls: "bg-indigo-50 text-indigo-700",icon: ArrowUpRight },
+  ORDER_PAID_PENDING_DELIVERY: { label: "مدفوع - ينتظر التوصيل", cls: "bg-orange-50 text-orange-700", icon: Circle },
+  CLOSED_SUCCESS:              { label: "مكتمل",              cls: "bg-green-50 text-green-700",  icon: CheckCircle2 },
+  CLOSED_CANCELLED:            { label: "ملغى",               cls: "bg-red-50 text-red-600",      icon: AlertCircle },
+  REJECTED:                    { label: "مرفوض",              cls: "bg-gray-100 text-gray-500",   icon: AlertCircle },
+};
+
+function StatusPill({ status }: { status?: string }) {
+  const cfg = STATUS_CONFIG[status ?? ""] ?? { label: status ?? "—", cls: "bg-gray-100 text-gray-500", icon: Circle };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.cls}`}>
+      <Icon size={10} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function KpiCard({
+  title, value, delta, deltaLabel, icon: Icon, highlight = false, loading,
 }: {
-  title: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ElementType;
-  trend?: string;
-  trendUp?: boolean;
-  accent?: boolean;
+  title: string; value: string | number; delta?: string; deltaLabel?: string;
+  icon: React.ElementType; highlight?: boolean; loading?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl p-6 flex flex-col gap-4 transition-shadow hover:shadow-md ${
-        accent
-          ? "bg-orange-500 text-white"
-          : "bg-white border border-gray-200 text-gray-900"
-      }`}
-    >
-      <div className="flex items-start justify-between">
-        <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            accent ? "bg-white/20" : "bg-orange-50"
-          }`}
-        >
-          <Icon
-            size={20}
-            className={accent ? "text-white" : "text-orange-500"}
-          />
+    <div className={`rounded-xl p-5 flex flex-col gap-4 border transition-shadow hover:shadow-md ${
+      highlight
+        ? "bg-orange-500 border-orange-400 text-white"
+        : "bg-white border-gray-200 text-gray-900"
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+          highlight ? "bg-white/20" : "bg-orange-50"
+        }`}>
+          <Icon size={18} className={highlight ? "text-white" : "text-orange-500"} />
         </div>
-        {trend && (
-          <span
-            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
-              trendUp
-                ? accent
-                  ? "bg-white/20 text-white"
-                  : "bg-green-50 text-green-600"
-                : accent
-                ? "bg-white/20 text-white"
-                : "bg-red-50 text-red-500"
-            }`}
-          >
-            {trendUp ? (
-              <ArrowUpRight size={12} />
-            ) : (
-              <ArrowDownRight size={12} />
-            )}
-            {trend}
+        {delta && (
+          <span className={`flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            highlight ? "bg-white/20 text-white" : "bg-green-50 text-green-600"
+          }`}>
+            <TrendingUp size={10} />
+            {delta}
           </span>
         )}
       </div>
       <div>
-        <p
-          className={`text-3xl font-bold tracking-tight ${
-            accent ? "text-white" : "text-gray-900"
-          }`}
-        >
-          {value}
+        <p className={`text-2xl font-bold tracking-tight leading-none ${highlight ? "text-white" : "text-gray-900"}`}>
+          {loading ? <span className="inline-block w-16 h-6 bg-gray-100 rounded animate-pulse" /> : value}
         </p>
-        <p
-          className={`text-sm mt-1 font-medium ${
-            accent ? "text-white/80" : "text-gray-500"
-          }`}
-        >
-          {title}
-        </p>
-        {sub && (
-          <p
-            className={`text-xs mt-0.5 ${
-              accent ? "text-white/60" : "text-gray-400"
-            }`}
-          >
-            {sub}
-          </p>
+        <p className={`text-xs mt-1.5 font-medium ${highlight ? "text-orange-100" : "text-gray-500"}`}>{title}</p>
+        {deltaLabel && (
+          <p className={`text-[11px] mt-0.5 ${highlight ? "text-orange-200" : "text-gray-400"}`}>{deltaLabel}</p>
         )}
       </div>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status?: string }) {
-  const s = status?.toLowerCase() ?? "";
-  if (s.includes("complet") || s.includes("تم"))
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
-        <CheckCircle2 size={11} /> مكتمل
-      </span>
-    );
-  if (s.includes("pending") || s.includes("انتظار"))
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
-        <Clock size={11} /> انتظار
-      </span>
-    );
-  if (s.includes("cancel") || s.includes("ملغ"))
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-semibold">
-        <AlertCircle size={11} /> ملغي
-      </span>
-    );
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">
-      <Activity size={11} /> {status ?? "جاري"}
-    </span>
   );
 }
 
@@ -154,244 +95,163 @@ export default function AdminDashboard() {
     []
   );
 
-  const gmv = formatCurrency(stats?.totalGMV ?? 0).split(".")[0];
+  const gmv = loading ? "—" : formatCurrency(stats?.totalGMV ?? 0).split(".")[0];
 
   return (
-    <div className="p-8 space-y-8 min-h-screen bg-gray-50" dir="rtl">
+    <div className="p-6 lg:p-8 space-y-6 min-h-screen" dir="rtl">
 
-      {/* Page Title */}
-      <div className="flex items-center justify-between">
+      {/* Page header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">لوحة التحكم</h1>
-          <p className="text-sm text-gray-500 mt-0.5">نظرة عامة على أداء المنصة</p>
+          <h1 className="text-xl font-bold text-gray-900">لوحة التحكم</h1>
+          <p className="text-sm text-gray-500 mt-0.5">نظرة عامة على أداء المنصة اليوم</p>
         </div>
-        <span className="hidden sm:inline-flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-3 py-1.5 rounded-full">
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          النظام يعمل بكفاءة
-        </span>
+          النظام يعمل
+        </div>
       </div>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <StatCard
-          title="إجمالي المبيعات"
-          value={loading ? "—" : gmv}
-          sub="القيمة الإجمالية للمعاملات"
-          icon={CreditCard}
-          trend="12.5%"
-          trendUp
-          accent
-        />
-        <StatCard
-          title="الطلبات المفتوحة"
-          value={loading ? "—" : (stats?.openRequests ?? 0)}
-          sub="طلبات تحتاج مراجعة"
-          icon={Package}
-          trend={`${stats?.openRequests ?? 0} طلب`}
-          trendUp={false}
-        />
-        <StatCard
-          title="طلبات اليوم"
-          value={loading ? "—" : (stats?.todayRequests ?? 0)}
-          sub="طلبات منذ منتصف الليل"
-          icon={Activity}
-          trend="اليوم"
-          trendUp
-        />
-        <StatCard
-          title="إجمالي المستخدمين"
-          value={loading ? "—" : (stats?.totalUsers ?? 0).toLocaleString("ar-EG")}
-          sub={`${stats?.totalVendors ?? 0} مورد نشط`}
-          icon={Users}
-          trend="24 هذا الشهر"
-          trendUp
-        />
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <KpiCard title="إجمالي المبيعات"    value={gmv}                                              delta="+12.5%" deltaLabel="مقارنة بالشهر الماضي"  icon={CreditCard} highlight loading={loading} />
+        <KpiCard title="الطلبات المفتوحة"   value={stats?.openRequests   ?? 0}                       delta={undefined}                                   icon={Package}                loading={loading} />
+        <KpiCard title="طلبات اليوم"        value={stats?.todayRequests  ?? 0}                       delta={undefined}                                   icon={Activity}               loading={loading} />
+        <KpiCard title="المستخدمين"         value={(stats?.totalUsers    ?? 0).toLocaleString("ar-EG")} deltaLabel={`${stats?.totalVendors ?? 0} مورد`}  icon={Users}                  loading={loading} />
       </div>
 
-      {/* Content: Table + Sidebar */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Main content */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* Recent Requests Table */}
-        <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        {/* Table */}
+        <div className="xl:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div>
-              <h2 className="text-base font-bold text-gray-900">أحدث الطلبات</h2>
-              <p className="text-xs text-gray-400 mt-0.5">آخر العمليات المسجلة</p>
+              <h2 className="text-sm font-bold text-gray-900">أحدث الطلبات</h2>
+              <p className="text-xs text-gray-400 mt-0.5">آخر العمليات على المنصة</p>
             </div>
-            <Link
-              href="/admin/requests"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 transition-colors"
-            >
-              عرض الكل
-              <ChevronLeft size={14} />
+            <Link href="/admin/requests" className="flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 transition-colors">
+              عرض الكل <ChevronLeft size={13} />
             </Link>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-right">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-3.5 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    الطلب
-                  </th>
-                  <th className="px-6 py-3.5 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    العميل
-                  </th>
-                  <th className="px-6 py-3.5 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    الحالة
-                  </th>
-                  <th className="px-6 py-3.5 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    التاريخ
-                  </th>
+                <tr className="border-b border-gray-100">
+                  <th className="px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">الطلب</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">العميل</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">الحالة</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60">التاريخ</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      <td colSpan={4} className="px-6 py-4">
-                        <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                      </td>
-                    </tr>
-                  ))
-                ) : (stats?.recentRequests?.length ?? 0) === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-16 text-center text-sm text-gray-400"
-                    >
-                      لا توجد طلبات حالياً
-                    </td>
-                  </tr>
-                ) : (
-                  stats!.recentRequests.slice(0, 7).map((req) => (
-                    <tr
-                      key={req.id}
-                      className="hover:bg-gray-50/70 transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
-                            <Package size={14} className="text-orange-500" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900 leading-none">
-                              {req.title}
-                            </p>
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              #{req.id}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {req.client?.fullName || "عميل"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={req.status} />
-                      </td>
-                      <td className="px-6 py-4 text-xs text-gray-400">
-                        {formatDate(req.createdAt)}
-                      </td>
-                    </tr>
-                  ))
-                )}
+              <tbody>
+                {loading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="border-b border-gray-50">
+                        <td colSpan={4} className="px-5 py-3.5">
+                          <div className="h-4 bg-gray-100 rounded-md animate-pulse" style={{ width: `${60 + i * 7}%` }} />
+                        </td>
+                      </tr>
+                    ))
+                  : (stats?.recentRequests?.length ?? 0) === 0
+                    ? (
+                      <tr>
+                        <td colSpan={4} className="px-5 py-14 text-center text-sm text-gray-400">
+                          لا توجد طلبات حالياً
+                        </td>
+                      </tr>
+                    )
+                    : stats!.recentRequests.slice(0, 8).map((req) => (
+                        <tr key={req.id} className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors group">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+                                <Package size={13} className="text-orange-500" />
+                              </div>
+                              <div>
+                                <p className="text-[13px] font-semibold text-gray-900 leading-none line-clamp-1">{req.title}</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">#{req.id}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-[13px] text-gray-600">{req.client?.fullName ?? "—"}</td>
+                          <td className="px-5 py-3.5"><StatusPill status={req.status} /></td>
+                          <td className="px-5 py-3.5 text-[11px] text-gray-400 whitespace-nowrap">{formatDate(req.createdAt)}</td>
+                        </tr>
+                      ))}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Right Sidebar: Stats + Links */}
-        <div className="space-y-5">
+        {/* Right column */}
+        <div className="space-y-4">
 
-          {/* Quick Stats */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 mb-2">ملخص سريع</h3>
-            {[
-              {
-                label: "الموردين النشطين",
-                value: stats?.totalVendors ?? 0,
-                color: "bg-orange-500",
-              },
-              {
-                label: "المستخدمين المسجلين",
-                value: stats?.totalUsers ?? 0,
-                color: "bg-blue-500",
-              },
-              {
-                label: "طلبات اليوم",
-                value: stats?.todayRequests ?? 0,
-                color: "bg-green-500",
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`w-2 h-2 rounded-full ${item.color}`}
-                  />
-                  <span className="text-sm text-gray-600">{item.label}</span>
-                </div>
-                <span className="text-sm font-bold text-gray-900">
-                  {loading ? "—" : item.value.toLocaleString("ar-EG")}
-                </span>
+          {/* GMV highlight */}
+          <div className="bg-gray-900 rounded-xl p-5 text-white">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">إجمالي المبيعات</p>
+              <TrendingUp size={14} className="text-orange-400" />
+            </div>
+            <p className="text-3xl font-bold text-white tracking-tight">{gmv}</p>
+            <p className="text-xs text-gray-500 mt-1">القيمة الإجمالية للمعاملات</p>
+            <div className="mt-4">
+              <div className="flex justify-between text-[11px] text-gray-500 mb-1.5">
+                <span>الهدف الشهري</span>
+                <span className="text-orange-400 font-semibold">72%</span>
               </div>
-            ))}
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-orange-500 rounded-full" style={{ width: "72%" }} />
+              </div>
+            </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-            <h3 className="text-sm font-bold text-gray-900 mb-4">روابط سريعة</h3>
-            <div className="space-y-2">
+          {/* Quick stats */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <p className="text-xs font-bold text-gray-900 mb-3">ملخص النظام</p>
+            <div className="space-y-1">
               {[
-                { label: "إدارة المستخدمين", href: "/admin/users", icon: Users },
-                { label: "الطلبات المفتوحة", href: "/admin/requests", icon: Package },
-                { label: "التقارير المالية", href: "/admin/finance", icon: CreditCard },
-                { label: "تتبع التوصيل", href: "/admin/tracking", icon: Activity },
-              ].map((link) => {
+                { label: "الموردين النشطين",    value: stats?.totalVendors   ?? 0, color: "bg-orange-500" },
+                { label: "إجمالي المستخدمين",   value: stats?.totalUsers     ?? 0, color: "bg-blue-500"   },
+                { label: "طلبات اليوم",         value: stats?.todayRequests  ?? 0, color: "bg-green-500"  },
+                { label: "الطلبات المفتوحة",    value: stats?.openRequests   ?? 0, color: "bg-amber-500"  },
+              ].map(item => (
+                <div key={item.label} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                    <span className="text-[13px] text-gray-600">{item.label}</span>
+                  </div>
+                  <span className="text-[13px] font-bold text-gray-900 tabular-nums">
+                    {loading ? "—" : item.value.toLocaleString("ar-EG")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick links */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <p className="text-xs font-bold text-gray-900 mb-3">روابط سريعة</p>
+            <div className="space-y-0.5">
+              {[
+                { label: "إدارة المستخدمين",   href: "/admin/users",        icon: Users       },
+                { label: "الطلبات المفتوحة",   href: "/admin/requests",     icon: Package     },
+                { label: "التقارير المالية",    href: "/admin/finance",      icon: CreditCard  },
+                { label: "تتبع التوصيل",       href: "/admin/tracking",     icon: Activity    },
+              ].map(link => {
                 const Icon = link.icon;
                 return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 group transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-500 flex items-center justify-center transition-colors">
-                      <Icon
-                        size={15}
-                        className="text-gray-500 group-hover:text-white transition-colors"
-                      />
+                  <Link key={link.href} href={link.href} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-orange-50 group transition-colors">
+                    <div className="w-7 h-7 rounded-md bg-gray-100 group-hover:bg-orange-500 flex items-center justify-center transition-colors">
+                      <Icon size={13} className="text-gray-500 group-hover:text-white transition-colors" />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600 transition-colors flex-1">
-                      {link.label}
-                    </span>
-                    <ChevronLeft
-                      size={14}
-                      className="text-gray-300 group-hover:text-orange-400 transition-colors"
-                    />
+                    <span className="text-[13px] font-medium text-gray-700 group-hover:text-orange-600 flex-1 transition-colors">{link.label}</span>
+                    <ChevronLeft size={13} className="text-gray-300 group-hover:text-orange-400 transition-colors" />
                   </Link>
                 );
               })}
             </div>
-          </div>
-
-          {/* GMV Card */}
-          <div className="bg-gray-900 rounded-2xl p-6 text-white">
-            <div className="flex items-start justify-between mb-4">
-              <p className="text-xs text-gray-400 font-medium">إجمالي المبيعات</p>
-              <TrendingUp size={16} className="text-orange-400" />
-            </div>
-            <p className="text-2xl font-bold text-white">{loading ? "—" : gmv}</p>
-            <p className="text-xs text-gray-500 mt-1">قيمة إجمالية للمعاملات</p>
-            <div className="mt-4 h-1 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-orange-500 rounded-full"
-                style={{ width: "72%" }}
-              />
-            </div>
-            <p className="text-[11px] text-gray-500 mt-1.5">72% من الهدف الشهري</p>
           </div>
         </div>
       </div>
