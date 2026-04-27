@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { ErrorState } from "@/components/shared/error-state";
+import { BidCardSkeleton } from "@/components/shoofly/skeleton";
 import { listVendorBids } from "@/lib/api/bids";
 import { formatCurrency } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
@@ -26,28 +27,31 @@ const STATUS_CFG: Record<string, { label: string; badge: string; border: string;
   REJECTED:           { label: "مرفوض",              badge: "bg-rose-50 text-rose-600",     border: "border-r-rose-400",    icon: FiXCircle },
 };
 
-function SkeletonCard() {
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse border-r-4 border-r-slate-200">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 space-y-2">
-          <div className="h-3.5 bg-slate-100 rounded w-2/3" />
-          <div className="h-3 bg-slate-100 rounded w-full" />
-          <div className="h-3 bg-slate-100 rounded w-1/2" />
-        </div>
-        <div className="h-6 w-16 bg-slate-100 rounded-full" />
-      </div>
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-        <div className="h-3 w-20 bg-slate-100 rounded" />
-        <div className="h-5 w-24 bg-slate-100 rounded" />
-      </div>
-    </div>
-  );
-}
 
 export default function VendorBidsPage() {
   const [filter, setFilter] = useState("ALL");
   const { data, loading, error, refresh } = useAsyncData(() => listVendorBids(), []);
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR BID UPDATES
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("🎟️ Bid update received via SSE:", payload.type);
+        
+        // Refresh when a bid is selected or status changed
+        if (['NEW_BID', 'ORDER_STATUS_CHANGED', 'OFFERS_FORWARDED'].includes(payload.type)) {
+          refresh();
+        }
+      } catch (err) {
+        console.error("SSE Bids Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [refresh]);
 
   const counts = useMemo(() => {
     const list = data ?? [];
@@ -136,7 +140,7 @@ export default function VendorBidsPage() {
       {/* Loading */}
       {loading && (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+          {[1, 2, 3].map(i => <BidCardSkeleton key={i} />)}
         </div>
       )}
 

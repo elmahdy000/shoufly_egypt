@@ -25,8 +25,8 @@ export async function GET(
     const uploadDir = externalUploadDir
       ? path.isAbsolute(externalUploadDir)
         ? externalUploadDir
-        : path.join(process.cwd(), externalUploadDir)
-      : path.join(process.cwd(), 'public/uploads');
+        : path.join(/* turbopackIgnore: true */ process.cwd(), externalUploadDir)
+      : path.join(/* turbopackIgnore: true */ process.cwd(), 'public/uploads');
 
     const filePath = path.join(uploadDir, filename);
 

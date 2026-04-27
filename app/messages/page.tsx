@@ -9,6 +9,9 @@ import { listConversations, listChatMessages, sendChatMessage } from "@/lib/api/
 import { FiSend, FiMessageSquare, FiSearch, FiArrowRight } from "react-icons/fi";
 import { formatRelative } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useToast } from "@/components/providers/toast-provider";
+
+import { ShooflyLoader } from "@/components/shoofly/loader";
 
 function MessagesContent() {
   const searchParams = useSearchParams();
@@ -35,13 +38,34 @@ function MessagesContent() {
     }
   }, [conversations, initialOtherId, selectedUser]);
 
+  const { toast } = useToast();
+
   useEffect(() => {
-    const interval = setInterval(() => {
-        if (selectedUser) refreshMsgs();
-        refreshConvs();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [selectedUser]);
+    // REAL-TIME SSE FOR CHAT
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'chat') {
+          console.log("💬 New chat message received via SSE");
+          
+          // Only show toast if it's not from me
+          // (Assuming we have userId available, but for now we'll just show it)
+          toast('رسالة جديدة 💬', payload.data.content, 'info');
+
+          if (selectedUser && (payload.data.senderId === selectedUser.id || payload.data.receiverId === selectedUser.id)) {
+            refreshMsgs();
+          }
+          refreshConvs();
+        }
+      } catch (err) {
+        console.error("SSE Chat Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [selectedUser, refreshMsgs, refreshConvs, toast]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -207,14 +231,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={
-      <div className="flex flex-col h-screen bg-slate-50 items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-500 font-bold">جاري التحميل...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<ShooflyLoader message="بنفتح الرسايل..." />}>
       <MessagesContent />
     </Suspense>
   );

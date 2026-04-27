@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState, useMemo } from "react";
+import { FormEvent, useRef, useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/shoofly/button";
@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { createVendorBid } from "@/lib/api/bids";
 import { getRequestDetails } from "@/lib/api/requests";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { apiFetch } from "@/lib/api/client";
 import { 
   FileText, 
   MapPin, 
@@ -40,38 +41,40 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Platform standard commission (e.g., 10%)
-  const COMMISSION_RATE = 0.10;
+  // 🔄 Fetch platform commission rate from settings (dynamic)
+  const [commissionRate, setCommissionRate] = useState(0.15); // default 15%
+  
+  useEffect(() => {
+    apiFetch('/api/settings/public', 'VENDOR')
+      .then((data: any) => {
+        if (data?.commission) {
+          setCommissionRate(data.commission / 100);
+        }
+      })
+      .catch(() => {
+        // Keep default on error
+      });
+  }, []);
   
   const financialBreakdown = useMemo(() => {
     const price = Number(netPrice) || 0;
-    const commission = price * COMMISSION_RATE;
+    const commission = price * commissionRate;
     const clientPays = price + commission;
     return { price, commission, clientPays };
-  }, [netPrice]);
+  }, [netPrice, commissionRate]);
 
   async function uploadImage(file: File): Promise<string | null> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // Get CSRF token for upload
-    const getCsrfToken = () => {
-      const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
-      return match ? match[2] : null;
-    };
-    
     try {
-      const res = await fetch('/api/upload', { 
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const data = await apiFetch<any>('/api/upload', 'VENDOR', { 
         method: 'POST', 
-        body: formData, 
-        credentials: 'include',
-        headers: {
-          'x-csrf-token': getCsrfToken() || ''
-        }
+        body: formData 
       });
-      const data = await res.json();
       return data.success ? data.fileUrl : null;
     } catch (err) {
+      console.error('Upload failed', err);
       return null;
     }
   }
@@ -297,13 +300,16 @@ function VendorRequestDetails({ requestId }: { requestId: number }) {
                       <span className="font-bold">{financialBreakdown.price.toFixed(2)} ج.م</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400 text-sm">عمولة المنصة ({COMMISSION_RATE*100}%)</span>
+                      <span className="text-slate-400 text-sm">عمولة المنصة ({(commissionRate * 100).toFixed(0)}%)</span>
                       <span className="text-rose-400">+{financialBreakdown.commission.toFixed(2)} ج.م</span>
                     </div>
                     <div className="h-px bg-white/10 my-1" />
                     <div className="flex justify-between items-center text-lg">
                       <span className="font-bold">المبلغ اللي هيدفعه العميل</span>
                       <span className="text-primary font-black">{financialBreakdown.clientPays.toFixed(2)} ج.م</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-2">
+                      عمولة المنصة: {(commissionRate * 100).toFixed(0)}%
                     </div>
                   </div>
                 </div>

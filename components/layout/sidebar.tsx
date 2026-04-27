@@ -2,95 +2,92 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  FiHome, 
-  FiPackage, 
-  FiTrendingUp, 
-  FiDollarSign, 
-  FiUsers, 
-  FiSettings,
-  FiRepeat,
-  FiInbox,
+import type { ComponentType } from "react";
+import {
+  FiHome,
   FiMoon,
-  FiSun
+  FiSun,
 } from "react-icons/fi";
 import { useTheme } from "@/components/providers/theme-provider";
 
-export type SidebarItem = { href: string; label: string; icon: any };
+export type SidebarItem = { href: string; label: string; icon: ComponentType<{ size?: number; className?: string }> };
 
 export function Sidebar({ title, items }: { title: string; items: SidebarItem[] }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 lg:flex flex-col">
-      {/* Brand Header */}
-      <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
-          <FiHome size={20} />
-        </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Shoofly</p>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+    <aside className="hidden h-screen w-72 shrink-0 overflow-hidden border-l border-white/70 bg-white/90 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl lg:flex flex-col">
+      <div className="border-b border-slate-100/80 px-5 py-5">
+        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-primary/10 via-white to-slate-50 p-3 ring-1 ring-primary/10">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+            <FiHome size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Shoofly</p>
+            <h2 className="truncate text-lg font-bold text-slate-900">{title}</h2>
+          </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
         {items.map((item) => {
-          const isActive = item.href === '/admin' ? pathname === item.href : pathname.startsWith(item.href);
+          const isActive = item.href === "/admin" ? pathname === item.href : pathname.startsWith(item.href);
           const Icon = item.icon;
-          
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                isActive 
-                  ? 'bg-primary text-white font-medium' 
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+              className={`group relative flex items-center gap-3 rounded-2xl border px-4 py-3 transition-all ${
+                isActive
+                  ? "border-primary/20 bg-primary/10 text-slate-900 shadow-sm"
+                  : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors'} />
+              {isActive && <span className="absolute inset-y-2 right-2 w-1 rounded-full bg-primary" />}
+              <Icon size={18} className={isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600"} />
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-9 h-9 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
-               AD
-             </div>
-             <div>
-               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">المدير العام</p>
-               <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> متصل
-               </p>
-             </div>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <button 
-              onClick={toggleTheme}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-              title="تبديل الوضع"
-            >
-              {theme === 'dark' ? <FiSun size={16} /> : <FiMoon size={16} />}
-            </button>
-            <button 
-              onClick={() => {
-                document.cookie = 'session_token=; Max-Age=0; path=/';
-                window.location.href = '/login';
-              }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-              title="تسجيل الخروج"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            </button>
+      <div className="border-t border-slate-100/80 p-4">
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3 shadow-inner">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white font-bold text-sm shadow-sm">
+                AD
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">Ø§Ù„Ù…Ø¯ÙŠØ± Ø§Ù„Ø¹Ø§Ù…</p>
+                <p className="flex items-center gap-1 text-[10px] text-slate-500">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Ù…ØªØµÙ„
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleTheme}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition-colors hover:border-primary/30 hover:text-primary"
+                title="ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„ÙˆØ¶Ø¹"
+              >
+                {theme === "dark" ? <FiSun size={16} /> : <FiMoon size={16} />}
+              </button>
+              <button
+                onClick={() => {
+                  document.cookie = "session_token=; Max-Age=0; path=/";
+                  window.location.href = "/login";
+                }}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-500 transition-colors hover:border-rose-200 hover:bg-rose-500 hover:text-white"
+                title="ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>

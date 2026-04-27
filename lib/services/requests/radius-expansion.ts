@@ -1,4 +1,6 @@
 import { prisma } from '../../prisma';
+import { Notify } from '../notifications/hub';
+import { logger } from '../../utils/logger';
 
 /**
  * This service reviews OPEN_FOR_BIDDING requests that haven't received enough bids.
@@ -18,24 +20,22 @@ export async function expandSearchRadiusForOlderRequests() {
     include: { category: true }
   });
 
-  console.log(`🔍 Checking ${pendingRequests.length} pending requests for radius expansion...`);
+  logger.info('radius.expansion.checking', { count: pendingRequests.length });
 
   for (const req of pendingRequests) {
     // Logic: In a real system, we would notify specialized vendors in a wider radius.
     // For the DB, we can mark them with a 'priority' or 'expanded' flag if we had one,
     // or log it for the matching engine.
     
-    console.log(`🚀 Expanding radius for Request #${req.id} (${req.title}) - Category: ${req.category.name}`);
+    logger.info('radius.expansion.expanding', { requestId: req.id, title: req.title, category: req.category.name });
     
     // Simulate notifying the client that we are expanding the search for them
-    await prisma.notification.create({
-      data: {
-        userId: req.clientId, // Notify the owner of the request
-        type: 'REQUEST_DISPATCHED',
-        title: 'تنبيه توسيع نطاق البحث',
-        message: `جاري توسيع نطاق البحث للطلب #${req.id} لزيادة فرص العثور على مورد في مناطق أبعد.`,
-        requestId: req.id
-      }
+    await Notify.send({
+      userId: req.clientId, // Notify the owner of the request
+      type: 'REQUEST_DISPATCHED',
+      title: 'تنبيه توسيع نطاق البحث 📡',
+      message: `جاري توسيع نطاق البحث للطلب #${req.id} لزيادة فرص العثور على مورد في مناطق أبعد.`,
+      requestId: req.id
     });
 
     // We can also update the updatedAt to prevent immediate re-expansion in the next loop

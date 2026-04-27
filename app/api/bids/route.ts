@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json(bid, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError('BIDS_POST_ERROR', error);
     const { response, status } = createErrorResponse(error);
     return NextResponse.json(response, { status });

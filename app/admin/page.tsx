@@ -1,36 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { 
+  AlertCircle, ArrowLeft, BarChart3, Briefcase, 
+  CircleDollarSign, Clock3, Eye, FileText, 
+  Package, Settings, Sparkles, Truck, Users,
+  TrendingUp, ShieldCheck, Zap, Layers
+} from "lucide-react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import {
-  Activity,
-  AlertCircle,
-  ArrowUpRight,
-  BarChart3,
-  Briefcase,
-  CircleDollarSign,
-  Clock3,
-  Eye,
-  FileText,
-  Package,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Truck,
-  Users,
-  Filter,
-} from "lucide-react";
+import { ImprovedCard } from "@/components/ui/improved-card";
+import { ImprovedButton } from "@/components/ui/improved-button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { motion } from "framer-motion";
-import { EmptyState, ImprovedCard, StatusBadge } from "@/components/ui/improved-card";
-import { ImprovedLoading } from "@/components/ui/improved-loading";
 
 interface RecentRequest {
   id: number;
   title: string;
   createdAt: string;
-  status?: string;
+  status: string;
   client?: { fullName?: string | null } | null;
 }
 
@@ -40,308 +30,334 @@ interface DashboardStats {
   totalVendors: number;
   todayRequests: number;
   totalGMV: number;
-  pendingAiReview?: number;
+  pendingAiReview: number;
+  pendingWithdrawals: number;
+  activeDeliveries: number;
+  totalAdmins: number;
+  onlineAdmins: number;
   recentRequests: RecentRequest[];
 }
 
-type Tone = "primary" | "emerald" | "amber" | "slate" | "indigo" | "rose";
-type RequestBadgeStatus = Parameters<typeof StatusBadge>[0]["status"];
-
-interface MetricCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  hint: string;
-  tone: Tone;
-}
-
-const formatCount = (value: number) => new Intl.NumberFormat("ar-EG").format(value);
-
-const toneStyles: Record<Tone, { gradient: string; icon: string; ring: string }> = {
-  primary: {
-    gradient: "from-primary/20 via-primary/10 to-transparent",
-    icon: "bg-primary/15 text-primary ring-primary/15",
-    ring: "border-primary/15",
-  },
-  emerald: {
-    gradient: "from-emerald-500/20 via-emerald-500/10 to-transparent",
-    icon: "bg-emerald-500/15 text-emerald-600 ring-emerald-500/15",
-    ring: "border-emerald-500/15",
-  },
-  amber: {
-    gradient: "from-amber-500/20 via-amber-500/10 to-transparent",
-    icon: "bg-amber-500/15 text-amber-600 ring-amber-500/15",
-    ring: "border-amber-500/15",
-  },
-  slate: {
-    gradient: "from-slate-500/20 via-slate-500/10 to-transparent",
-    icon: "bg-slate-900/5 text-slate-700 ring-slate-500/15",
-    ring: "border-slate-200",
-  },
-  indigo: {
-    gradient: "from-indigo-500/20 via-indigo-500/10 to-transparent",
-    icon: "bg-indigo-500/15 text-indigo-600 ring-indigo-500/15",
-    ring: "border-indigo-500/15",
-  },
-  rose: {
-    gradient: "from-rose-500/20 via-rose-500/10 to-transparent",
-    icon: "bg-rose-500/15 text-rose-600 ring-rose-500/15",
-    ring: "border-rose-500/15",
-  },
-};
-
-const statusBadgeMap: Record<string, RequestBadgeStatus> = {
-  active: "active",
-  inactive: "inactive",
-  pending: "pending",
-  approved: "approved",
-  rejected: "rejected",
-  processing: "processing",
-  completed: "completed",
-};
-
-const MetricCard = ({ label, value, icon: Icon, hint, tone }: MetricCardProps) => {
-  const theme = toneStyles[tone];
-
-  return (
-    <ImprovedCard className={`group relative overflow-hidden border ${theme.ring} bg-white/90 shadow-[0_12px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]`}>
-      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${theme.gradient}`} />
-      <div className="absolute -right-8 top-0 h-24 w-24 rounded-full bg-slate-950/5 blur-3xl transition-all duration-300 group-hover:scale-125" />
-
-      <div className="relative flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{value}</p>
-          <p className="mt-2 text-sm text-slate-500">{hint}</p>
-        </div>
-
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 ${theme.icon}`}>
-          <Icon size={22} />
-        </div>
-      </div>
-    </ImprovedCard>
-  );
-};
-
 const quickActions = [
-  { label: "مراجعة الطلبات", href: "/admin/requests", icon: Package },
-  { label: "تتبع الأسطول", href: "/admin/tracking", icon: Truck },
-  { label: "تحليل البيانات", href: "/admin/analytics", icon: BarChart3 },
-  { label: "إدارة المستخدمين", href: "/admin/users", icon: Users },
-  { label: "إدارة الموردين", href: "/admin/vendors", icon: Briefcase },
-  { label: "الإعدادات", href: "/admin/settings", icon: Settings },
+  { label: "الطلبات", href: "/admin/requests", icon: Package, color: "text-blue-500", bg: "bg-blue-50" },
+  { label: "تتبع الأسطول", href: "/admin/tracking", icon: Truck, color: "text-emerald-500", bg: "bg-emerald-50" },
+  { label: "التحليلات", href: "/admin/analytics", icon: BarChart3, color: "text-indigo-500", bg: "bg-indigo-50" },
+  { label: "المستخدمين", href: "/admin/users", icon: Users, color: "text-orange-500", bg: "bg-orange-50" },
+  { label: "الموردين", href: "/admin/vendors", icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
+  { label: "الإعدادات", href: "/admin/settings", icon: Settings, color: "text-slate-500", bg: "bg-slate-100" },
 ];
+
+import { ShooflyLoader } from "@/components/shoofly/loader";
 
 export default function AdminDashboard() {
   const { data: stats, loading, error } = useAsyncData<DashboardStats>(
-    () => apiFetch("/api/admin/stats", "ADMIN"),
+    () => apiFetch("/api/admin/stats", "ADMIN"), 
     []
   );
 
-  const cards = [
+  const cards = useMemo(() => [
     {
-      label: "إجمالي المعاملات",
-      value: formatCurrency(stats?.totalGMV ?? 0).split(".")[0],
+      label: "إجمالي التداول المالي",
+      value: stats ? formatCurrency(Math.floor(stats.totalGMV)) : "٠",
       icon: CircleDollarSign,
-      hint: "إجمالي الحركة المالية",
-      tone: "primary" as const,
+      hint: "القيمة الإجمالية للعمليات المنفذة بالمنصة",
+      trend: "+١٢.٥٪",
+      trendUp: true,
+      color: "blue",
+      borderColor: "border-blue-100",
+      accentColor: "bg-blue-500 text-white",
+      bgGradient: "from-blue-50 to-white"
     },
     {
-      label: "طلبات اليوم",
-      value: formatCount(stats?.todayRequests ?? 0),
-      icon: Clock3,
-      hint: "طلبات جديدة اليوم",
-      tone: "emerald" as const,
+      label: "عمليات الميدان اليوم",
+      value: stats?.todayRequests ?? 0,
+      icon: Zap,
+      hint: "إجمالي الطلبات المستلمة خلال ٢٤ ساعة",
+      trend: "+٥ وحدات",
+      trendUp: true,
+      color: "emerald",
+      borderColor: "border-emerald-100",
+      accentColor: "bg-emerald-500 text-white",
+      bgGradient: "from-emerald-50 to-white"
     },
     {
-      label: "مراجعات AI",
-      value: formatCount(stats?.pendingAiReview ?? 0),
-      icon: Sparkles,
-      hint: "بانتظار المراجعة الذكية",
-      tone: "amber" as const,
-    },
+        label: "تنبيهات المراقبة الذكية",
+        value: stats?.pendingAiReview ?? 0,
+        icon: Sparkles,
+        hint: "طلبات بانتظار المراجعة والتدقيق الإداري",
+        trend: stats?.pendingAiReview ? "مراجعة مطلوبة" : "النظام مستقر",
+        trendUp: false,
+        color: "orange",
+        borderColor: "border-orange-100",
+        accentColor: "bg-orange-500 text-white",
+        bgGradient: "from-orange-50 to-white"
+      },
     {
-      label: "الطلبات المفتوحة",
-      value: formatCount(stats?.openRequests ?? 0),
+      label: "الطلبات النشطة الآن",
+      value: stats?.openRequests ?? 0,
       icon: Package,
-      hint: "قيد المتابعة حالياً",
-      tone: "indigo" as const,
+      hint: "طلبات مفتوحة للمزايدة بالوقت الفعلي",
+      trend: "متابعة مباشرة",
+      trendUp: true,
+      color: "primary",
+      borderColor: "border-primary/20",
+      accentColor: "bg-primary text-white",
+      bgGradient: "from-primary/10 to-white"
     },
-  ];
+  ], [stats]);
 
-  const snapshotValues = [
-    { label: "طلبات اليوم", value: stats?.todayRequests ?? 0, tone: "emerald" as const },
-    { label: "الطلبات المفتوحة", value: stats?.openRequests ?? 0, tone: "primary" as const },
-    { label: "الموردون", value: stats?.totalVendors ?? 0, tone: "indigo" as const },
-    { label: "مراجعات AI", value: stats?.pendingAiReview ?? 0, tone: "amber" as const },
-  ];
+  if (loading && !stats) {
+    return <ShooflyLoader message="بنجمعلك إحصائيات النظام..." />;
+  }
 
-  const maxSnapshot = Math.max(...snapshotValues.map((item) => item.value), 1);
   const nowLabel = new Intl.DateTimeFormat("ar-EG", {
     hour: "2-digit",
     minute: "2-digit",
+    day: "numeric",
+    month: "long"
   }).format(new Date());
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8 flex items-center justify-center" dir="rtl">
-        <EmptyState
-          icon={AlertCircle}
-          title="تعذر تحميل لوحة الأدمن"
-          description="حدث خطأ أثناء جلب البيانات. جرّب إعادة التحميل."
-          action={{ label: "إعادة التحميل", onClick: () => window.location.reload() }}
-        />
+      <div className="p-6 lg:p-10 font-cairo" dir="rtl">
+        <div className="p-12 text-center bg-white border border-red-100 shadow-xl shadow-red-500/5 rounded-3xl max-w-2xl mx-auto mt-20">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500">
+            <AlertCircle size={40} strokeWidth={2} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900">الاتصال بمركز البيانات قطع</h2>
+          <p className="mt-3 text-base font-medium text-slate-500">حصل مشكلة في تحديث البيانات. ياريت تتأكد إن السيرفر شغال كويس.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-8 px-8 h-12 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 active:scale-95"
+          >
+            حاول تاني دلوقتي
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-6 md:p-10 space-y-10" dir="rtl">
+    <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-10 font-cairo antialiased min-h-screen bg-slate-50" dir="rtl">
       
-      {/* 🚀 Modern Hero Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-white border border-slate-200 p-8 md:p-12 shadow-sm"
-      >
-        <div className="absolute top-0 left-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl -ml-32 -mt-32 opacity-60" />
-        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
-          <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-100 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-orange-700">
-              <Sparkles size={14} /> مركز القيادة المركزية
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight tracking-tight">
-              أهلاً بك، <span className="text-orange-600">مدير النظام</span>. إليك ملخص الحالة التشغيلية اليوم.
-            </h1>
-            <p className="text-slate-500 font-medium leading-relaxed">
-              تتم متابعة جميع العمليات اللوجستية والمالية بدقة. النظام يعمل بكفاءة تامة حالياً.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-               <div className="flex items-center gap-2 text-xs font-bold text-slate-400 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
-                  <Clock3 size={14} /> آخر تحديث: {nowLabel}
-               </div>
-               <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-4 py-2 rounded-lg border border-green-100">
-                  <Activity size={14} /> حالة السيرفر: مستقر
-               </div>
-            </div>
+      {/* 🌟 ELEGANT HEADER */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+            <span className="text-xs font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">تحديث لايف</span>
           </div>
-
-          <div className="flex gap-4 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
-             {cards.slice(0, 2).map((item, i) => (
-               <div key={i} className="min-w-[180px] p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
-                  <p className="text-2xl font-bold text-slate-900">{item.value}</p>
-                  <p className="text-[10px] font-medium text-slate-500">{item.hint}</p>
-               </div>
-             ))}
-          </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">لوحة التحكم</h1>
+          <p className="text-base text-slate-500 font-medium">دير كل الشغل والفلوس لشبكة شوفلي مصر من مكان واحد.</p>
         </div>
-      </motion.section>
-
-      {/* 📊 Metrics Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <MetricCard {...card} />
-          </motion.div>
-        ))}
-      </section>
-
-      {/* ⚡ Quick Actions & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-         <div className="lg:col-span-8 space-y-6">
-            <div className="flex items-center justify-between">
-               <h2 className="text-xl font-bold text-slate-900">أحدث الطلبات</h2>
-               <Link href="/admin/requests" className="text-sm font-bold text-orange-600 hover:text-orange-700 transition-colors">عرض الكل</Link>
-            </div>
-            
-            <ImprovedCard className="bg-white/80 border-slate-200 overflow-hidden shadow-sm">
-               {loading ? (
-                 <div className="p-10"><ImprovedLoading isLoading={true} variant="card" count={3}><div></div></ImprovedLoading></div>
-               ) : stats?.recentRequests?.length ? (
-                 <div className="divide-y divide-slate-100">
-                   {stats.recentRequests.map((req) => (
-                     <div key={req.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group">
-                        <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold shadow-sm">
-                              <Package size={20} />
-                           </div>
-                           <div>
-                              <p className="font-bold text-slate-900 group-hover:text-orange-600 transition-colors">#{req.id} - {req.title}</p>
-                              <p className="text-xs text-slate-400 font-medium">{formatDate(req.createdAt)} • {req.client?.fullName || 'عميل'}</p>
-                           </div>
+        
+        <div className="flex items-center gap-4">
+            <div className="bg-white border border-slate-100 p-4 px-6 rounded-2xl flex items-center gap-5 shadow-sm">
+                <div className="flex -space-x-3 rtl:space-x-reverse">
+                    {[1,2,3].map(i => (
+                        <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm">
+                            م
                         </div>
-                        <div className="flex items-center gap-4">
-                           {req.status && <StatusBadge status={statusBadgeMap[req.status.toLowerCase()] || "pending"} />}
-                           <Link href={`/admin/requests?id=${req.id}`} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all shadow-sm">
-                              <Eye size={16} />
-                           </Link>
-                        </div>
-                     </div>
-                   ))}
-                 </div>
-               ) : (
-                 <div className="p-20"><EmptyState icon={FileText} title="لا توجد طلبات حديثة" description="لم يتم تسجيل أي طلبات في النظام مؤخراً." /></div>
-               )}
-            </ImprovedCard>
-         </div>
-
-         <div className="lg:col-span-4 space-y-6">
-            <h2 className="text-xl font-bold text-slate-900">إجراءات سريعة</h2>
-            <div className="grid grid-cols-2 gap-4">
-               {quickActions.map((action, i) => (
-                 <Link 
-                   key={i} 
-                   href={action.href}
-                   className="p-6 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-orange-500 hover:bg-orange-50/30 hover:shadow-md transition-all group scale-100 active:scale-95"
-                 >
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all">
-                       <action.icon size={20} />
+                    ))}
+                </div>
+                <div className="border-r border-slate-100 pr-5">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">المشرفين المتصلين حالياً</p>
+                    <div className="flex items-center gap-2">
+                        <span className="text-lg font-black text-slate-800">
+                            {String(stats?.onlineAdmins ?? 1).padStart(2, '0')}
+                        </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors uppercase tracking-tight">{action.label}</span>
-                 </Link>
-               ))}
+                </div>
             </div>
+            <div className="bg-white border border-slate-100 p-4 px-6 rounded-2xl flex items-center gap-3 shadow-sm text-slate-700">
+                <Clock3 size={20} className="text-primary" />
+                <span className="text-sm font-bold">{nowLabel}</span>
+            </div>
+        </div>
+      </header>
 
-            <ImprovedCard className="bg-slate-900 text-white p-6 border-slate-950 shadow-xl overflow-hidden relative">
-               <div className="absolute top-0 left-0 w-32 h-32 bg-orange-600/20 blur-3xl -ml-16 -mt-16" />
-               <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
-                  <BarChart3 size={14} /> نبذة الأداء اليوم
-               </h3>
-               <div className="space-y-4">
-                  {snapshotValues.map((item, i) => (
-                    <div key={i} className="space-y-2">
-                       <div className="flex justify-between text-[10px] font-bold uppercase">
-                          <span className="text-slate-300">{item.label}</span>
-                          <span className="text-white">{item.value}</span>
-                       </div>
-                       <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(item.value / maxSnapshot) * 100}%` }}
-                            className={`h-full rounded-full bg-gradient-to-r ${item.tone === 'primary' ? 'from-orange-500 to-orange-600' : item.tone === 'emerald' ? 'from-emerald-400 to-emerald-500' : 'from-indigo-400 to-indigo-500'}`}
-                          />
-                       </div>
+      {/* 📊 PREMIUM KPI GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {cards.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+                <motion.div
+                    key={card.label}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group"
+                >
+                    <div className={`bg-gradient-to-br ${card.bgGradient} border ${card.borderColor} rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden`}>
+                        <div className="flex justify-between items-start mb-6">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md ${card.accentColor}`}>
+                                <Icon size={24} />
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-slate-100 text-slate-600 shadow-sm`}>
+                                {card.trendUp && <TrendingUp size={12} className="text-emerald-500" />}
+                                {card.trend}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-bold text-slate-500">{card.label}</h3>
+                            <div className="flex items-baseline gap-3">
+                                <span className="text-3xl font-black text-slate-900 tracking-tight">
+                                    {loading ? "..." : card.value}
+                                </span>
+                            </div>
+                            <p className="text-[11px] font-medium text-slate-400 pt-2 opacity-80">{card.hint}</p>
+                        </div>
                     </div>
-                  ))}
-               </div>
-            </ImprovedCard>
-         </div>
+                </motion.div>
+            );
+        })}
       </div>
 
-      <motion.footer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.35, delay: 0.5 }}
-        className="pb-2 pt-2 text-center text-sm text-slate-500"
-      >
-        آخر تحديث: {nowLabel}
-      </motion.footer>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        
+        {/* 📋 DATA HUB (CLEAN TABLE) */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center"><Layers size={20} /></div>
+                <div>
+                    <h2 className="text-xl font-black text-slate-900">آخر العمليات</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">سجل لايف لآخر الطلبات اللي حصلت</p>
+                </div>
+              </div>
+              <Link href="/admin/requests" className="text-xs font-bold text-primary bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                شوف الأرشيف <ArrowLeft size={14} />
+              </Link>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+            {loading ? (
+              <div className="space-y-4 p-8">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 rounded-xl bg-slate-50 animate-pulse border border-slate-100" />
+                ))}
+              </div>
+            ) : stats?.recentRequests?.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                    <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100 text-slate-500">
+                        <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">الطلب</th>
+                        <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">العميل</th>
+                        <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">الحالة</th>
+                        <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">التاريخ</th>
+                    </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                    {stats.recentRequests.map((req) => (
+                        <tr key={req.id} className="group hover:bg-slate-50/50 transition-colors cursor-pointer">
+                        <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-50 border border-slate-100 text-slate-400 rounded-xl flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                <FileText size={18} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-slate-900 group-hover:text-primary transition-colors line-clamp-1">{req.title}</p>
+                                <p className="text-[10px] font-bold text-slate-400 mt-1">#{req.id}</p>
+                            </div>
+                            </div>
+                        </td>
+                        <td className="px-6 py-4 text-center text-sm font-bold text-slate-600">
+                            {req.client?.fullName || "عميل غير مسمى"}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                            <StatusBadge status={req.status} className="scale-90 shadow-sm" />
+                        </td>
+                        <td className="px-6 py-4 text-left text-[11px] font-bold text-slate-500">
+                            {formatDate(req.createdAt)}
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+              </div>
+            ) : (
+                <div className="py-20 text-center space-y-4">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                        <FileText size={32} />
+                    </div>
+                    <div>
+                        <p className="text-lg font-bold text-slate-700">مفيش أي سجلات</p>
+                        <p className="text-xs text-slate-400 mt-1">هتظهر كل الأنشطة هنا أول ما الشغل يبدأ.</p>
+                    </div>
+                </div>
+            )}
+          </div>
+        </div>
+
+        {/* 🛠 ELEGANT SIDEBAR */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center"><Zap size={16} /></div>
+                <h2 className="text-lg font-black text-slate-900">في السريع</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="group bg-slate-50 border border-slate-100 p-4 rounded-2xl transition-all hover:border-primary/30 hover:bg-white hover:shadow-md"
+                  >
+                    <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${action.bg} ${action.color}`}>
+                      <Icon size={20} />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 group-hover:text-primary transition-colors">{action.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
+            
+            <div className="relative z-10 flex flex-col gap-8">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-6">
+                    <h2 className="text-lg font-black text-white">إحصائيات الشبكة</h2>
+                    <ShieldCheck size={24} className="text-primary" />
+                </div>
+                
+                <div className="grid gap-4">
+                    <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 mb-1">العملاء الشغالين</p>
+                            <p className="text-2xl font-black">{stats?.totalUsers ?? 0}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center"><Users size={20} /></div>
+                    </div>
+
+                    <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 mb-1">الصنايعية المعتمدين</p>
+                            <p className="text-2xl font-black">{stats?.totalVendors ?? 0}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center"><Briefcase size={20} /></div>
+                    </div>
+
+                    <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 mb-1">المناديب</p>
+                            <p className="text-2xl font-black">{stats?.activeDeliveries ?? 0}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><Truck size={20} /></div>
+                    </div>
+                </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

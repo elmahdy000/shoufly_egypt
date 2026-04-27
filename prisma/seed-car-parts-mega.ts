@@ -12,6 +12,9 @@ async function expandCarParts() {
 
   // Helper
   async function addSub(name: string, slug: string, bType: string | null = 'CARS', type: 'SERVICE' | 'PRODUCT' | 'DIGITAL' = 'PRODUCT') {
+     if (!cars) {
+       throw new Error('Parent cars category is required');
+     }
      return prisma.category.upsert({
        where: { slug },
        update: { name, parentId: cars.id, requiresBrand: !!bType, brandType: bType, type },

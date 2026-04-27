@@ -18,7 +18,7 @@ export default function AdminBidsPage() {
   const { data, loading, error } = useAsyncData<Request[]>(() => listPendingAdminRequests(), []);
 
   return (
-    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
+    <div className="admin-page admin-page--spacious" dir="rtl">
       
       {/* 🚀 Header: Bid Monitoring Hub */}
       <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">

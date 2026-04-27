@@ -1,8 +1,8 @@
 import { apiFetch } from "@/lib/api/client";
-import type { ApiDeliveryConfirmResult, ApiDeliveryEntry } from "@/lib/types/api";
+import type { ApiDeliveryConfirmResult, ApiDeliveryTimeline, ApiDeliveryEntry } from "@/lib/types/api";
 
 export async function listClientDeliveryTimeline(requestId: number) {
-  return apiFetch<ApiDeliveryEntry[]>(`/api/client/delivery/${requestId}`, "CLIENT");
+  return apiFetch<ApiDeliveryTimeline>(`/api/client/delivery/${requestId}`, "CLIENT");
 }
 
 export async function updateVendorDeliveryStatus(
@@ -20,6 +20,9 @@ export async function markVendorDeliveryReturned(requestId: number, payload?: { 
   return apiFetch<ApiDeliveryEntry>(`/api/vendor/delivery/${requestId}/returned`, "VENDOR", { method: "POST", body: payload ?? {} });
 }
 
-export async function confirmClientDelivery(requestId: number) {
-  return apiFetch<ApiDeliveryConfirmResult>(`/api/client/qr/confirm/${requestId}`, "CLIENT", { method: "POST", body: {} });
+export async function confirmClientDelivery(requestId: number, qrCode: string) {
+  return apiFetch<ApiDeliveryConfirmResult>(`/api/client/qr/confirm/${requestId}`, "CLIENT", { 
+    method: "POST", 
+    body: { qrCode } 
+  });
 }

@@ -144,7 +144,7 @@ async function testVendorLogic() {
           // Should not reach here
           throw new Error('Should have prevented duplicate bid');
         } catch (error: any) {
-          if (error.message.includes('Unique constraint') || error.message.includes('already')) {
+          if (error.message.includes('Unique constraint') || error.message.includes('already') || error.message.includes('مسبقاً')) {
             results.push({ test: 'Duplicate Bid Prevention', passed: true });
             console.log('✅ System prevents duplicate bids\n');
           } else {
@@ -165,30 +165,32 @@ async function testVendorLogic() {
   try {
     console.log('Test 5: Order Fulfillment');
     
-    // Find a paid order for this vendor
+    // Find a paid order for this vendor that hasn't started delivery
     const paidOrder = await prisma.bid.findFirst({
       where: { 
         vendorId: vendor.id,
         status: 'ACCEPTED_BY_CLIENT',
         request: {
           status: 'ORDER_PAID_PENDING_DELIVERY',
+          deliveryTracking: {
+            none: { status: { in: ['VENDOR_PREPARING', 'READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'FAILED_DELIVERY', 'RETURNED'] } }
+          }
         },
       },
       include: { request: true },
     });
     
     if (paidOrder && paidOrder.request) {
-      // Simulate order preparation
       await updateDeliveryStatus({
         requestId: paidOrder.request.id,
-        vendorId: vendor.id,
+        userId: vendor.id,
         status: 'VENDOR_PREPARING',
         note: 'Preparing order',
       });
       
       await updateDeliveryStatus({
         requestId: paidOrder.request.id,
-        vendorId: vendor.id,
+        userId: vendor.id,
         status: 'READY_FOR_PICKUP',
         note: 'Ready for delivery agent',
       });

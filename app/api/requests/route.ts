@@ -3,12 +3,29 @@ import { getCurrentUser, requireUser, requireRole } from "@/lib/auth";
 import { CreateRequestSchema } from "@/lib/validations/request";
 import { createRequest, listClientRequests } from "@/lib/services/requests";
 import { createErrorResponse, logError } from "@/lib/utils/error-handler";
+import { checkRateLimit } from "@/lib/utils/rate-limiter";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req.headers);
     requireUser(user);
     requireRole(user, "CLIENT");
+
+    // 🛡️ APPLY HYBRID RATE LIMIT: 5 Requests per 60 Seconds
+    const { allowed, limit, remaining, resetTime } = await checkRateLimit(`create_req:${user.id}`, 5, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "لقد تجاوزت الحد المسموح من الطلبات لدقيقة واحدة. يرجى المحاولة لاحقاً." },
+        { 
+          status: 429, 
+          headers: { 
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(resetTime),
+          } 
+        }
+      );
+    }
 
     const body = await req.json();
     const validated = CreateRequestSchema.parse(body);

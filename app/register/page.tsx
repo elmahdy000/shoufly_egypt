@@ -45,7 +45,7 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGov || !selectedCity) {
-      setError('يرجى اختيار المحافظة والمدينة');
+      setError('لازم تختار المحافظة والمدينة');
       return;
     }
 
@@ -62,7 +62,7 @@ export default function RegisterPage() {
       });
       router.push('/login?registered=true');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'فشل إنشاء الحساب. يرجى مراجعة البيانات.');
+      setError(err instanceof Error ? err.message : 'فشلنا نعملك الحساب. راجع بياناتك وجرب تاني.');
       setIsLoading(false);
     }
   };
@@ -75,8 +75,8 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-white mb-2">
             <FiShield size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">إنشاء حساب</h1>
-          <p className="text-slate-500 text-sm">انضم إلى منصة شوفلي</p>
+          <h1 className="text-3xl font-bold text-slate-900">اعمل حساب جديد</h1>
+          <p className="text-slate-500 text-sm">نورنا في منصة شوفلي</p>
         </div>
 
         {/* Registration Card */}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                   type="text" 
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="أدخل اسمك الثلاثي" 
+                  placeholder="اكتب اسمك الثلاثي" 
                   className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:bg-white outline-none transition-all"
                   required
                 />
@@ -104,7 +104,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">البريد الإلكتروني</label>
+              <label className="text-sm font-medium text-slate-700">الإيميل</label>
               <div className="relative">
                 <FiMail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input 
@@ -120,7 +120,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">نوع الحساب</label>
+              <label className="text-sm font-medium text-slate-700">بتسجل كإيه؟</label>
               <div className="grid grid-cols-3 gap-2">
                  <RoleCard 
                     active={role === 'CLIENT'} 
@@ -132,13 +132,13 @@ export default function RegisterPage() {
                     active={role === 'VENDOR'} 
                     onClick={() => setRole('VENDOR')} 
                     icon={<FiBriefcase />} 
-                    label="تاجر" 
+                    label="مورد/تاجر" 
                  />
                  <RoleCard 
                     active={role === 'DELIVERY'} 
                     onClick={() => setRole('DELIVERY')} 
                     icon={<FiTruck />} 
-                    label="مندوب" 
+                    label="طيار/مندوب" 
                  />
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:bg-white outline-none transition-all appearance-none"
                   required
                 >
-                  <option value="">اختر المحافطة</option>
+                  <option value="">اختار المحافظة</option>
                   {governorates.map((gov: any) => (
                     <option key={gov.id} value={gov.id}>{gov.name}</option>
                   ))}
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                   disabled={!selectedGov}
                   required
                 >
-                  <option value="">اختر المدينة</option>
+                  <option value="">اختار المدينة</option>
                   {cities.map((city: any) => (
                     <option key={city.id} value={city.id}>{city.name}</option>
                   ))}
@@ -177,7 +177,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">كلمة المرور</label>
+              <label className="text-sm font-medium text-slate-700">الباسورد</label>
               <div className="relative">
                 <FiLock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input 
@@ -197,13 +197,13 @@ export default function RegisterPage() {
               className="w-full h-12 text-base font-medium rounded-xl mt-2" 
               isLoading={isLoading}
             >
-               إنشاء حساب
+               سجل دلوقتي
             </Button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-100 text-center">
              <p className="text-sm text-slate-500">
-               لديك حساب بالفعل؟ <Link href="/login" className="text-primary font-medium hover:underline">سجل دخولك</Link>
+               عندك حساب؟ <Link href="/login" className="text-primary font-medium hover:underline">ادخل على حسابك</Link>
              </p>
           </div>
         </div>

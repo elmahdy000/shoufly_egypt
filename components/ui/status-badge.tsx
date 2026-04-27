@@ -1,3 +1,6 @@
+import React from "react";
+import { cn } from "@/lib/utils";
+
 const toneMap: Record<string, string> = {
   PENDING_ADMIN_REVISION: "bg-amber-50 text-amber-700 border-amber-200",
   OPEN_FOR_BIDDING: "bg-blue-50 text-blue-700 border-blue-200",
@@ -58,15 +61,27 @@ const labelMap: Record<string, string> = {
   READY_FOR_PICKUP: "جاهز للاستلام"
 };
 
-export function StatusBadge({ status }: { status: string | null | undefined }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: string | null | undefined;
+  className?: string;
+}) {
   const key = status ?? "UNKNOWN";
   const arabicLabel = labelMap[key] ?? key;
   const tone = toneMap[key] ?? "bg-stone-50 text-stone-700 border-stone-200";
   const dotColor = dotMap[key] ?? "bg-stone-400";
 
   return (
-    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${tone}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ml-1.5 shrink-0 ${dotColor}`} />
+    <div
+      className={cn(
+        "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border",
+        tone,
+        className
+      )}
+    >
+      <span className={cn("w-1.5 h-1.5 rounded-full ml-1.5 shrink-0", dotColor)} />
       {arabicLabel}
     </div>
   );

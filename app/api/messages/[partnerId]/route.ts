@@ -21,11 +21,12 @@ export async function GET(
     const pid = parseInt(partnerId);
 
     const { searchParams } = new URL(req.url);
+    const requestId = searchParams.get('requestId') ? parseInt(searchParams.get('requestId')!) : undefined;
     const limit = Math.min(Number(searchParams.get('limit')) || 50, 100);
     const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
 
     // Reuse the central service for consistency
-    const messages = await listMessages(user.id, pid, limit, offset);
+    const messages = await listMessages(user.id, pid, limit, offset, requestId);
 
     return NextResponse.json(messages);
   } catch (error: unknown) {

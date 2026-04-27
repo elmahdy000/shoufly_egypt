@@ -9,7 +9,8 @@ import {
 } from "react-icons/fi";
 
 interface Conversation {
-  id: number;
+  partnerId: number;
+  requestId: number | null;
   name: string;
   role: string;
   lastMsg: string;
@@ -80,8 +81,8 @@ export default function ChatListPage() {
         <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
           {(data ?? []).map((conv) => (
             <Link
-              key={conv.id}
-              href={`/client/chat/${conv.id}`}
+              key={`${conv.partnerId}-${conv.requestId}`}
+              href={`/client/chat/${conv.partnerId}?requestId=${conv.requestId}`}
               className="flex items-center gap-3 px-4 py-4 hover:bg-slate-50 transition-colors"
             >
               <div className="w-11 h-11 bg-violet-100 rounded-full flex items-center justify-center shrink-0 text-violet-600 font-bold text-sm">

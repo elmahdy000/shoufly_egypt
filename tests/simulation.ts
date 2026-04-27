@@ -44,10 +44,16 @@ async function runSimulation() {
       create: { fullName: 'Flash Delivery', email: 'agent@example.com', password: hashedPassword, role: 'DELIVERY' }
     });
 
-    const category = await prisma.category.upsert({
+    const parentCategory = await prisma.category.upsert({
       where: { slug: 'electronics' },
       update: {},
       create: { name: 'Electronics', slug: 'electronics' }
+    });
+
+    const subCategory = await prisma.category.upsert({
+      where: { slug: 'laptop-repair' },
+      update: {},
+      create: { name: 'Laptop Repair', slug: 'laptop-repair', parentId: parentCategory.id }
     });
 
     await prisma.platformSetting.upsert({
@@ -64,9 +70,9 @@ async function runSimulation() {
 
 
     await prisma.vendorCategory.upsert({
-      where: { vendorId_categoryId: { vendorId: vendor.id, categoryId: category.id } },
+      where: { vendorId_categoryId: { vendorId: vendor.id, categoryId: subCategory.id } },
       update: {},
-      create: { vendorId: vendor.id, categoryId: category.id }
+      create: { vendorId: vendor.id, categoryId: subCategory.id }
     });
 
     console.log(`✅ Users ready. Client: #${client.id}, Vendor: #${vendor.id}, Admin: #${admin.id}, Agent: #${agent.id}`);
@@ -82,7 +88,7 @@ async function runSimulation() {
     const request = await createRequest(client.id, {
       title: 'Fix my laptop',
       description: 'Screen is flickering',
-      categoryId: category.id,
+      categoryId: subCategory.id,
       address: 'Cairo, Egypt',
       latitude: 30.0444,
       longitude: 31.2357,
@@ -122,12 +128,12 @@ async function runSimulation() {
     console.log('\n--- Step 7: Preparing Order (Vendor) ---');
     await updateDeliveryStatus({
         requestId: request.id,
-        vendorId: vendor.id,
+        userId: vendor.id,
         status: 'VENDOR_PREPARING'
     });
     await updateDeliveryStatus({
         requestId: request.id,
-        vendorId: vendor.id,
+        userId: vendor.id,
         status: 'READY_FOR_PICKUP'
     });
     console.log(`✅ Order READY FOR PICKUP.`);
@@ -136,12 +142,16 @@ async function runSimulation() {
     console.log('\n--- Step 8: Delivery In Progress (Agent) ---');
     await acceptDeliveryTask(request.id, agent.id);
     console.log(`✅ Agent picked up. Status: OUT_FOR_DELIVERY`);
-    await completeDeliveryAgent(request.id, agent.id);
-    console.log(`✅ Agent delivered. Awaiting client QR scan.`);
+    
+    // Fetch request again to get the generated QR code for simulation
+    const dbRequest = await prisma.request.findUnique({ where: { id: request.id }, select: { qrCode: true } });
+    if (!dbRequest?.qrCode) throw new Error('Failed to retrieve QR code for simulation');
 
-    // 9. Final Settlement
-    console.log('\n--- Step 9: Final Settlement (Client QR Scan) ---');
-    const finalResult = await settleOrder(request.id);
+    const finalResult = await completeDeliveryAgent(request.id, agent.id, dbRequest.qrCode);
+    console.log(`✅ Agent delivered (QR Scanned). Awaiting client QR scan.`);
+
+    // 9. Final Settlement (Already done inside completeDeliveryAgent)
+    console.log('\n--- Step 9: Final Settlement (Automated) ---');
     console.log(`\n🏆 SIMULATION SUCCESSFUL!`);
     console.log(`-------------------------`);
     console.log(`Final Status: ${finalResult.finalRequestStatus}`);

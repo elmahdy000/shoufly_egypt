@@ -1,4 +1,4 @@
-import { RateLimiter } from '../lib/rate-limiter';
+import { checkRateLimit } from '../lib/utils/rate-limiter';
 import { listVendorOpenRequests } from '../lib/services/requests/list-vendor-open-requests';
 import { prisma } from '../lib/prisma';
 
@@ -11,11 +11,12 @@ async function runSecurityPaginationAudit() {
     console.log('🔥 PHASE 1: Rate Limiter Burst Test (Limit: 5)');
     const key = `test_user_${Date.now()}`;
     for (let i = 1; i <= 7; i++) {
-        const result = await RateLimiter.check(key, 5, 10);
+        const result = await checkRateLimit(key, 5, 10000); // 5 requests in 10 seconds
         if (result.allowed) {
             console.log(`✅ Request ${i}: ALLOWED (Remaining: ${result.remaining})`);
         } else {
-            console.log(`❌ Request ${i}: BLOCKED (Retry in: ${result.reset}s)`);
+            const resetIn = Math.ceil((result.resetTime - Date.now()) / 1000);
+            console.log(`❌ Request ${i}: BLOCKED (Retry in: ${resetIn}s)`);
         }
     }
 

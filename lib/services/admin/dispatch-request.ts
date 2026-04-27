@@ -13,6 +13,7 @@ export async function dispatchRequest(requestId: number) {
     select: {
       id: true,
       categoryId: true,
+      governorateId: true,
       status: true,
       title: true,
     },
@@ -26,18 +27,24 @@ export async function dispatchRequest(requestId: number) {
     throw new Error(`Request must be in OPEN_FOR_BIDDING status to dispatch`);
   }
 
-  const matchedVendors = await prisma.vendorCategory.findMany({
-    where: { categoryId: request.categoryId },
-    select: { vendorId: true },
+  // Realistic Matching: Notify vendors in the same category AND same governorate
+  const matchedVendors = await prisma.user.findMany({
+    where: { 
+      role: 'VENDOR',
+      isActive: true,
+      vendorCategories: { some: { categoryId: request.categoryId } },
+      governorateId: request.governorateId 
+    },
+    select: { id: true },
   });
 
   if (matchedVendors.length > 0) {
     await prisma.notification.createMany({
       data: matchedVendors.map((v) => ({
-        userId: v.vendorId,
+        userId: v.id,
         type: 'REQUEST_DISPATCHED',
-        title: 'Request Dispatched',
-        message: `Request #${request.id} is now open for bidding.`,
+        title: 'طلب جديد بانتظار عرضك! 🛠️',
+        message: `طلب رقم #${request.id} متاح الآن في قسم ${request.title} لتقديم عرض سعر.`,
       })),
     });
     logger.info('notification.created', {

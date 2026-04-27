@@ -129,11 +129,21 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   isActive: 'isActive',
   isVerified: 'isVerified',
+  verificationStatus: 'verificationStatus',
   isBlocked: 'isBlocked',
   walletBalance: 'walletBalance',
   fcmToken: 'fcmToken',
   cityId: 'cityId',
   governorateId: 'governorateId',
+  nationalId: 'nationalId',
+  vehicleType: 'vehicleType',
+  licensePlate: 'licensePlate',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  vendorAddress: 'vendorAddress',
+  idCardFrontUrl: 'idCardFrontUrl',
+  idCardBackUrl: 'idCardBackUrl',
+  kycSubmissionDate: 'kycSubmissionDate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -146,6 +156,7 @@ exports.Prisma.CategoryScalarFieldEnum = {
   requiresBrand: 'requiresBrand',
   brandType: 'brandType',
   type: 'type',
+  nameAr: 'nameAr',
   createdAt: 'createdAt'
 };
 
@@ -182,6 +193,7 @@ exports.Prisma.RequestScalarFieldEnum = {
   latitude: 'latitude',
   longitude: 'longitude',
   deliveryPhone: 'deliveryPhone',
+  budget: 'budget',
   notes: 'notes',
   status: 'status',
   selectedBidId: 'selectedBidId',
@@ -210,6 +222,7 @@ exports.Prisma.BidScalarFieldEnum = {
   description: 'description',
   netPrice: 'netPrice',
   clientPrice: 'clientPrice',
+  duration: 'duration',
   status: 'status',
   adminNote: 'adminNote',
   createdAt: 'createdAt',
@@ -247,6 +260,18 @@ exports.Prisma.TransactionScalarFieldEnum = {
   description: 'description',
   metadata: 'metadata',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.PaymentAttemptScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  amount: 'amount',
+  provider: 'provider',
+  externalId: 'externalId',
+  status: 'status',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.NotificationScalarFieldEnum = {
@@ -320,13 +345,29 @@ exports.Prisma.ComplaintScalarFieldEnum = {
 
 exports.Prisma.GovernorateScalarFieldEnum = {
   id: 'id',
-  name: 'name'
+  name: 'name',
+  nameAr: 'nameAr'
 };
 
 exports.Prisma.CityScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  nameAr: 'nameAr',
   governorateId: 'governorateId'
+};
+
+exports.Prisma.AdminAuditLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  action: 'action',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  metadata: 'metadata',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -359,6 +400,13 @@ exports.UserRole = exports.$Enums.UserRole = {
   VENDOR: 'VENDOR',
   ADMIN: 'ADMIN',
   DELIVERY: 'DELIVERY'
+};
+
+exports.VerificationStatus = exports.$Enums.VerificationStatus = {
+  NOT_SUBMITTED: 'NOT_SUBMITTED',
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
 };
 
 exports.CategoryType = exports.$Enums.CategoryType = {
@@ -421,7 +469,13 @@ exports.NotificationType = exports.$Enums.NotificationType = {
   WITHDRAWAL_APPROVED: 'WITHDRAWAL_APPROVED',
   WITHDRAWAL_REJECTED: 'WITHDRAWAL_REJECTED',
   WITHDRAWAL_REQUESTED: 'WITHDRAWAL_REQUESTED',
-  REQUEST_CANCELLED: 'REQUEST_CANCELLED'
+  REQUEST_CANCELLED: 'REQUEST_CANCELLED',
+  REQUEST_REJECTED: 'REQUEST_REJECTED',
+  REQUEST_NEEDS_REVISION: 'REQUEST_NEEDS_REVISION',
+  DISPUTE_RAISED: 'DISPUTE_RAISED',
+  DISPUTE_RESOLVED: 'DISPUTE_RESOLVED',
+  KYC_APPROVED: 'KYC_APPROVED',
+  KYC_REJECTED: 'KYC_REJECTED'
 };
 
 exports.WithdrawalStatus = exports.$Enums.WithdrawalStatus = {
@@ -449,6 +503,7 @@ exports.Prisma.ModelName = {
   BidImage: 'BidImage',
   DeliveryTracking: 'DeliveryTracking',
   Transaction: 'Transaction',
+  PaymentAttempt: 'PaymentAttempt',
   Notification: 'Notification',
   ChatMessage: 'ChatMessage',
   WithdrawalRequest: 'WithdrawalRequest',
@@ -456,7 +511,8 @@ exports.Prisma.ModelName = {
   Review: 'Review',
   Complaint: 'Complaint',
   Governorate: 'Governorate',
-  City: 'City'
+  City: 'City',
+  AdminAuditLog: 'AdminAuditLog'
 };
 
 /**

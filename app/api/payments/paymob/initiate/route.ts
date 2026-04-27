@@ -3,6 +3,7 @@ import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PAYMOB_CONFIG } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
+import { checkRateLimit } from '@/lib/utils/rate-limiter';
 
 /**
  * Initialize Paymob Payment
@@ -17,6 +18,22 @@ export async function GET(req: NextRequest) {
     requireUser(user);
     requireRole(user, 'CLIENT');
 
+    // 🛡️ Rate limit: 5 payment initiations per minute per user
+    const { allowed, limit, remaining, resetTime } = await checkRateLimit(`paymob_initiate:${user.id}`, 5, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'لقد تجاوزت الحد المسموح من طلبات الدفع. يرجى الانتظار دقيقة.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(resetTime),
+          },
+        }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const txnId = searchParams.get('txnId');
     const amount = searchParams.get('amount');
@@ -26,8 +43,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing transaction ID or amount' }, { status: 400 });
     }
 
+    const txnIdParsed = parseInt(txnId, 10);
+    if (isNaN(txnIdParsed)) {
+      return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
+    }
+
     const transaction = await prisma.transaction.findUnique({
-      where: { id: parseInt(txnId) },
+      where: { id: txnIdParsed },
     });
 
     if (!transaction || transaction.userId !== user.id) {
@@ -107,9 +129,12 @@ export async function GET(req: NextRequest) {
 
     // Update transaction with Paymob order ID
     await prisma.transaction.update({
-      where: { id: parseInt(txnId) },
+      where: { id: txnIdParsed },
       data: {
         metadata: { 
+          ...((transaction.metadata as Record<string, unknown> | null) || {}),
+          status: 'PENDING',
+          provider: 'paymob',
           paymobOrderId: orderData.id,
           paymobPaymentKey: paymentKeyData.token,
         },

@@ -2,7 +2,7 @@ import { apiFetch } from "@/lib/api/client";
 import type { ApiNotification } from "@/lib/types/api";
 
 export async function listNotifications(
-  role: "CLIENT" | "VENDOR" | "ADMIN",
+  role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN",
   limit = 20,
   offset = 0
 ) {
@@ -13,7 +13,7 @@ export async function listNotifications(
 }
 
 export async function listAllNotifications(
-  role: "CLIENT" | "VENDOR" | "ADMIN"
+  role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN"
 ): Promise<ApiNotification[]> {
   const PAGE = 100;
   const result: ApiNotification[] = [];
@@ -28,7 +28,7 @@ export async function listAllNotifications(
 }
 
 export async function markNotificationRead(
-  role: "CLIENT" | "VENDOR" | "ADMIN",
+  role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN",
   notificationId: number
 ) {
   return apiFetch<ApiNotification>(
@@ -39,7 +39,7 @@ export async function markNotificationRead(
 }
 
 export async function markAllNotificationsRead(
-  role: "CLIENT" | "VENDOR" | "ADMIN"
+  role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN"
 ) {
   return apiFetch<{ count: number }>(
     "/api/notifications/read-all",

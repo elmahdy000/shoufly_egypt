@@ -11,6 +11,8 @@ export interface BidScoreResult {
  * 🎯 The Matchmaker: AI Bid Quality Scorer
  * Ranks vendor bids based on professionality, context, and client needs.
  */
+import { callGemini } from './gemini';
+
 export async function scoreBid(requestId: number, bidId: number): Promise<BidScoreResult> {
   logger.info('ai.bid_score.started', { requestId, bidId });
 
@@ -21,52 +23,52 @@ export async function scoreBid(requestId: number, bidId: number): Promise<BidSco
 
   if (!bid) throw new Error('Bid not found');
 
-  const context = `
-    Request: ${bid.request.title} - ${bid.request.description}
-    Vendor Offer: ${bid.description}
+  const systemInstruction = `
+    You are an AI Commerce Analyst for "شوفلي مصر" (Shoofly Egypt).
+    Your goal is to compare a Vendor's Bid against a Client's Request and score it.
+    
+    Factors to consider:
+    1. Relevance: Does the vendor offer what the client requested?
+    2. Professionalism: Is the description clear and detailed?
+    3. Trust: Does the offer include quality guarantees (e.g., "ضمان", "أصلي")?
+    4. Delivery: Does the vendor mention immediate availability (e.g., "فوراً", "خلال ساعة")?
+    5. Price Value: Does the price seem reasonable for the service?
+
+    Return only JSON in this format:
+    {
+      "score": number (0-100),
+      "recommendation": "TOP_PICK" | "SOLID_CHOICE" | "AVERAGE" | "RISKY",
+      "analysis": "A one-sentence analysis in Egyptian Arabic summarizing why this score was given."
+    }
+  `;
+
+  const prompt = `
+    CLIENT REQUEST:
+    Title: ${bid.request.title}
+    Description: ${bid.request.description}
+
+    VENDOR BID:
+    Description: ${bid.description}
     Price: ${bid.clientPrice} EGP
-    Vendor Rating: ${bid.vendor.walletBalance.gt(1000) ? 'Premier' : 'Standard'}
-  `.toLowerCase();
+    Vendor Verified: ${bid.vendor.isVerified}
+  `;
 
-  // Simulated Professionality Analysis
-  let score = 50; // Base score
-  let analysis = 'Standard offer detected.';
+  try {
+    const rawResponse = await callGemini(prompt, systemInstruction);
+    const result: BidScoreResult = JSON.parse(rawResponse);
 
-  // 1. Context Matching (Keyword Correlation)
-  const reqKeywords = bid.request.title.split(' ').concat(bid.request.description.split(' '));
-  const bidKeywords = bid.description.split(' ');
-  const intersection = bidKeywords.filter(k => k.length > 2 && reqKeywords.includes(k));
-  
-  if (intersection.length > 0) {
-    score += (intersection.length * 5);
-    analysis = `تم اكتشاف تطابق في ${intersection.length} معايير أساسية للطلب.`;
+    logger.info('ai.bid_score.completed', { bidId, score: result.score, recommendation: result.recommendation });
+    return result;
+  } catch (error: any) {
+    logger.error('ai.bid_score.fallback', { error: error.message });
+    
+    // Fallback logic
+    return {
+      score: 60,
+      recommendation: 'AVERAGE',
+      analysis: 'تم تطبيق تقييم افتراضي نظراً لعدم توفر تحليل الذكاء الاصطناعي اللحظي.'
+    };
   }
-
-  if (bid.description.includes('ضمان') || bid.description.includes('اصلي') || bid.description.includes('سنتين')) {
-    score += 15;
-    analysis += ' العرض يتضمن ضمانات جودة إضافية.';
-  }
-
-  if (bid.description.includes('فورا') || bid.description.includes('الآن') || bid.description.includes('ساعة')) {
-    score += 10;
-    analysis += ' المورد مستعد للتنفيذ الفوري.';
-  }
-
-  // 2. Price Logic (Simplified)
-  // If price is too low vs average might be risky, if too high might be average.
-  
-  // 3. Vendor Reliability
-  if (bid.vendor.isVerified) score += 10;
-
-  // Final Classification
-  let recommendation: BidScoreResult['recommendation'] = 'AVERAGE';
-  if (score >= 85) recommendation = 'TOP_PICK';
-  else if (score >= 70) recommendation = 'SOLID_CHOICE';
-  else if (score < 40) recommendation = 'RISKY';
-
-  logger.info('ai.bid_score.completed', { bidId, score, recommendation });
-
-  return { score, recommendation, analysis };
 }
 
 /**
@@ -87,6 +89,6 @@ export async function applyAiBidScoring(bidId: number) {
     } catch (error: any) {
         logger.error('ai.bid_scoring.failed', { bidId, error: error.message });
         // Return a neutral result instead of crashing the process
-        return { score: 50, recommendation: 'AVERAGE', analysis: 'Automatic evaluation currently unavailable.' };
+        return { score: 50, recommendation: 'AVERAGE', analysis: 'التقييم التلقائي غير متاح حالياً.' };
     }
 }

@@ -9,8 +9,12 @@ export async function GET(req: NextRequest) {
     requireUser(user);
     requireRole(user, 'ADMIN');
 
-    const withdrawals = await listAdminWithdrawals();
-    return ok(withdrawals);
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+
+    const result = await listAdminWithdrawals({ page, limit });
+    return ok(result);
   } catch (error) {
     return fail(error);
   }

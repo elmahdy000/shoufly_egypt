@@ -8,32 +8,32 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const colors = {
-  // Primary Brand Colors
+  // Primary Brand Colors - Cyan/Turquoise (Shoofly Brand)
   primary: {
-    50: '#EFF6FF',
-    100: '#DBEAFE',
-    200: '#BFDBFE',
-    300: '#93C5FD',
-    400: '#60A5FA',
-    500: '#3B82F6', // Base
-    600: '#2563EB',
-    700: '#1D4ED8',
-    800: '#1E40AF',
-    900: '#1E3A8A',
+    50: '#ECFEFF',
+    100: '#CFFAFE',
+    200: '#A5F3FC',
+    300: '#67E8F9',
+    400: '#22D3EE',
+    500: '#06B6D4', // Base - Primary Brand
+    600: '#0891B2', // Primary hover/active
+    700: '#0E7490', // Primary dark
+    800: '#155E76',
+    900: '#164E63',
   },
 
-  // Secondary Brand Colors
+  // Secondary/Accent - Indigo
   secondary: {
-    50: '#F3E8FF',
-    100: '#E9D5FF',
-    200: '#D8B4FE',
-    300: '#C084FC',
-    400: '#A855F7',
-    500: '#9333EA', // Base
-    600: '#7E22CE',
-    700: '#6D28D9',
-    800: '#5B21B6',
-    900: '#4C1D95',
+    50: '#EEF2FF',
+    100: '#E0E7FF',
+    200: '#C7D2FE',
+    300: '#A5B4FC',
+    400: '#818CF8',
+    500: '#6366F1', // Base - Accent
+    600: '#4F46E5', // Secondary hover/active
+    700: '#4338CA',
+    800: '#3730A3',
+    900: '#312E81',
   },
 
   // Semantic Colors
@@ -76,19 +76,33 @@ export const colors = {
     900: '#7F1D1D',
   },
 
-  // Neutral/Grayscale
+  // Neutral/Grayscale - Slate-based for modern feel
   neutral: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280', // Base
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-    900: '#111827',
+    50: '#F8FAFC',    // Page BG
+    100: '#F1F5F9',    // Soft Section BG
+    200: '#E2E8F0',    // Border
+    300: '#CBD5E1',
+    400: '#94A3B8',    // Text Muted
+    500: '#64748B',    // Base
+    600: '#475569',    // Text Secondary
+    700: '#334155',
+    800: '#1E293B',
+    900: '#0F172A',    // Text Primary / Deep Navy
   },
+
+  // Backgrounds
+  background: {
+    page: '#F8FAFC',
+    card: '#FFFFFF',
+    section: '#F1F5F9',
+    subtle: '#F8FAFC',
+  },
+  text: {
+    primary: '#0F172A',
+    secondary: '#475569',
+    muted: '#94A3B8',
+  },
+  border: '#E2E8F0',
 
   // Utility
   white: '#FFFFFF',
@@ -271,23 +285,29 @@ export const components = {
     },
     outline: {
       bg: colors.white,
-      text: colors.primary[500],
+      text: colors.primary[600],
       border: colors.primary[500],
       hover: colors.primary[50],
     },
     ghost: {
       bg: 'transparent',
-      text: colors.neutral[700],
+      text: colors.neutral[600],
       hover: colors.neutral[100],
+    },
+    danger: {
+      bg: colors.danger[500],
+      text: colors.white,
+      hover: colors.danger[600],
+      active: colors.danger[700],
     },
   },
 
   // Input styles
   input: {
     bg: colors.white,
-    border: colors.neutral[300],
+    border: colors.neutral[200],
     text: colors.neutral[900],
-    placeholder: colors.neutral[500],
+    placeholder: colors.neutral[400],
     focus: colors.primary[500],
   },
 
@@ -296,7 +316,7 @@ export const components = {
     bg: colors.white,
     border: colors.neutral[200],
     shadow: shadows.base,
-    radius: borderRadius.lg,
+    radius: borderRadius['2xl'],
   },
 };
 

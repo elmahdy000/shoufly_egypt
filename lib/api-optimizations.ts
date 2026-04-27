@@ -30,7 +30,7 @@ export function withAPCache(
         });
 
     // Try to get from cache
-    const cached = cache.get<string>(cacheKey);
+    const cached = await cache.get<string>(cacheKey);
     
     if (cached) {
       return new NextResponse(cached, {
@@ -76,12 +76,8 @@ export function jsonResponse(data: any, status: number = 200, cacheControl?: str
     headers['Cache-Control'] = cacheControl;
   }
 
-  // Add compression hint for large responses
-  const jsonString = JSON.stringify(data);
-  if (jsonString.length > 1024) {
-    headers['Content-Encoding'] = 'gzip';
-  }
-
+  // Next.js handles compression (gzip/brotli) automatically at the platform level.
+  // Manually setting the header without compressing the body will break the response.
   return NextResponse.json(data, { status, headers });
 }
 

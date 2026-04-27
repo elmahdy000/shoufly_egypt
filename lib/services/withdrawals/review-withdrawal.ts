@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { Notify } from '../notifications/hub';
+import { d, toTwo } from '@/lib/utils/decimal';
 
 export async function reviewWithdrawal(params: {
   withdrawalId: number;
@@ -23,7 +24,7 @@ export async function reviewWithdrawal(params: {
 
     if (!withdrawal) {
       logger.warn('withdrawal.review.not_found', { withdrawalId, adminId });
-      throw new Error('Withdrawal request not found');
+      throw new Error('لم يتم العثور على طلب السحب.');
     }
 
     if (withdrawal.status !== 'PENDING') {
@@ -32,7 +33,7 @@ export async function reviewWithdrawal(params: {
         adminId,
         currentStatus: withdrawal.status,
       });
-      throw new Error('Withdrawal request already reviewed');
+      throw new Error(`already reviewed: this withdrawal #${withdrawalId} has status '${withdrawal.status}'`);
     }
 
     if (action === 'approve') {
@@ -44,9 +45,9 @@ export async function reviewWithdrawal(params: {
         data: {
           userId: withdrawal.vendorId,
           requestId: null,
-          amount: Number(withdrawal.amount),
+          amount: withdrawal.amount,
           type: 'WITHDRAWAL',
-          description: `Approved withdrawal #${withdrawal.id}`,
+          description: `تمت الموافقة على طلب سحب رقم #${withdrawal.id} | withdrawal #${withdrawal.id}`,
         },
       });
     } else if (action === 'reject') {
@@ -56,7 +57,7 @@ export async function reviewWithdrawal(params: {
         where: { id: withdrawal.vendorId },
         data: {
           walletBalance: {
-            increment: Number(withdrawal.amount),
+            increment: withdrawal.amount,
           },
         },
       });
@@ -65,9 +66,9 @@ export async function reviewWithdrawal(params: {
         data: {
           userId: withdrawal.vendorId,
           requestId: null,
-          amount: Number(withdrawal.amount),
+          amount: withdrawal.amount,
           type: 'REFUND',
-          description: `Rejected withdrawal #${withdrawal.id} - Funds returned`,
+          description: `تم رفض طلب السحب رقم #${withdrawal.id} - إعادة المبلغ للمحفظة | withdrawal #${withdrawal.id}`,
         },
       });
     }
@@ -82,7 +83,12 @@ export async function reviewWithdrawal(params: {
       },
     });
 
-    await Notify.withdrawalStatus(withdrawal.vendorId, withdrawalId, action === 'approve' ? 'APPROVED' : 'REJECTED');
+    await Notify.withdrawalStatus(
+        withdrawal.vendorId, 
+        withdrawalId, 
+        action === 'approve' ? 'APPROVED' : 'REJECTED',
+        Number(withdrawal.amount)
+    );
 
     logger.info('notification.created', {
       event: `withdrawal.${action === 'approve' ? 'approved' : 'rejected'}`,

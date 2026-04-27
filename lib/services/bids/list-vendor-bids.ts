@@ -10,6 +10,14 @@ export async function listVendorBids(vendorId: number) {
           title: true,
           categoryId: true,
           status: true,
+          deliveryTracking: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: {
+              status: true,
+              createdAt: true,
+            },
+          },
         },
       },
       vendor: { select: { id: true, fullName: true } },

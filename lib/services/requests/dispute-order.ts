@@ -1,56 +1,76 @@
 import { prisma } from '../../prisma';
 import { Notify } from '../notifications/hub';
+import { logger } from '../../utils/logger';
 
 /**
  * Service to allow a client to dispute an order after delivery.
- * This freeze the funds in Escrow and prevents the vendor/agent from being paid.
+ * Freezes the escrow funds and flags the request for admin review.
  */
 export async function disputeOrder(clientId: number, requestId: number, reason: string) {
-  // 1. Verify the request belongs to the client and is in a state allow dispute
-  const request = await prisma.request.findUnique({
-    where: { id: requestId },
-    include: { client: true, transactions: true }
-  });
+  logger.info('dispute.order.started', { clientId, requestId });
 
-  if (!request || request.clientId !== clientId) {
-    throw new Error('Unauthorized or request not found.');
-  }
+  return prisma.$transaction(async (tx) => {
+    // 1. Fetch + lock the request inside the transaction
+    const request = await tx.request.findUnique({
+      where: { id: requestId },
+      include: { transactions: true },
+    });
 
-  // 2. Check if the request is already completed/paid out
-  if (request.status === 'CLOSED_SUCCESS') {
-    throw new Error('Order already settled and completed. Please contact support for legacy refund.');
-  }
-
-  // 3. Find the reported user (the vendor from the accepted bid)
-  const acceptedBid = await prisma.bid.findFirst({
-    where: { requestId: requestId, status: 'ACCEPTED_BY_CLIENT' }
-  });
-
-  // 4. Create a formal Complaint linked to the reported vendor
-  const complaint = await prisma.complaint.create({
-    data: {
-      requestId: requestId,
-      userId: clientId,
-      reportedUserId: acceptedBid?.vendorId || null,
-      subject: 'نزاع مالي - جودة الخدمة/المنتج',
-      description: reason,
-      status: 'OPEN'
+    if (!request || request.clientId !== clientId) {
+      throw new Error('غير مصرح أو الطلب غير موجود.');
     }
+
+    // 2. Can only dispute a paid order
+    const disputeableStates = ['ORDER_PAID_PENDING_DELIVERY'];
+    if (!disputeableStates.includes(request.status)) {
+      throw new Error(
+        `لا يمكن فتح نزاع على طلب في الحالة "${request.status}". يجب أن يكون الطلب مدفوعاً.`
+      );
+    }
+
+    // 3. Find the accepted vendor
+    const acceptedBid = await tx.bid.findFirst({
+      where: { requestId, status: 'ACCEPTED_BY_CLIENT' },
+    });
+
+    // 4. Create formal Complaint
+    const complaint = await tx.complaint.create({
+      data: {
+        requestId,
+        userId: clientId,
+        reportedUserId: acceptedBid?.vendorId || null,
+        subject: 'نزاع مالي - جودة الخدمة/المنتج',
+        description: reason,
+        status: 'OPEN',
+      },
+    });
+
+    // 5. Freeze the request — return to admin review
+    //    NOTE: using PENDING_ADMIN_REVISION (not REJECTED which is for admin-review rejections)
+    await tx.request.update({
+      where: { id: requestId },
+      data: { status: 'PENDING_ADMIN_REVISION' },
+    });
+
+    logger.info('dispute.order.completed', {
+      requestId,
+      complaintId: complaint.id,
+      reportedVendorId: acceptedBid?.vendorId,
+    });
+
+    return { success: true, complaintId: complaint.id };
+  }).then(async (result) => {
+    // Post-transaction: notify vendor (non-critical, outside tx)
+    const acceptedBid = await prisma.bid.findFirst({
+      where: { requestId, status: 'ACCEPTED_BY_CLIENT' },
+    });
+    if (acceptedBid?.vendorId) {
+      try {
+        await Notify.disputeRaised(acceptedBid.vendorId, requestId, reason);
+      } catch (err) {
+        logger.error('dispute.order.notify.failed', { requestId, err });
+      }
+    }
+    return result;
   });
-
-  // 4. Mark the request as "REJECTED" or "UNDER_REVIEW" (Let's use a custom status if we had one)
-  // For now, let's keep it under the complaint status but mark the request as PENDING_ADMIN_REVISION again
-  await prisma.request.update({
-    where: { id: requestId },
-    data: { status: 'REJECTED' } // This blocks payout logic
-  });
-
-  // 5. Notify the vendor about the dispute
-  if (acceptedBid?.vendorId) {
-    await Notify.disputeRaised(acceptedBid.vendorId, requestId, reason);
-  }
-
-  console.log(`⚠️ DISPUTE RAISED: Request #${requestId} is now frozen. Admin notified.`);
-
-  return { success: true, complaintId: complaint.id };
 }

@@ -70,7 +70,7 @@ export default function AdminRefundsPage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
+    <div className="admin-page admin-page--spacious" dir="rtl">
       
       {/* 🚀 Header: Refund & Settlement Center */}
       <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
@@ -161,7 +161,7 @@ export default function AdminRefundsPage() {
                           <button
                             type="submit"
                             disabled={isLoading || !requestId}
-                            className="w-full h-14 bg-rose-600 text-white rounded-2xl text-xs font-bold shadow-xl shadow-rose-600/20 hover:bg-rose-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+                            className="w-full h-14 bg-rose-600 text-white rounded-xl text-xs font-semibold shadow-sm hover:bg-rose-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
                           >
                              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <RefreshCw size={20} />}
                              معالجة وإتمام عملية الاسترداد المالي

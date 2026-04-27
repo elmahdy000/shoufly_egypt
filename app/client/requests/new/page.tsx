@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useRef, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/shoofly/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { createClientRequest } from "@/lib/api/requests";
@@ -12,6 +12,7 @@ import {
   ChevronLeft, ChevronRight, Zap, DollarSign
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiFetch } from "@/lib/api/client";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/shoofly/map-picker"), { 
@@ -31,7 +32,12 @@ const getCategoryIcon = (name: string) => {
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Pre-fill from Query Params
+  const queryCategory = searchParams.get('category');
+  const queryService = searchParams.get('service');
   
   // Form State
   const [step, setStep] = useState(1);
@@ -68,8 +74,8 @@ export default function NewRequestPage() {
       setSelectedBrand("");
       return;
     }
-    const flatSubs = categoryList.flatMap((c: any) => c.subcategories || []);
-    const sub = flatSubs.find((s: any) => s.id === categoryId);
+    const flatSubs = categoryList.flatMap((c: any) => c.subcategories || []);  
+    const sub = flatSubs.find((s: any) => s.id === categoryId);  
     if (sub?.requiresBrand && sub?.brandType) {
       fetch(`/api/brands?type=${sub.brandType}`)
         .then(res => res.json())
@@ -85,12 +91,38 @@ export default function NewRequestPage() {
     // Categories Fetch
     fetch('/api/categories', { credentials: 'include' })
       .then(r => r.json())
-      .then((cats: any[]) => {
+      .then((cats: any[]) => {  
         setCategoryList(cats);
-        if (cats?.length > 0) {
-          setSelectedParentId(cats[0].id);
-          if (cats[0].subcategories?.length > 0) {
-            setCategoryId(cats[0].subcategories[0].id);
+        
+        const draft = localStorage.getItem('shoofly_new_request_draft');
+        let hasDraftedCategory = false;
+        if (draft) {
+          try {
+            const d = JSON.parse(draft);
+            if (d.categoryId && d.selectedParentId) hasDraftedCategory = true;
+          } catch(e) {}
+        }
+
+        // Logical Pre-filling from Query (only if no draft is active)
+        if (queryService && !title) setTitle(queryService);
+
+        if (!hasDraftedCategory) {
+          if (queryCategory && cats?.length > 0) {
+            const matchedParent = cats.find(c => c.name.includes(queryCategory) || queryCategory.includes(c.name));
+            if (matchedParent) {
+              setSelectedParentId(matchedParent.id);
+              if (matchedParent.subcategories?.length > 0) {
+                setCategoryId(matchedParent.subcategories[0].id);
+              }
+            } else if (cats.length > 0) {
+               setSelectedParentId(cats[0].id);
+               if (cats[0].subcategories?.length > 0) setCategoryId(cats[0].subcategories[0].id);
+            }
+          } else if (cats?.length > 0) {
+            setSelectedParentId(cats[0].id);
+            if (cats[0].subcategories?.length > 0) {
+              setCategoryId(cats[0].subcategories[0].id);
+            }
           }
         }
       }).catch(err => setError("فشل تحميل الفئات. يرجى التحديث."));
@@ -185,11 +217,11 @@ export default function NewRequestPage() {
 
   const nextStep = () => {
     if (step === 1 && (!title || !description || !categoryId)) {
-      setError("برجاء ملء بيانات الطلب الأساسية واختيار النوع.");
+      setError("يا ريت تملى بيانات الطلب وتختار النوع.");
       return;
     }
     if (step === 3 && address.length < 5) {
-      setError("برجاء إدخال عنوان تفصيلي صحيح.");
+      setError("يا ريت تكتب العنوان بالتفصيل.");
       return;
     }
     setError(null);
@@ -202,19 +234,11 @@ export default function NewRequestPage() {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Improved CSRF token retrieval
-    const csrfToken = document.cookie.match(/(^| )csrf_token=([^;]+)/)?.[2] || "";
-    
-    const response = await fetch('/api/upload', { 
+    const result = await apiFetch<any>('/api/upload', 'CLIENT', { 
       method: 'POST', 
-      body: formData,
-      credentials: 'include',
-      headers: { 'x-csrf-token': csrfToken }
+      body: formData
     });
-
-    if (!response.ok) throw new Error(`فشل رفع الصورة: ${file.name}`);
-    const result = await response.json();
-    return { filePath: result.url, fileName: file.name, mimeType: file.type, fileSize: file.size };
+    return { filePath: result.fileUrl, fileName: file.name, mimeType: file.type, fileSize: file.size };
   }
 
   async function onSubmit(e: FormEvent) {
@@ -245,8 +269,18 @@ export default function NewRequestPage() {
       });
       clearDraft();
       router.push(`/client/requests/${created.id}?new=true`);
-    } catch (err: any) {
-      setError(err.message || "حدث خطأ أثناء إرسال الطلب");
+    } catch (err: any) {  
+      const msg = err.message || "حدث خطأ أثناء إرسال الطلب";
+      if (msg.includes("401") || msg.includes("403") || msg.toLowerCase().includes("unauthorized") || msg.toLowerCase().includes("forbidden")) {
+        // Save state one last time before redirecting just to be absolutely sure
+        localStorage.setItem('shoofly_new_request_draft', JSON.stringify({
+          title, description, address, deliveryPhone, budget, 
+          step, categoryId, selectedParentId, updatedAt: new Date().toISOString()
+        }));
+        router.push(`/login?callbackUrl=${encodeURIComponent('/client/requests/new')}`);
+      } else {
+        setError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -265,12 +299,12 @@ export default function NewRequestPage() {
       <div className="space-y-10 text-center">
         <div className="inline-flex items-center gap-3 px-4 py-2 bg-primary/5 rounded-2xl border border-primary/10">
            <Sparkles size={16} className="text-primary" />
-           <span className="text-xs font-black text-primary uppercase tracking-wider">إنشاء طلب جديد في ثوانٍ</span>
+           <span className="text-xs font-black text-primary uppercase tracking-wider">اعمل طلب جديد في ثواني</span>
         </div>
         
         <div className="space-y-2">
-           <h1 className="text-3xl font-black text-slate-900 tracking-tight">ما الذي تبحث عنه اليوم؟</h1>
-           <p className="text-muted text-sm font-bold">أكمل الخطوات البسيطة لنشر طلبك بقوة في السوق.</p>
+           <h1 className="text-3xl font-black text-slate-900 tracking-tight">بتدور على إيه النهارده؟</h1>
+           <p className="text-muted text-sm font-bold">كمل الخطوات البسيطة دي عشان ننشر طلبك للصنايعية.</p>
         </div>
 
         {/* Liquid Stepper */}
@@ -324,74 +358,131 @@ export default function NewRequestPage() {
                    />
                 </div>
 
-                <div className="space-y-4">
-                  <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                    <Grid size={18} className="text-primary" /> اختر الفئة المناسبة
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {categoryList.map((cat) => {
-                      const Icon = getCategoryIcon(cat.name);
-                      const isSelected = selectedParentId === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedParentId(cat.id);
-                            if (cat.subcategories?.length > 0) {
-                              setCategoryId(cat.subcategories[0].id);
-                            }
-                          }}
-                          className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${
-                            isSelected ? "bg-primary/5 border-primary shadow-lg shadow-primary/5" : "bg-white border-border"
-                          }`}
-                        >
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? "bg-primary text-white" : "bg-muted text-slate-400"}`}>
-                             <Icon size={24} />
-                          </div>
-                          <span className={`text-xs font-black ${isSelected ? "text-primary" : "text-slate-600"}`}>{cat.name}</span>
-                        </button>
-                      );
-                    })}
+                <div className="space-y-6">
+                  {/* 1. MAIN CATEGORIES */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <Grid size={18} className="text-primary" /> القسم الأساسي
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                      {categoryList.map((cat) => {
+                        const Icon = getCategoryIcon(cat.name);
+                        const isSelected = selectedParentId === cat.id;
+                        const subCount = cat._count?.subcategories || 0;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedParentId(cat.id);
+                              if (cat.subcategories?.length > 0) {
+                                setCategoryId(cat.subcategories[0].id);
+                              } else {
+                                setCategoryId(null);
+                              }
+                            }}
+                            className={`relative p-4 md:p-5 rounded-2xl border transition-all text-right overflow-hidden group focus:outline-none ${
+                              isSelected 
+                                ? "bg-white border-primary shadow-[0_8px_30px_rgb(0,0,0,0.06)] ring-1 ring-primary" 
+                                : "bg-white border-slate-200 hover:border-primary/40 hover:shadow-sm"
+                            }`}
+                          >
+                            {isSelected && <div className="absolute top-0 right-0 w-1.5 h-full bg-primary" />}
+                            <div className="flex items-start justify-between gap-2">
+                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                 isSelected ? "bg-primary/10 text-primary" : "bg-slate-50 text-slate-400 group-hover:text-primary group-hover:bg-primary/10"
+                               }`}>
+                                 <Icon size={20} />
+                               </div>
+                               {subCount > 0 && (
+                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                                   isSelected ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-500"
+                                 }`}>
+                                   {subCount} تخصص
+                                 </span>
+                               )}
+                            </div>
+                            <h3 className={`mt-4 font-bold text-sm leading-snug ${isSelected ? "text-primary" : "text-slate-700"}`}>
+                              {cat.name}
+                            </h3>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   
-                  {currentParent && currentParent.subcategories?.length > 0 && (
-                    <div className="pt-2">
-                      <select 
-                        value={categoryId || ""}
-                        onChange={(e) => setCategoryId(Number(e.target.value))}
-                        className="w-full px-6 py-4 bg-white border-2 border-primary/20 rounded-2xl text-base font-black text-primary outline-none"
+                  {/* 2. SUBCATEGORIES (COMPACT PILLS) */}
+                  <AnimatePresence>
+                    {currentParent && currentParent.subcategories?.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pt-2 space-y-3 overflow-hidden"
                       >
-                         {currentParent.subcategories.map((s: any) => (
-                           <option key={s.id} value={s.id}>{s.name}</option>
-                         ))}
-                      </select>
-                    </div>
-                  )}
+                        <label className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <List size={18} className="text-primary" /> التخصص الفرعي
+                        </label>
+                        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                           {currentParent.subcategories.map((s: any) => {  
+                             const isSel = categoryId === s.id;
+                             return (
+                               <button
+                                 key={s.id}
+                                 type="button"
+                                 onClick={() => setCategoryId(s.id)}
+                                 className={`shrink-0 px-6 py-3 rounded-full text-sm font-bold transition-all border focus:outline-none ${
+                                   isSel 
+                                     ? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10" 
+                                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                                 }`}
+                               >
+                                 {s.name}
+                               </button>
+                             );
+                           })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  {/* Brand Selection UI */}
-                  {brandOptions.length > 0 && (
-                    <div className="pt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
-                       <label className="text-sm font-black text-slate-900">الماركة / النوع</label>
-                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {brandOptions.map((brand: any) => {
-                            const isSel = selectedBrand === brand.id.toString();
-                            return (
-                              <button
-                                key={brand.id}
-                                type="button"
-                                onClick={() => setSelectedBrand(brand.id.toString())}
-                                className={`px-4 py-3 rounded-2xl text-xs font-black border-2 transition-all ${
-                                  isSel ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "bg-white border-border text-slate-500 hover:border-primary/30"
-                                }`}
-                              >
-                                {brand.name}
-                              </button>
-                            );
-                          })}
-                       </div>
-                    </div>
-                  )}
+                  {/* 3. BRANDS (LOGO CARDS) */}
+                  <AnimatePresence>
+                    {brandOptions.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="pt-2 space-y-3 overflow-hidden"
+                      >
+                         <label className="text-sm font-black text-slate-900">الماركة التجارية (اختياري)</label>
+                         <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                            {brandOptions.map((brand: any) => {  
+                              const isSel = selectedBrand === brand.id.toString();
+                              return (
+                                <button
+                                  key={brand.id}
+                                  type="button"
+                                  onClick={() => setSelectedBrand(isSel ? "" : brand.id.toString())}
+                                  className={`shrink-0 w-28 h-24 rounded-2xl border transition-all flex flex-col items-center justify-center gap-2 group focus:outline-none ${
+                                    isSel 
+                                      ? "bg-primary/5 border-primary shadow-inner" 
+                                      : "bg-white border-slate-200 hover:border-primary/40 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <div className={`text-[10px] font-black tracking-widest px-2 py-0.5 rounded ${isSel ? "bg-primary text-white" : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                                    BRAND
+                                  </div>
+                                  <span className={`text-sm font-bold truncate w-full px-2 text-center ${isSel ? "text-slate-900" : "text-slate-600"}`}>
+                                    {brand.name}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="space-y-3">
@@ -450,7 +541,7 @@ export default function NewRequestPage() {
 
                 {images.length === 0 && (
                   <button onClick={() => setStep(3)} className="text-slate-400 hover:text-slate-600 font-bold text-xs underline underline-offset-4">
-                    ليس لدي صور حالياً، تخطي هذه الخطوة
+                    معنديش صور دلوقتي، عدي الخطوة دي
                   </button>
                 )}
              </div>
@@ -464,106 +555,112 @@ export default function NewRequestPage() {
             initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}
             className="space-y-6"
           >
-             <div className="shoofly-card p-8 space-y-8">
-                <div 
-                  onClick={detectLocation}
-                  className={`p-8 rounded-[40px] border-4 cursor-pointer transition-all flex flex-col items-center text-center gap-4 ${
-                    locStatus === 'success' ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-500/10' : 'bg-muted/30 border-border hover:border-primary/30'
-                  }`}
-                >
-                   <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-xl ${
-                     locStatus === 'detecting' ? 'bg-amber-100 text-amber-600 animate-spin' :
-                     locStatus === 'success' ? 'bg-emerald-500 text-white' : 'bg-white text-primary'
-                   }`}>
-                      {locStatus === 'detecting' ? <Activity size={32} /> : <MapPin size={32} />}
-                   </div>
-                   <div className="space-y-1">
-                      <h3 className="font-black text-slate-900 text-lg">{locStatus === 'success' ? 'تم تحديد المكان بنجاح!' : 'تحديد الموقع تلقائياً'}</h3>
-                      <p className="text-muted text-xs font-medium">سنقوم بتحديد إحداثيات المشكلة لسهولة الوصول.</p>
-                   </div>
-                   {locStatus !== 'success' && <div className="text-primary font-black text-sm underline">اضغط للتفعيل</div>}
-                </div>
-
-                {/* 🗺️ Interactive Map Picker */}
-                <div className="space-y-4">
-                   <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                      <MapPin size={18} className="text-primary" /> حدد المكان بدقة على الخريطة
-                   </label>
-                   <MapPicker 
-                     initialLat={Number(latitude)} 
-                     initialLng={Number(longitude)} 
-                     onLocationChange={(lat, lng) => {
-                       setLatitude(String(lat));
-                       setLongitude(String(lng));
-                     }}
-                   />
-                   <p className="text-[10px] text-slate-400 font-medium bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
-                      ملاحظة: يمكنك تحريك الخريطة والضغط لتغيير مكان "الدبوس" لضمان وصول المندوب لأقرب نقطة لك.
-                   </p>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                       <label className="text-sm font-black text-slate-900">العنوان النصي بالتفصيل</label>
-                       <input 
-                         value={address} onChange={(e) => setAddress(e.target.value)} required
-                         placeholder="مثال: التجمع الخامس، المنطقة الثالثة، عمارة 45"
-                         className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none"
+             <div className="shoofly-card p-0 overflow-hidden shadow-sm border border-slate-200">
+                 {/* Map Section */}
+                 <div className="relative border-b border-slate-200">
+                    <div className="h-[320px] md:h-[450px] w-full bg-slate-100 relative">
+                       <MapPicker 
+                         initialLat={Number(latitude)} 
+                         initialLng={Number(longitude)} 
+                         onLocationChange={(lat, lng) => {
+                           setLatitude(String(lat));
+                           setLongitude(String(lng));
+                         }}
                        />
+                       
+                       {/* Floating GPS Button */}
+                       <button
+                         onClick={detectLocation}
+                         type="button"
+                         className={`absolute bottom-6 left-6 z-[400] flex items-center gap-2.5 px-6 py-3.5 rounded-2xl shadow-xl transition-all ${
+                           locStatus === 'detecting' ? 'bg-amber-500 text-white animate-pulse' :
+                           locStatus === 'success' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 
+                           locStatus === 'error' ? 'bg-rose-50 border border-rose-200 text-rose-600' :
+                           'bg-white text-slate-800 hover:bg-slate-50'
+                         }`}
+                       >
+                         {locStatus === 'detecting' ? <Activity size={20} className="animate-spin" /> : <MapPin size={20} />}
+                         <span className="text-sm font-bold">
+                           {locStatus === 'success' ? 'حددنا موقعك بالظبط' : 
+                            locStatus === 'detecting' ? 'بندور...' : 
+                            locStatus === 'error' ? 'معرفناش نحدد الموقع - جرب تاني' :
+                            'استخدم موقعي دلوقتي'}
+                         </span>
+                       </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-sm font-black text-slate-900">المحافظة</label>
-                          <select 
-                            value={selectedGov}
-                            onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(''); }}
-                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none appearance-none"
-                            required
-                          >
-                             <option value="">اختر المحافظة</option>
-                             {governorates.map((gov: any) => (
-                               <option key={gov.id} value={gov.id}>{gov.name}</option>
-                             ))}
-                          </select>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-sm font-black text-slate-900">المدينة</label>
-                          <select 
-                            value={selectedCity}
-                            onChange={(e) => setSelectedCity(e.target.value)}
-                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none appearance-none"
-                            disabled={!selectedGov}
-                            required
-                          >
-                             <option value="">اختر المدينة</option>
-                             {cities.map((city: any) => (
-                               <option key={city.id} value={city.id}>{city.name}</option>
-                             ))}
-                          </select>
-                       </div>
-                    </div>
+                 </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <label className="text-sm font-black text-slate-900">رقم الهاتف للتواصل</label>
-                          <input 
-                            value={deliveryPhone} onChange={(e) => setDeliveryPhone(e.target.value)} required
-                            placeholder="010xxxxxxxx"
-                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none text-left"
-                            dir="ltr"
-                          />
+                 {/* Form Fields Section */}
+                 <div className="p-6 md:p-10 space-y-10 bg-white">
+                    <div className="space-y-6">
+                       <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Home size={20} />
+                          </div>
+                          <h3 className="text-lg font-black text-slate-900">أين يتواجد العطل / المشكلة؟</h3>
                        </div>
-                       <div className="space-y-2">
-                          <label className="text-sm font-black text-slate-900">ملاحظات العنوان</label>
-                          <input 
-                            value={notes} onChange={(e) => setNotes(e.target.value)}
-                            placeholder="مثل: الجرس لا يعمل"
-                            className="w-full px-6 py-5 bg-muted/30 border-2 border-border rounded-[28px] text-base font-bold focus:border-primary outline-none"
-                          />
+                       
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-wider">المحافظة</label>
+                             <select 
+                               value={selectedGov}
+                               onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(''); }}
+                               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-primary focus:bg-white outline-none appearance-none transition-all"
+                               required
+                             >
+                                <option value="">اختر المحافظة</option>
+                                {governorates.map((gov: any) => (  
+                                  <option key={gov.id} value={gov.id}>{gov.name}</option>
+                                ))}
+                             </select>
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-wider">المدينة</label>
+                             <select 
+                               value={selectedCity}
+                               onChange={(e) => setSelectedCity(e.target.value)}
+                               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-primary focus:bg-white outline-none appearance-none transition-all disabled:opacity-50"
+                               disabled={!selectedGov}
+                               required
+                             >
+                                <option value="">اختر المدينة</option>
+                                {cities.map((city: any) => (  
+                                  <option key={city.id} value={city.id}>{city.name}</option>
+                                ))}
+                             </select>
+                          </div>
+                       </div>
+
+                       <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Smartphone size={20} />
+                          </div>
+                          <h3 className="text-lg font-black text-slate-900">هنتواصل معاك إزاي وقت التنفيذ؟</h3>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-wider">رقم الهاتف (للمندوب أو المورد)</label>
+                             <input 
+                               value={deliveryPhone} onChange={(e) => setDeliveryPhone(e.target.value)} required
+                               placeholder="010xxxxxxxx"
+                               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-primary focus:bg-white outline-none text-left transition-all tracking-widest"
+                               dir="ltr"
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-xs font-black text-slate-500 uppercase tracking-wider">ملاحظات تانية (لو تحب)</label>
+                             <input 
+                               value={notes} onChange={(e) => setNotes(e.target.value)}
+                               placeholder="مثال: الجرس بايظ، أو رن عليا أول ما توصل"
+                               className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-primary focus:bg-white outline-none transition-all"
+                             />
+                          </div>
                        </div>
                     </div>
-                </div>
-             </div>
+                 </div>
+              </div>
           </motion.div>
         )}
 
@@ -605,7 +702,7 @@ export default function NewRequestPage() {
                    </div>
 
                    <div className="space-y-3">
-                      <label className="text-xs font-black text-primary flex items-center gap-1.5 uppercase tracking-widest"><DollarSign size={14} /> ميزانية تقديرية (اختياري)</label>
+                      <label className="text-xs font-black text-primary flex items-center gap-1.5 uppercase tracking-widest"><DollarSign size={14} /> حاطط ميزانية كام؟ (لو تحب)</label>
                       <div className="relative">
                          <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-primary text-xl">ج.م</span>
                          <input 
@@ -636,18 +733,18 @@ export default function NewRequestPage() {
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
            {step > 1 ? (
              <Button variant="outline" onClick={prevStep} className="h-16 px-8 rounded-[2rem] font-black">
-                <ChevronRight className="ml-2" /> السابق
+                <ChevronRight className="ml-2" /> اللي قبله
              </Button>
            ) : <div />}
 
            {step < 4 ? (
              <Button onClick={nextStep} className="h-16 px-12 flex-1 md:flex-none rounded-[2rem] font-black shadow-xl shadow-primary/20 text-lg">
-                التالي <ChevronLeft className="mr-2" />
+                اللي بعده <ChevronLeft className="mr-2" />
              </Button>
            ) : (
              <form onSubmit={onSubmit} className="flex-1 md:flex-none">
                 <Button type="submit" isLoading={saving} className="h-16 w-full px-12 rounded-[2rem] font-black shadow-2xl shadow-primary/30 text-lg">
-                   تأكيد ونشر الطلب <CheckCircle className="mr-2" />
+                   أكد وانشر الطلب <CheckCircle className="mr-2" />
                 </Button>
              </form>
            )}

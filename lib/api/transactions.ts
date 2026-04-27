@@ -35,7 +35,7 @@ export async function listAdminTransactions() {
   return apiFetch<ApiTransaction[]>("/api/admin/finance/transactions", "ADMIN");
 }
 
-export async function reviewAdminWithdrawal(withdrawalId: number, action: "APPROVE" | "REJECT", reviewNote?: string) {
+export async function reviewAdminWithdrawal(withdrawalId: number, action: "approve" | "reject", reviewNote?: string) {
   return apiFetch<ApiWithdrawal>(`/api/admin/withdrawals/${withdrawalId}`, "ADMIN", {
     method: "PATCH",
     body: { action, reviewNote },
@@ -61,4 +61,8 @@ export async function withdrawClientWallet(amount: number, method?: 'bank' | 'wa
     method: "POST",
     body: { action: "withdraw", amount, method },
   });
+}
+
+export async function getClientBalance() {
+  return apiFetch<{ balance: number }>("/api/client/wallet", "CLIENT");
 }

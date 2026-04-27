@@ -85,7 +85,7 @@ async function runStrategicStressTest() {
     let successfulCount = 0;
     
     for (let i = 0; i < CONCURRENT_JOBS; i += chunkSize) {
-        const chunk = Array.from({ length: chunkSize }).map((_, j) => runFullCycle(i + j));
+        const chunk = Array.from({ length: chunkSize }).map((_, j: number) => runFullCycle(i + j));
         const results = await Promise.all(chunk);
         successfulCount += results.filter(Boolean).length;
         console.log(`📊 Progress: ${i + chunkSize} / ${CONCURRENT_JOBS} | Block Time: ${((Date.now() - mainStartTime) / 1000).toFixed(1)}s`);

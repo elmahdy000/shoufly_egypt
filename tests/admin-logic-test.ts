@@ -197,7 +197,7 @@ async function testAdminLogic() {
         where: { id: pendingComplaint.id },
         data: { 
           status: 'RESOLVED',
-          adminResponse: 'Issue resolved by admin',
+          resolution: 'Issue resolved by admin',
         },
       });
       

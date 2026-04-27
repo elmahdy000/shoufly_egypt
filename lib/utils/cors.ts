@@ -36,8 +36,8 @@ export function isOriginAllowed(origin: string | null): boolean {
     return true;
   }
   
-  // In production, check against whitelist
-  return ALLOWED_ORIGINS.includes(origin);
+  // In production, check against whitelist and vercel domains
+  return ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app');
 }
 
 /**

@@ -188,6 +188,11 @@ export function observeLazyLoad(
 ) {
   if (typeof window === 'undefined') return;
 
+  if (!element || !(element instanceof Element)) {
+    console.warn('[Performance] observeLazyLoad called without a valid Element');
+    return () => {};
+  }
+
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {

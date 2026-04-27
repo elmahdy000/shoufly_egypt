@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { listNotifications, markNotificationRead } from "@/lib/api/notifications";
 import type { ApiNotification } from "@/lib/types/api";
 
-export function useNotificationsStream(role: "CLIENT" | "VENDOR" | "ADMIN", intervalMs = 4000) {
+export function useNotificationsStream(role: "CLIENT" | "VENDOR" | "DELIVERY" | "ADMIN", intervalMs = 4000) {
   const [data, setData] = useState<ApiNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

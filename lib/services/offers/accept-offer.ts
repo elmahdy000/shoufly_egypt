@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 export async function acceptOffer(bidId: number, clientId: number) {
   logger.info('offer.accept.started', { bidId, clientId });
@@ -9,28 +10,24 @@ export async function acceptOffer(bidId: number, clientId: number) {
   });
 
   if (!bid) {
-    throw new Error('Bid not found');
+    throw new Error('عرض السعر ده مش موجود.');
   }
 
   if (bid.status !== 'SELECTED') {
-    throw new Error(`Cannot accept bid in status ${bid.status}`);
+    throw new Error('مينفعش تقبل العرض ده دلوقتي.');
   }
 
   if (bid.request.status !== 'OFFERS_FORWARDED') {
-    throw new Error(`Request is in status ${bid.request.status}, cannot accept offer`);
+    throw new Error('الطلب لسه مخلصش مرحلة استقبال العروض.');
   }
 
   if (bid.request.clientId !== clientId) {
-    throw new Error('Only the client who created the request can accept offers');
+    throw new Error('معلش، صاحب الطلب بس هو اللي يقدر يقبل العروض.');
   }
 
-  // NEW: Prevent double selection or selection after payment
+  // NEW: Prevent double selection
   if (bid.request.selectedBidId) {
-    throw new Error('This request already has an accepted offer');
-  }
-
-  if (bid.request.status === 'ORDER_PAID_PENDING_DELIVERY' || bid.request.status === 'CLOSED_SUCCESS') {
-    throw new Error('Cannot change selection after payment or completion');
+    throw new Error('إنت وافقت على عرض للطلب ده قبل كده خلاص.');
   }
 
   const result = await prisma.$transaction(async (tx) => {
@@ -47,18 +44,27 @@ export async function acceptOffer(bidId: number, clientId: number) {
       where: { id: bid.requestId },
       data: {
         selectedBidId: bid.id,
-        status: 'OFFERS_FORWARDED',  // Keep as is - no OFFERS_ACCEPTED in enum
+        status: 'OFFERS_FORWARDED',
       },
     });
 
-    await tx.notification.create({
-      data: {
-        userId: bid.vendorId,
-        type: 'BID_ACCEPTED',
-        title: 'Bid Accepted',
-        message: `Your bid for request #${bid.requestId} was accepted by client.`,
+    // ⛔ NEW: Reject all other competing bids for this request
+    await tx.bid.updateMany({
+      where: {
+        requestId: bid.requestId,
+        id: { not: bidId },
+        status: { in: ['PENDING', 'SELECTED'] },
       },
+      data: { status: 'REJECTED' },
     });
+
+    await Notify.send({
+      userId: bid.vendorId,
+      type: 'BID_ACCEPTED',
+      title: 'تم قبول عرضك! 🎉',
+      message: `تهانينا، تم قبول عرض السعر الخاص بك للطلب رقم #${bid.requestId} من قبل العميل. يمكنك الآن انتظار تأكيد الدفع.`,
+      requestId: bid.requestId,
+    }, tx);
 
     logger.info('notification.created', {
       event: 'offer.accepted',

@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const parentIdParam = searchParams.get('parentId');
-    const parentId = parentIdParam ? parseInt(parentIdParam) : null;
+    const parentIdParsed = parentIdParam ? parseInt(parentIdParam, 10) : NaN;
+    const parentId = !isNaN(parentIdParsed) ? parentIdParsed : null;
 
     const categories = await getCategories({ parentId });
 

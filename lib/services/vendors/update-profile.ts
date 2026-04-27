@@ -6,12 +6,15 @@ export interface UpdateVendorProfilePayload {
   phone?: string;
   categoryIds?: number[];
   brandIds?: number[];
+  latitude?: number;
+  longitude?: number;
+  vendorAddress?: string;
 }
 
 export async function updateVendorProfile(vendorId: number, payload: UpdateVendorProfilePayload) {
   logger.info('vendor.profile.update.started', { vendorId, ...payload });
 
-  const { fullName, phone, categoryIds, brandIds } = payload;
+  const { fullName, phone, categoryIds, brandIds, latitude, longitude, vendorAddress } = payload;
 
   return prisma.$transaction(async (tx) => {
     // 1. Update basic user info
@@ -20,6 +23,9 @@ export async function updateVendorProfile(vendorId: number, payload: UpdateVendo
       data: {
         ...(fullName && { fullName }),
         ...(phone && { phone }),
+        ...(latitude !== undefined && { latitude }),
+        ...(longitude !== undefined && { longitude }),
+        ...(vendorAddress !== undefined && { vendorAddress }),
       },
       select: {
         id: true,

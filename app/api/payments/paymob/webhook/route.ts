@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { PAYMOB_CONFIG, verifyWebhookSignature } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
 import { depositFunds } from '@/lib/services/transactions';
+import { validateWebhookTimestamp } from '@/lib/utils/error-handler';
 
 /**
  * Paymob Webhook Handler
@@ -18,9 +19,20 @@ export async function POST(req: NextRequest) {
 
     // Verify webhook signature for security
     const isValid = verifyWebhookSignature(body, signature, 'paymob');
-    if (!isValid && process.env.NODE_ENV === 'production') {
+    if (!isValid && (process.env.NODE_ENV === 'production' || !!PAYMOB_CONFIG.hmacSecret)) {
       logger.warn('payment.paymob.webhook.invalid_signature', { signature });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    // 🛡️ Timestamp validation to prevent replay attacks (Paymob uses created_at)
+    const paymobTimestamp = body.obj?.created_at;
+    if (!validateWebhookTimestamp(paymobTimestamp)) {
+      logger.warn('payment.paymob.webhook.replay_attack_detected', { 
+        transactionId: body.order?.merchant_order_id,
+        timestamp: paymobTimestamp,
+        ip: req.headers.get('x-forwarded-for') || 'unknown'
+      });
+      return NextResponse.json({ error: 'Webhook timestamp expired or invalid' }, { status: 400 });
     }
 
     const {
@@ -87,6 +99,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: 'already_processed' });
     }
 
+    const expectedAmount = Number(transaction.amount);
+    if (Math.abs(expectedAmount - amount) > 0.009) {
+      logger.warn('payment.paymob.webhook.amount_mismatch', {
+        transactionId: transaction.id,
+        expectedAmount,
+        receivedAmount: amount,
+      });
+      return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+    }
+
     // Process successful payment
     logger.info('payment.paymob.webhook.success', {
       transactionId: transaction.id,
@@ -97,6 +119,19 @@ export async function POST(req: NextRequest) {
     // Use depositFunds service to add balance and notify user
     // PASSING transaction.id here ensures we update the existing record instead of creating a duplicate!
     await depositFunds(transaction.userId, amount, transaction.id);
+
+    await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        metadata: {
+          ...(meta || {}),
+          status: 'SUCCESS',
+          paymobStatus: 'SUCCESS',
+          paymobTransactionId: transactionData?.id,
+          processedAt: new Date().toISOString(),
+        },
+      },
+    });
 
     // If this transaction is linked to a request, auto-pay it
     if (transaction.requestId) {

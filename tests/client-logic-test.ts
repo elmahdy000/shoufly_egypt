@@ -134,10 +134,13 @@ async function testClientLogic() {
       });
     }
     
-    // Link bid to request
+    // Link bid to request and set status
     await prisma.request.update({
       where: { id: testRequest.id },
-      data: { selectedBidId: bid.id },
+      data: { 
+        selectedBidId: bid.id,
+        status: 'OFFERS_FORWARDED'
+      },
     });
     
     // Set insufficient balance

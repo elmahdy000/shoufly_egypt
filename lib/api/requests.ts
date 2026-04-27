@@ -39,7 +39,7 @@ export async function listVendorOpenRequests(filters: { governorateId?: number, 
   if (filters.governorateId) query.set("governorateId", filters.governorateId.toString());
   if (filters.cityId) query.set("cityId", filters.cityId.toString());
   
-  const endpoint = `/api/vendor/requests/open${query.toString() ? `?${query.toString()}` : ""}`;
+  const endpoint = `/api/vendor/open-requests${query.toString() ? `?${query.toString()}` : ""}`;
   return apiFetch<ApiRequestSummary[]>(endpoint, "VENDOR");
 }
 

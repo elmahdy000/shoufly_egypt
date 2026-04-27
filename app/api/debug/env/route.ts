@@ -1,6 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser, requireRole, requireUser } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const user = await getCurrentUser(req.headers);
+  requireUser(user);
+  requireRole(user, "ADMIN");
+
   const checks = {
     nodeEnv: process.env.NODE_ENV || "not set",
     hasSessionSecret: !!process.env.SESSION_SECRET,

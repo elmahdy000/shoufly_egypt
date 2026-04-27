@@ -6,7 +6,7 @@ import { verifySessionToken } from "@/lib/session";
 async function resolveUserById(id: number) {
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, role: true, fullName: true, isBlocked: true },
+    select: { id: true, email: true, role: true, fullName: true, isBlocked: true, isActive: true },
   });
   
   // SECURITY: Block access if user is blocked
@@ -107,9 +107,9 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, role: true, fullName: true, isBlocked: true },
+    select: { id: true, email: true, role: true, fullName: true, isBlocked: true, isActive: true },
   });
 
-  if (!user || user.role !== payload.role || user.isBlocked) return null;
+  if (!user || user.role !== payload.role || user.isBlocked || !user.isActive) return null;
   return user;
 }

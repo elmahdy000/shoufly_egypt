@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
 import { verifyUser, blockUser } from '@/lib/services/admin/moderation';
+import { logAdminAction } from '@/lib/services/admin/audit-log';
 import { z } from 'zod';
 import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
@@ -28,12 +29,44 @@ export async function PATCH(
     const { action } = ModerationSchema.parse(body);
 
     let result;
+    let auditAction: 'USER_VERIFIED' | 'USER_UNVERIFIED' | 'USER_BLOCKED' | 'USER_UNBLOCKED';
+    let oldValue: Record<string, unknown> = {};
+    
     switch (action) {
-      case 'VERIFY': result = await verifyUser(uid, true); break;
-      case 'UNVERIFY': result = await verifyUser(uid, false); break;
-      case 'BLOCK': result = await blockUser(uid, true); break;
-      case 'UNBLOCK': result = await blockUser(uid, false); break;
+      case 'VERIFY': 
+        result = await verifyUser(uid, true); 
+        auditAction = 'USER_VERIFIED';
+        oldValue = { isVerified: false };
+        break;
+      case 'UNVERIFY': 
+        result = await verifyUser(uid, false); 
+        auditAction = 'USER_UNVERIFIED';
+        oldValue = { isVerified: true };
+        break;
+      case 'BLOCK': 
+        result = await blockUser(uid, true); 
+        auditAction = 'USER_BLOCKED';
+        oldValue = { isBlocked: false };
+        break;
+      case 'UNBLOCK': 
+        result = await blockUser(uid, false); 
+        auditAction = 'USER_UNBLOCKED';
+        oldValue = { isBlocked: true };
+        break;
     }
+    
+    // 📝 Log admin action to audit trail (non-blocking)
+    logAdminAction({
+      adminId: admin.id,
+      action: auditAction,
+      targetType: 'USER',
+      targetId: uid,
+      oldValue,
+      newValue: result,
+      metadata: { performedBy: admin.fullName || admin.email }
+    }).catch(() => {
+      // Audit logging failure should not break the main flow
+    });
 
     // 🚀 Invalidate middleware Redis cache so block/unblock takes effect immediately
     if (action === 'BLOCK' || action === 'UNBLOCK') {

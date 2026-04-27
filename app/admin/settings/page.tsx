@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Settings, DollarSign, Navigation, Shield, Save,
-  AlertTriangle, CheckCircle, Loader2
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { AlertTriangle, CheckCircle, DollarSign, Loader2, Navigation, Save, Shield } from "lucide-react";
+import { apiFetch } from "@/lib/api/client";
 
 export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [commission, setCommission] = useState(15);
   const [vat, setVat] = useState(14);
   const [radius, setRadius] = useState(50);
@@ -17,212 +17,308 @@ export default function AdminSettingsPage() {
   const [verifyRequired, setVerifyRequired] = useState(true);
   const [otpDelivery, setOtpDelivery] = useState(true);
 
+  // 🔄 Load current settings on mount
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await apiFetch<{
+          commission?: number;
+          vat?: number;
+          radius?: number;
+          minOrder?: number;
+          autoPayout?: boolean;
+          verifyRequired?: boolean;
+          otpDelivery?: boolean;
+        }>("/api/settings/public", "ADMIN");
+        if (data) {
+          setCommission(data.commission ?? 15);
+          setVat(data.vat ?? 14);
+          setRadius(data.radius ?? 50);
+          setMinOrder(data.minOrder ?? 100);
+          setAutoPayout(data.autoPayout ?? true);
+          setVerifyRequired(data.verifyRequired ?? true);
+          setOtpDelivery(data.otpDelivery ?? true);
+        }
+      } catch (err: any) {
+        setError("فشل تحميل الإعدادات الحالية");
+        console.error("Failed to load settings:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
+
   async function handleSave() {
     setIsSaving(true);
     try {
-      // Get CSRF token for state-changing request
-      const getCsrfToken = () => {
-        const match = document.cookie.match(/(^| )csrf_token=([^;]+)/);
-        return match ? match[2] : null;
-      };
-      
-      const response = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-csrf-token': getCsrfToken() || ''
-        },
-        credentials: 'include',
-        body: JSON.stringify({ commission, vat, radius, minOrder, autoPayout, verifyRequired, otpDelivery })
+      await apiFetch("/api/admin/settings", "ADMIN", {
+        method: "POST",
+        body: { commission, vat, radius, minOrder, autoPayout, verifyRequired, otpDelivery },
       });
-      if (!response.ok) throw new Error('Failed to save');
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error('Save failed:', err);
+      console.error("Save failed:", err);
     } finally {
       setIsSaving(false);
     }
   }
 
   return (
-    <div className="admin-page" dir="rtl">
+    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-10 font-cairo antialiased min-h-screen bg-slate-50" dir="rtl">
       
-      {/* 🚀 Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-           <h1 className="text-2xl font-bold text-slate-900 leading-tight">إعدادات المنصة</h1>
-           <p className="text-slate-500 font-medium mt-1">تخصيص القواعد التشغيلية والسياسات المالية للنظام</p>
+      {/* 🌟 PREMIUM HEADER */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+            <span className="text-[10px] font-black tracking-widest text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/10 uppercase">النظام المركزي v4.0</span>
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">إعدادات المنصة</h1>
+          <p className="text-base text-slate-500 font-medium">التحكم الكامل في الضوابط التشغيلية، السياسات المالية، وبروتوكولات الأمان.</p>
+        </div>
+      </header>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-3 text-slate-500">
+            <Loader2 className="animate-spin" size={24} />
+            <span className="font-medium">جاري تحميل الإعدادات...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center gap-3 mb-6">
+          <AlertTriangle size={20} />
+          <span>{error}</span>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mr-auto px-4 py-2 bg-rose-100 hover:bg-rose-200 rounded-lg text-sm font-bold transition-colors"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      )}
+
+      {!isLoading && (
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* 💰 Financial Policies */}
+          <section className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-4 bg-slate-50/30">
+              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm border border-emerald-100/50">
+                <DollarSign size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900">السياسات المالية</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Financial Regulation</p>
+              </div>
+            </div>
+
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-3">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">عمولة المنصة (%)</label>
+                  <div className="relative group">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300 group-focus-within:text-primary transition-colors">%</span>
+                    <input
+                      type="number"
+                      value={commission}
+                      onChange={(e) => setCommission(Number(e.target.value))}
+                      className="w-full h-12 pr-6 pl-12 bg-slate-50 border border-slate-100 rounded-2xl text-base font-black text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 opacity-70">النسبة التي يتم اقتطاعها آلياً من كل معاملة ناجحة.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">ضريبة القيمة المضافة (%)</label>
+                  <div className="relative group">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300 group-focus-within:text-primary transition-colors">%</span>
+                    <input
+                      type="number"
+                      value={vat}
+                      onChange={(e) => setVat(Number(e.target.value))}
+                      className="w-full h-12 pr-6 pl-12 bg-slate-50 border border-slate-100 rounded-2xl text-base font-black text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 opacity-70">الضرائب المطبقة حسب القوانين المحلية الحالية.</p>
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-center justify-between group hover:bg-white hover:shadow-md transition-all">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-black text-slate-900">التسوية التلقائية للموردين</h3>
+                  <p className="text-xs text-slate-400 font-medium">جدولة تحويل الأرباح آلياً لمحافظ الموردين عند اكتمال الطلب.</p>
+                </div>
+                <button
+                  onClick={() => setAutoPayout(!autoPayout)}
+                  className={`relative h-7 w-14 rounded-full transition-all duration-300 ${autoPayout ? "bg-emerald-500 shadow-lg shadow-emerald-500/20" : "bg-slate-200"}`}
+                >
+                  <span
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all duration-300 ${autoPayout ? "right-1" : "left-8"}`}
+                  />
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* 📍 Operational Scope */}
+          <section className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+            <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-4 bg-slate-50/30">
+              <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm border border-primary/20">
+                <Navigation size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900">نطاق العمليات</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Operational Boundary</p>
+              </div>
+            </div>
+
+            <div className="p-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400">قطر التغطية (كم)</label>
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300">KM</span>
+                  <input
+                    type="number"
+                    value={radius}
+                    onChange={(e) => setRadius(Number(e.target.value))}
+                    className="w-full h-12 pr-6 pl-12 bg-slate-50 border border-slate-100 rounded-2xl text-base font-black text-slate-900 focus:bg-white focus:border-primary outline-none transition-all"
+                  />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 opacity-70">أقصى مسافة للربط الذكي بين أطراف العملية.</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400">الحد الأدنى للطلب (ج.م)</label>
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300">EGP</span>
+                  <input
+                    type="number"
+                    value={minOrder}
+                    onChange={(e) => setMinOrder(Number(e.target.value))}
+                    className="w-full h-12 pr-6 pl-12 bg-slate-50 border border-slate-100 rounded-2xl text-base font-black text-slate-900 focus:bg-white focus:border-primary outline-none transition-all"
+                  />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 opacity-70">أقل قيمة مقبولة لفتح طلب مزايدة جديد.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* 🛡️ Security Protocols */}
+          <section className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+            <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-4 bg-slate-50/30">
+              <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm border border-indigo-100/50">
+                <Shield size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900">بروتوكولات الأمان</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Security Compliance</p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-50">
+              <SettingToggle
+                title="توثيق الهوية الإلزامي"
+                desc="منع الموردين من استلام الطلبات قبل اعتماد الوثائق الرسمية."
+                active={verifyRequired}
+                onToggle={() => setVerifyRequired(!verifyRequired)}
+              />
+              <SettingToggle
+                title="رمز التحقق عند التسليم (OTP)"
+                desc="فرض طبقة أمان إضافية لضمان وصول الشحنة للعميل الصحيح."
+                active={otpDelivery}
+                onToggle={() => setOtpDelivery(!otpDelivery)}
+                last
+              />
+            </div>
+          </section>
+
+          <div className="p-6 bg-amber-50 border border-amber-100 rounded-3xl flex items-start gap-4">
+            <AlertTriangle className="shrink-0 text-amber-500 mt-0.5" size={20} />
+            <p className="text-xs font-bold text-amber-800 leading-relaxed">
+              تنبيه هام: تعديل السياسات المالية والتشغيلية يؤثر فوراً على العمليات الجديدة فقط. الطلبات القائمة ستحافظ على القواعد التي بدأت بها لضمان استقرار العقود.
+            </p>
+          </div>
+        </div>
+
+        {/* 💾 Sidebar Actions */}
+        <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+          <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+            
+            <div className="relative z-10 space-y-8">
+              <div>
+                <h3 className="text-lg font-black mb-1">ملخص التغييرات</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Configuration Snapshot</p>
+              </div>
+
+              <div className="space-y-4">
+                <SummaryRow label="عمولة المنصة" val={`${commission}%`} />
+                <SummaryRow label="الضريبة المضافة" val={`${vat}%`} />
+                <SummaryRow label="نطاق التغطية" val={`${radius} كم`} />
+                <SummaryRow label="الحد الأدنى" val={`${minOrder} ج.م`} />
+              </div>
+
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`w-full h-14 rounded-2xl flex items-center justify-center gap-3 text-sm font-black transition-all active:scale-95 shadow-lg ${success ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-primary hover:bg-orange-600 shadow-orange-500/20'} disabled:opacity-50`}
+              >
+                {isSaving ? <Loader2 size={20} className="animate-spin" /> : success ? <CheckCircle size={20} /> : <Save size={20} />}
+                {isSaving ? "جاري مزامنة البيانات..." : success ? "تم الحفظ بنجاح" : "حفظ الضوابط الجديدة"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-         
-         <div className="lg:col-span-2 space-y-8">
-            
-            {/* 💰 Financial Configuration */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-               <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700"><DollarSign size={20} /></div>
-                  <h2 className="text-lg font-bold text-slate-900">السياسات المالية</h2>
-               </div>
-               <div className="p-8 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">عمولة المنصة (%)</label>
-                        <div className="relative">
-                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black">%</span>
-                           <input
-                             type="number"
-                             value={commission}
-                             onChange={(e) => setCommission(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                           />
-                        </div>
-                        <p className="text-xs text-slate-500 mr-2">النسبة المقتطعة من إجمالي قيمة الطلب</p>
-                     </div>
-                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-500 tracking-wide mr-2">ضريبة القيمة المضافة (%)</label>
-                        <div className="relative">
-                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black">%</span>
-                           <input
-                             type="number"
-                             value={vat}
-                             onChange={(e) => setVat(Number(e.target.value))}
-                             className="w-full pr-4 pl-10 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                           />
-                        </div>
-                        <p className="text-xs text-slate-500 mr-2">الضريبة المفروضة طبقاً للوائح المحلية</p>
-                     </div>
-                  </div>
-
-                  <div className="p-6 bg-slate-50 rounded-2xl flex items-center justify-between gap-4 border border-slate-100/50">
-                     <div>
-                        <h4 className="text-xs font-bold text-slate-900">التسوية التلقائية للموردين</h4>
-                        <p className="text-xs text-slate-500 mt-1">جدولة تحويل الأرصدة آلياً بعد اكتمال الدورة المالية</p>
-                     </div>
-                     <button
-                       onClick={() => setAutoPayout(!autoPayout)}
-                       className={`w-12 h-6 rounded-full transition-all relative ${autoPayout ? 'bg-primary' : 'bg-slate-200'}`}
-                     >
-                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${autoPayout ? 'right-1' : 'left-1'}`} />
-                     </button>
-                  </div>
-               </div>
-            </section>
-
-            {/* Operational Metrics */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-               <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-700"><Navigation size={20} /></div>
-                  <h2 className="text-lg font-bold text-slate-900">نطاق العمليات</h2>
-               </div>
-               <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                     <label className="text-xs font-black text-slate-500 tracking-wide mr-2">قطر التغطية (كم)</label>
-                     <input
-                       type="number"
-                       value={radius}
-                       onChange={(e) => setRadius(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                     />
-                     <p className="text-xs text-slate-500 mr-2">أقصى مسافة للربط بين العميل والمندوب</p>
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-xs font-black text-slate-500 tracking-wide mr-2">الحد الأدنى للطلب (ج.م)</label>
-                     <input
-                       type="number"
-                       value={minOrder}
-                       onChange={(e) => setMinOrder(Number(e.target.value))}
-                       className="w-full px-4 h-11 bg-white border border-slate-200 rounded-lg text-base focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                     />
-                     <p className="text-xs text-slate-500 mr-2">أقل قيمة مسموح بها لإنشاء طلب جديد</p>
-                  </div>
-               </div>
-            </section>
-
-            {/* Guardrail Settings */}
-            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-               <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-700"><Shield size={20} /></div>
-                  <h2 className="text-lg font-bold text-slate-900">بروتوكولات الأمان</h2>
-               </div>
-               <div className="p-0">
-                  <SettingToggle 
-                    title="توثيق الهوية الإلزامي" 
-                    desc="يتطلب من المورد رفع وثائق رسمية مفعلة قبل بدء العمل" 
-                    active={verifyRequired} 
-                    onToggle={() => setVerifyRequired(!verifyRequired)} 
-                  />
-                  <SettingToggle 
-                    title="رمز التأكيد عند التسليم (OTP)" 
-                    desc="يرسل كود تحقق لهاتف العميل لا يمكن استكمال الطلب بدونه" 
-                    active={otpDelivery} 
-                    onToggle={() => setOtpDelivery(!otpDelivery)} 
-                    last
-                  />
-               </div>
-            </section>
-
-            <div className="p-4 bg-amber-100 border border-amber-200 rounded-xl flex items-start gap-4">
-               <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
-               <p className="text-sm font-bold text-amber-800 leading-relaxed">
-                  ملاحظة هامة: القواعد والنسب المالية الجديدة تسري فقط على العمليات التي تتم بعد لحظة الحفظ. العمليات الجارية حالياً تحتفظ بخصائصها القديمة لضمان الثبات المالي.
-               </p>
-            </div>
-         </div>
-
-         {/* 💾 Control Sidebar */}
-         <div className="space-y-6 sticky top-24">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
-               <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-4">ملخص الإعدادات</h3>
-               <div className="space-y-4">
-                  <SummaryRow label="العمولة" val={`${commission}%`} />
-                  <SummaryRow label="الضريبة" val={`${vat}%`} />
-                  <SummaryRow label="نطاق التغطية" val={`${radius} كم`} />
-                  <SummaryRow label="الأدنى للطلب" val={`${minOrder} ج.م`} />
-               </div>
-               
-               <div className="pt-4">
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="w-full h-12 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-                  >
-                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : success ? <CheckCircle size={16} /> : <Save size={16} />}
-                     {isSaving ? "جاري الحفظ..." : success ? "تم الحفظ بنجاح" : "حفظ التغييرات"}
-                  </button>
-               </div>
-            </div>
-         </div>
-
-      </div>
+      )}
     </div>
   );
 }
 
-function SettingToggle({ title, desc, active, onToggle, last }: { title: string; desc: string; active: boolean; onToggle: () => void; last?: boolean }) {
+function SettingToggle({
+  title,
+  desc,
+  active,
+  onToggle,
+  last,
+}: {
+  title: string;
+  desc: string;
+  active: boolean;
+  onToggle: () => void;
+  last?: boolean;
+}) {
   return (
-    <div className={`p-8 flex items-center justify-between gap-6 hover:bg-slate-50 transition-colors ${!last ? 'border-b border-slate-100' : ''}`}>
-       <div>
-          <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-          <p className="text-xs text-slate-500 mt-1">{desc}</p>
-       </div>
-       <button
-         onClick={onToggle}
-         className={`w-12 h-6 rounded-full transition-all relative shrink-0 ${active ? 'bg-primary' : 'bg-slate-200'}`}
-       >
-          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${active ? 'right-1' : 'left-1'}`} />
-       </button>
+    <div className={`flex items-center justify-between gap-6 p-5 ${!last ? "border-b border-gray-100" : ""}`}>
+      <div>
+        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
+        <p className="mt-1 text-xs text-gray-500">{desc}</p>
+      </div>
+      <button
+        onClick={onToggle}
+        className={`relative h-6 w-12 shrink-0 rounded-full transition-colors ${active ? "bg-orange-500" : "bg-gray-200"}`}
+      >
+        <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${active ? "right-1" : "left-1"}`} />
+      </button>
     </div>
   );
 }
 
 function SummaryRow({ label, val }: { label: string; val: string }) {
   return (
-    <div className="flex justify-between items-center text-sm">
-       <span className="font-bold text-slate-500 tracking-wide">{label}</span>
-       <span className="font-black text-slate-900 tabular-nums">{val}</span>
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-xs font-medium uppercase tracking-widest text-gray-500">{label}</span>
+      <span className="text-sm font-semibold text-gray-900 tabular-nums">{val}</span>
     </div>
   );
 }

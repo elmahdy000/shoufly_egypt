@@ -46,7 +46,13 @@ async function runDisputeSimulation() {
       }
     });
 
-    await prisma.request.update({ where: { id: req.id }, data: { selectedBidId: bid.id } });
+    await prisma.request.update({ 
+      where: { id: req.id }, 
+      data: { 
+        selectedBidId: bid.id,
+        status: 'OFFERS_FORWARDED' 
+      } 
+    });
 
     // Step 1: Client Pays
     await depositFunds(client.id, 1200);

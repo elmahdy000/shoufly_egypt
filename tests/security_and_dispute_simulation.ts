@@ -8,7 +8,7 @@ async function runChaosSimulation() {
   try {
     const client = await prisma.user.findFirst({ where: { role: 'CLIENT' } });
     const agent = await prisma.user.findFirst({ where: { role: 'DELIVERY' } });
-    const category = await prisma.category.findFirst({ where: { slug: 'pc-parts' } });
+    const category = await prisma.category.findFirst({ where: { slug: 'plumbing' } });
 
     if (!client || !agent || !category) throw new Error('Base simulation data missing.');
 

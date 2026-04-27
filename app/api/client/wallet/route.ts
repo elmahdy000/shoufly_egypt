@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/app/generated/prisma';
-import { getPaymentRedirectUrl } from '@/lib/payments/config';
+import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
+import { getPaymentGateway, getPaymentRedirectUrl } from '@/lib/payments/config';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,63 +19,66 @@ export async function POST(req: NextRequest) {
     }
 
     const decimalAmount = new Prisma.Decimal(parsedAmount);
+    const provider = getPaymentGateway();
 
     const result = await prisma.$transaction(async (tx) => {
-      // Refresh User Model to prevent race conditions
-      const freshUser = await tx.user.findUniqueOrThrow({
-        where: { id: user.id }
+      await tx.user.findUniqueOrThrow({
+        where: { id: user.id },
       });
 
       if (action === 'withdraw') {
-        // Atomic decrement with balance check at database level
         const updateResult = await tx.user.updateMany({
-          where: { 
+          where: {
             id: user.id,
-            walletBalance: { gte: decimalAmount }
+            walletBalance: { gte: decimalAmount },
           },
-          data: { walletBalance: { decrement: decimalAmount } }
+          data: { walletBalance: { decrement: decimalAmount } },
         });
-        
+
         if (updateResult.count === 0) {
           throw new Error('الرصيد المتاح غير كافٍ للاسترداد أو تم تعديله في نفس اللحظة.');
         }
 
-        // Refetch user since updateMany doesn't return the updated record
         const updatedUser = await tx.user.findUnique({ where: { id: user.id } });
 
         const transaction = await tx.transaction.create({
           data: {
             userId: user.id,
             amount: decimalAmount,
-            type: 'WITHDRAWAL', // Representing refund/withdrawal for client
-            description: 'استرداد مبالغ من المحفظة إلى البطاقة البنكية'
-          }
+            type: 'WITHDRAWAL',
+            description: 'استرداد مبالغ من المحفظة إلى البطاقة البنكية',
+          },
         });
 
         return { user: updatedUser, transaction };
-      } 
-      
+      }
+
       if (action === 'topup') {
         const transaction = await tx.transaction.create({
           data: {
             userId: user.id,
             amount: decimalAmount,
-            type: 'WALLET_TOPUP', 
-            description: 'إيداع إلكتروني (انتظار التأكيد من بوابة الدفع)'
-          }
+            type: 'WALLET_TOPUP',
+            description: 'إيداع إلكتروني (انتظار التأكيد من بوابة الدفع)',
+            metadata: {
+              status: 'PENDING',
+              provider,
+              initiatedVia: 'wallet-topup',
+              initiatedAt: new Date().toISOString(),
+            },
+          },
         });
 
-        // Get redirect URL based on configured payment gateway
         const redirectUrl = getPaymentRedirectUrl(
-          String(transaction.id), 
+          String(transaction.id),
           parsedAmount
         );
-        
-        return { 
-          success: true, 
+
+        return {
+          success: true,
           redirectUrl,
           transactionId: transaction.id,
-          message: 'جاري تحويلك لبوابة الدفع الآمنة...'
+          message: 'جاري تحويلك لبوابة الدفع الآمنة...',
         };
       }
 
@@ -86,5 +89,25 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req.headers);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const freshUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { walletBalance: true },
+    });
+
+    if (!freshUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    return NextResponse.json({
+      balance: Number(freshUser.walletBalance),
+    });
+  } catch {
+    return NextResponse.json({ error: 'فشل استرجاع الرصيد' }, { status: 500 });
   }
 }

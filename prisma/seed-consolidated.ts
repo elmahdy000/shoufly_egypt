@@ -28,24 +28,31 @@ async function seedDatabase() {
   try {
     // 1. DELETE ALL DATA (order matters due to foreign keys)
     console.log("🧹 Cleaning database...");
-    await prisma.notification.deleteMany({});
-    await prisma.complaint.deleteMany({});
-    await prisma.review.deleteMany({});
-    await prisma.transaction.deleteMany({});
-    await prisma.deliveryTracking.deleteMany({});
-    await prisma.chatMessage.deleteMany({});
-    await prisma.withdrawalRequest.deleteMany({});
-    await prisma.bid.deleteMany({});
-    await prisma.request.deleteMany({});
-    await prisma.vendorBrand.deleteMany({});
-    await prisma.vendorCategory.deleteMany({});
-    await prisma.brand.deleteMany({});
-    await prisma.category.deleteMany({});
-    await prisma.platformSetting.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.city.deleteMany({});
-    await prisma.governorate.deleteMany({});
-    console.log("✅ Database cleaned\n");
+    const tables = [
+      'AdminAuditLog', 'Notification', 'Complaint', 'Review', 'Transaction', 
+      'DeliveryTracking', 'ChatMessage', 'WithdrawalRequest', 'PaymentAttempt', 
+      'BidImage', 'Bid', 'RequestImage', 'Request', 'VendorBrand', 'VendorCategory', 
+      'Brand', 'Category', 'PlatformSetting', 'User', 'City', 'Governorate'
+    ];
+
+    for (const table of tables) {
+      try {
+        // @ts-ignore
+        await prisma[table.charAt(0).toLowerCase() + table.slice(1)].deleteMany({});
+        console.log(`   ✅ Cleaned ${table}`);
+      } catch (e) {
+        console.log(`   ⚠️ Could not clean ${table} (likely foreign key, will retry later)`);
+      }
+    }
+    
+    // Retry once in reverse for stubborn tables
+    for (const table of [...tables].reverse()) {
+      try {
+        // @ts-ignore
+        await prisma[table.charAt(0).toLowerCase() + table.slice(1)].deleteMany({});
+      } catch (e) {}
+    }
+    console.log("✅ Database cleaning phase finished\n");
 
     // 2. CREATE PLATFORM SETTINGS
     console.log("⚙️ Creating Platform Settings...");
@@ -63,31 +70,33 @@ async function seedDatabase() {
     // 3. SEED LOCATIONS (Governorates & Cities)
     console.log("📍 Seeding Locations...");
     const governoratesData = [
-      {
-        name: "القاهرة",
-        arabicName: "القاهرة",
-        cities: ["القاهرة", "مصر الجديدة", "الزمالك", "جاردن سيتي"],
-      },
-      {
-        name: "الجيزة",
-        arabicName: "الجيزة",
-        cities: ["الجيزة", "6 أكتوبر", "الشيخ زايد", "إمبابة"],
-      },
-      {
-        name: "الإسكندرية",
-        arabicName: "الإسكندرية",
-        cities: ["الإسكندرية", "ستانلي", "سيدي بشر"],
-      },
-      {
-        name: "المنوفية",
-        arabicName: "المنوفية",
-        cities: ["شبين الكوم", "قويسنا", "تلا"],
-      },
-      {
-        name: "البحيرة",
-        arabicName: "البحيرة",
-        cities: ["دمنهور", "كفر الدوار", "رشيد"],
-      },
+      { name: "Cairo", arabicName: "القاهرة", cities: ["القاهرة الجديدة", "مدينة نصر", "المعادي", "وسط البلد", "مصر الجديدة", "حلوان", "المرج", "شبرا", "البساتين", "روض الفرج", "الزيتون", "عين شمس"] },
+      { name: "Giza", arabicName: "الجيزة", cities: ["المهندسين", "الدقي", "الهرم", "فيصل", "أكتوبر", "الشيخ زايد", "العمرانية", "الوراق", "إمبابة", "الحوامدية", "البدرشين", "العياط"] },
+      { name: "Alexandria", arabicName: "الإسكندرية", cities: ["سموحة", "المنتزة", "العجمي", "وسط الإسكندرية", "الرمل", "سيدي جابر", "العامرية", "برج العرب", "كرموز", "اللبان"] },
+      { name: "Sharqia", arabicName: "الشرقية", cities: ["الزقازيق", "العاشر من رمضان", "بلبيس", "منيا القمح", "أبو حماد", "فاقوس", "الحسينية", "كفر صقر", "أولاد صقر", "مشتول السوق", "ديرب نجم", "الإبراهيمية"] },
+      { name: "Dakahlia", arabicName: "الدقهلية", cities: ["المنصورة", "طلخا", "ميت غمر", "السنبلاوين", "دكرنس", "بلقاس", "شربين", "المنزلة", "منية النصر", "جمصة"] },
+      { name: "Beheira", arabicName: "البحيرة", cities: ["دمنهور", "كفر الدوار", "رشيد", "إيتاي البارود", "أبو حمص", "كوم حمادة", "شبراخيت", "الدلنجات", "حوش عيسى", "وادي النطرون"] },
+      { name: "Qalyubia", arabicName: "القليوبية", cities: ["بنها", "شبرا الخيمة", "العبور", "قليوب", "الخانكة", "طوخ", "قها", "شين القناطر", "كفر شكر"] },
+      { name: "Gharbia", arabicName: "الغربية", cities: ["طنطا", "المحلة الكبرى", "كفر الزيات", "زفتى", "السنطة", "قطور", "بسيون", "سمنود"] },
+      { name: "Monufia", arabicName: "المنوفية", cities: ["شبين الكوم", "قويسنا", "بركة السبع", "منوف", "مدينة السادات", "أشمون", "الباجور", "تلا", "الشهداء"] },
+      { name: "Fayoum", arabicName: "الفيوم", cities: ["الفيوم", "إطسا", "طامية", "سنورس", "أبشواي", "يوسف الصديق"] },
+      { name: "Kafr El Sheikh", arabicName: "كفر الشيخ", cities: ["كفر الشيخ", "دسوق", "فوه", "بيلا", "الحامول", "بلطيم", "مطوبس", "سيدي سالم", "قلين"] },
+      { name: "Ismailia", arabicName: "الإسماعيلية", cities: ["الإسماعيلية", "التل الكبير", "فايد", "القنطرة شرق", "القنطرة غرب", "أبو صوير", "القصاصين"] },
+      { name: "Suez", arabicName: "السويس", cities: ["السويس", "الأربعين", "الجناين", "عتاقة", "فيصل (السويس)"] },
+      { name: "Port Said", arabicName: "بورسعيد", cities: ["بورسعيد", "بورفؤاد", "حي العرب", "حي الشرق", "حي الضواحي"] },
+      { name: "Damietta", arabicName: "دمياط", cities: ["دمياط", "دمياط الجديدة", "رأس البر", "فارسكور", "الزرقا", "كفر سعد", "السرو"] },
+      { name: "Assiut", arabicName: "أسيوط", cities: ["أسيوط", "ديروط", "منفلوط", "القوصية", "أبوتيج", "صدفا", "الغنايم", "ساحل سليم", "البداري"] },
+      { name: "Sohag", arabicName: "سوهاج", cities: ["سوهاج", "أخميم", "طما", "طهطا", "جرجا", "البلينا", "المنشاة", "ساقلتة", "دار السلام"] },
+      { name: "Qena", arabicName: "قنا", cities: ["قنا", "نجع حمادي", "دشنا", "قوص", "أبو تشت", "فرشوط", "قفط", "نقادة"] },
+      { name: "Minya", arabicName: "المنيا", cities: ["المنيا", "ملوي", "بني مزار", "مغاغة", "سمالوط", "أبو قرقاص", "مطاي", "العدوة", "دير مواس"] },
+      { name: "Beni Suef", arabicName: "بني سويف", cities: ["بني سويف", "الواسطى", "ناصر", "ببا", "الفشن", "سمسطا", "إهناسيا"] },
+      { name: "Luxor", arabicName: "الأقصر", cities: ["الأقصر", "إسنا", "أرمنت", "البياضية", "القرنة", "الطود"] },
+      { name: "Aswan", arabicName: "أسوان", cities: ["أسوان", "كوم أمبو", "إدفو", "نصر النوبة", "درو", "أبو سمبل"] },
+      { name: "Red Sea", arabicName: "البحر الأحمر", cities: ["الغردقة", "سفاجا", "القصير", "مرسى علم", "رأس غارب", "شلاتين", "حلايب"] },
+      { name: "Matrouh", arabicName: "مطروح", cities: ["مرسى مطروح", "العلمين", "الضبعة", "الحمام", "سيوة", "براني", "السلوم"] },
+      { name: "New Valley", arabicName: "الوادي الجديد", cities: ["الخارجة", "الداخلة", "الفرافرة", "باريس", "بلاط"] },
+      { name: "North Sinai", arabicName: "شمال سيناء", cities: ["العريش", "بئر العبد", "الشيخ زويد", "رفح", "الحسنة"] },
+      { name: "South Sinai", arabicName: "جنوب سيناء", cities: ["شرم الشيخ", "طور سيناء", "دهب", "نويبع", "طابا", "سانت كاترين", "أبو رديس", "أبو زنيمة"] },
     ];
 
     const governoratesMap = new Map<string, number>();
@@ -95,7 +104,8 @@ async function seedDatabase() {
     for (const govData of governoratesData) {
       const gov = await prisma.governorate.create({
         data: {
-          name: govData.arabicName,
+          name: govData.name,
+          nameAr: govData.arabicName,
         },
       });
       governoratesMap.set(govData.name, gov.id);
@@ -104,6 +114,7 @@ async function seedDatabase() {
         await prisma.city.create({
           data: {
             name: cityName,
+            nameAr: cityName, // Use the same name for both for now, or add translations if available
             governorateId: gov.id,
           },
         });
@@ -501,7 +512,7 @@ async function seedDatabase() {
     // 6. SEED USERS
     console.log("👥 Seeding Users...");
     const hashedPassword = await bcrypt.hash("password123", 10);
-    const cairoGovId = governoratesMap.get("القاهرة") || 1;
+    const cairoGovId = governoratesMap.get("Cairo") || 1;
 
     // Admin
     const admin = await prisma.user.create({
@@ -591,7 +602,7 @@ async function seedDatabase() {
     if (carRepairCat && vendors[0]) {
       await prisma.vendorCategory.create({
         data: {
-          userId: vendors[0].id,
+          vendorId: vendors[0].id,
           categoryId: carRepairCat.id,
         },
       });
@@ -601,7 +612,7 @@ async function seedDatabase() {
     if (mobileRepairCat && vendors[1]) {
       await prisma.vendorCategory.create({
         data: {
-          userId: vendors[1].id,
+          vendorId: vendors[1].id,
           categoryId: mobileRepairCat.id,
         },
       });
@@ -609,7 +620,89 @@ async function seedDatabase() {
     }
     console.log();
 
-    // 8. SUCCESS MESSAGE
+    // 8. SEED REQUESTS & BIDS
+    console.log("📝 Seeding Requests and Bids...");
+    const carPartsCat = await prisma.category.findUnique({ where: { slug: "car-parts" } });
+
+    if (clients[0] && carPartsCat) {
+      const cairoCity = await prisma.city.findFirst({ where: { governorateId: cairoGovId } });
+      const req1 = await prisma.request.create({
+        data: {
+          clientId: clients[0].id,
+          categoryId: carPartsCat.id,
+          title: "محتاج تيل فرامل تويوتا كورولا 2020",
+          description: "أصلي أو ياباني بجودة عالية",
+          status: "OPEN_FOR_BIDDING",
+          budget: 1500,
+          governorateId: cairoGovId,
+          cityId: cairoCity?.id || 1,
+          address: "123 Nile St, Garden City",
+          latitude: 30.0444,
+          longitude: 31.2357,
+          deliveryPhone: "01000000001",
+        }
+      });
+      console.log(`✅ Request created: ${req1.title}`);
+
+      if (vendors[0]) {
+        await prisma.bid.create({
+          data: {
+            requestId: req1.id,
+            vendorId: vendors[0].id,
+            description: "موجود تيل فرامل ياباني ماركة أكي بونو",
+            netPrice: 1300,
+            clientPrice: 1400,
+            status: "PENDING"
+          }
+        });
+      }
+    }
+
+    if (clients[1] && mobileRepairCat) {
+      const gizaGov = await prisma.governorate.findUnique({ where: { name: "Giza" } });
+      const gizaCity = await prisma.city.findFirst({ where: { governorateId: gizaGov?.id } });
+      const req2 = await prisma.request.create({
+        data: {
+          clientId: clients[1].id,
+          categoryId: mobileRepairCat.id,
+          title: "تغيير شاشة iPhone 13 Pro",
+          description: "الشاشة مكسورة وبحاجة لتغيير أصلية",
+          status: "PENDING_ADMIN_REVISION",
+          budget: 8000,
+          governorateId: gizaGov?.id || cairoGovId,
+          cityId: gizaCity?.id || cairoCity?.id || 1,
+          address: "456 Pyramid Ave, Giza",
+          latitude: 30.0131,
+          longitude: 31.2089,
+          deliveryPhone: "01000000002",
+        }
+      });
+      console.log(`✅ Request created: ${req2.title}`);
+    }
+    console.log();
+
+    // 9. SEED TRANSACTIONS
+    console.log("💰 Seeding Transactions...");
+    if (clients[0]) {
+      await prisma.transaction.create({
+        data: {
+          userId: clients[0].id,
+          amount: 5000,
+          type: "WALLET_TOPUP",
+          description: "Initial seed deposit",
+          metadata: { provider: "FAWRY", reference: "SEED_REF_001" }
+        }
+      });
+      
+      // Update wallet balance to match
+      await prisma.user.update({
+        where: { id: clients[0].id },
+        data: { walletBalance: 5000 }
+      });
+    }
+    console.log("✅ Transactions Seeded\n");
+
+    // 10. SUCCESS MESSAGE
     console.log("✨ ============================================");
     console.log("✨ DATABASE SEEDING COMPLETED SUCCESSFULLY! ✨");
     console.log("✨ ============================================\n");
@@ -620,6 +713,9 @@ async function seedDatabase() {
     console.log(`   ✅ Categories (hierarchical): ${categories.length} main + subcategories`);
     console.log(`   ✅ Brands: ${brandData.length}`);
     console.log(`   ✅ Users: 1 Admin + 3 Clients + 5 Vendors + 2 Delivery Agents`);
+    console.log(`   ✅ Requests: 2`);
+    console.log(`   ✅ Bids: 1`);
+    console.log(`   ✅ Transactions: 1`);
     console.log("\n🔑 Login Credentials:");
     console.log("   Admin: admin@shoofly.com / password123");
     console.log("   Client 1: client1@shoofly.com / password123");

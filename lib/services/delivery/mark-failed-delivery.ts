@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 export async function markFailedDelivery(params: {
   requestId: number;
@@ -59,17 +60,19 @@ export async function markFailedDelivery(params: {
 
     await tx.request.update({
       where: { id: requestId },
-      data: { status: 'CLOSED_CANCELLED' },
-    });
-
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'DELIVERY_FAILED',
-        title: 'Delivery Failed',
-        message: `Request #${requestId} delivery was marked as failed by vendor. Admin will review for refund.`,
+      data: { 
+        status: 'PENDING_ADMIN_REVISION',
+        notes: `فشل التوصيل بواسطة المورد #${vendorId}. ملاحظة: ${note || 'لا يوجد'}`
       },
     });
+
+    await Notify.send({
+      userId: request.clientId,
+      type: 'DELIVERY_FAILED',
+      title: 'تعذر توصيل طلبك ⚠️',
+      message: `نعتذر منك، لقد أفاد المورد بتعذر توصيل الطلب رقم #${requestId}. الإدارة تقوم حالياً بمراجعة الطلب لرد المبلغ لمحفظتك.`,
+      requestId,
+    }, tx);
 
     const admins = await tx.user.findMany({
       where: { role: 'ADMIN' },
@@ -77,14 +80,13 @@ export async function markFailedDelivery(params: {
     });
 
     if (admins.length > 0) {
-      await tx.notification.createMany({
-        data: admins.map((a) => ({
-          userId: a.id,
-          type: 'DELIVERY_FAILED',
-          title: 'VENDOR FAILED DELIVERY - Refund Action Required',
-          message: `Vendor #${vendorId} marked Request #${requestId} as failed. Escrow funds need review.`,
-        })),
-      });
+      await Notify.bulkSend(admins.map((a) => ({
+        userId: a.id,
+        type: 'DELIVERY_FAILED',
+        title: 'فشل توصيل - مراجعة مالية مطلوبة 🚨',
+        message: `المورد #${vendorId} أبلغ عن فشل توصيل الطلب #${requestId}. يرجى مراجعة وتصفية مبالغ الأمانات (Escrow).`,
+        requestId,
+      })), tx);
     }
 
 

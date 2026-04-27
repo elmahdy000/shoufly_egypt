@@ -1,12 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { toTwo } from '@/lib/utils/decimal';
+import { Notify } from '../notifications/hub';
 
-function toTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+type LockedTransactionRow = {
+  id: number;
+  userId: number;
+  amount: unknown;
+  metadata: unknown;
+};
 
-export async function depositFunds(userId: number, amount: number, existingTransactionId?: number) {
-  logger.info('wallet.deposit.started', { userId, amount, existingTransactionId });
+export async function depositFunds(userId: number, amount: number, existingTransactionId?: number, idempotencyKey?: string) {
+  logger.info('wallet.deposit.started', { userId, amount, existingTransactionId, idempotencyKey });
 
   if (amount <= 0) {
     throw new Error('Deposit amount must be positive');
@@ -15,7 +20,43 @@ export async function depositFunds(userId: number, amount: number, existingTrans
   const depositAmount = toTwo(amount);
 
   return prisma.$transaction(async (tx) => {
-    // 1. Security check: Is user active?
+    let lockedTransaction: LockedTransactionRow | null = null;
+
+    if (existingTransactionId) {
+      const rows = await tx.$queryRaw<LockedTransactionRow[]>`
+        SELECT id, "userId", amount, metadata
+        FROM "Transaction"
+        WHERE id = ${existingTransactionId}
+        FOR UPDATE
+      `;
+
+      lockedTransaction = rows[0] ?? null;
+      if (!lockedTransaction) {
+        throw new Error('Transaction not found');
+      }
+
+      if (lockedTransaction.userId !== userId) {
+        throw new Error('Transaction does not belong to user');
+      }
+
+      const existingMetadata = (lockedTransaction.metadata as Record<string, unknown> | null) || {};
+      if (existingMetadata.status === 'SUCCESS') {
+        logger.warn('wallet.deposit.duplicate_detected', { existingTransactionId });
+
+        const existingUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { walletBalance: true },
+        });
+
+        return {
+          transactionId: existingTransactionId,
+          alreadyProcessed: true,
+          amount: Number(lockedTransaction.amount),
+          newBalance: Number(existingUser?.walletBalance ?? 0),
+        };
+      }
+    }
+
     const user = await tx.user.findUnique({
       where: { id: userId },
       select: { id: true, walletBalance: true, isBlocked: true, isActive: true },
@@ -26,7 +67,6 @@ export async function depositFunds(userId: number, amount: number, existingTrans
       throw new Error('Account is inactive or blocked. Cannot deposit funds.');
     }
 
-    // 2. Update Balance
     const updatedUser = await tx.user.update({
       where: { id: userId },
       data: {
@@ -36,42 +76,46 @@ export async function depositFunds(userId: number, amount: number, existingTrans
       },
     });
 
-    // 3. Handle Transaction Record (Avoid Duplicates)
     let transaction;
     if (existingTransactionId) {
-       // Update existing record if it exists
-       transaction = await tx.transaction.update({
-         where: { id: existingTransactionId },
-         data: {
-           amount: depositAmount,
-           type: 'WALLET_TOPUP',
-           description: `Wallet top-up (Confirmed) - ${depositAmount}`,
-           metadata: { 
-             status: 'SUCCESS',
-             confirmedAt: new Date().toISOString()
-           }
-         }
-       });
+      const existingMetadata = (lockedTransaction?.metadata as Record<string, unknown> | null) || {};
+
+      transaction = await tx.transaction.update({
+        where: { id: existingTransactionId },
+        data: {
+          amount: depositAmount,
+          type: 'WALLET_TOPUP',
+          description: `Wallet top-up (Confirmed) - ${depositAmount}`,
+          metadata: {
+            ...existingMetadata,
+            status: 'SUCCESS',
+            confirmedAt: new Date().toISOString(),
+            ...(idempotencyKey && { idempotencyKey }),
+          },
+        },
+      });
     } else {
-      // Create new record only if no ID provided
       transaction = await tx.transaction.create({
         data: {
           userId,
           amount: depositAmount,
           type: 'WALLET_TOPUP',
           description: `Wallet top-up of ${depositAmount}`,
+          metadata: {
+            status: 'SUCCESS',
+            confirmedAt: new Date().toISOString(),
+            ...(idempotencyKey && { idempotencyKey }),
+          },
         },
       });
     }
 
-    await tx.notification.create({
-      data: {
-        userId,
-        type: 'WALLET_TOPUP',
-        title: 'Wallet Topped Up',
-        message: `Successfully added ${depositAmount} to your wallet.`,
-      },
-    });
+    await Notify.send({
+      userId,
+      type: 'WALLET_TOPUP',
+      title: 'تم شحن المحفظة! ✅',
+      message: `تمت إضافة مبلغ ${depositAmount} ج.م إلى محفظتك بنجاح.`,
+    }, tx);
 
     logger.info('wallet.deposit.completed', {
       userId,

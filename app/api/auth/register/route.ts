@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { RegisterSchema } from "@/lib/validations/auth";
 import { checkRateLimit, getClientIP } from "@/lib/utils/rate-limiter";
 import { createErrorResponse, logError } from "@/lib/utils/error-handler";
+import { createSessionToken } from "@/lib/session";
 
 // Rate limit: 3 registration attempts per hour per IP
 const REGISTER_RATE_LIMIT = 3;
@@ -93,7 +94,22 @@ export async function POST(req: NextRequest) {
        }
     }
 
-    return NextResponse.json(user, { status: 201 });
+    if (!user.isActive) {
+      return NextResponse.json(user, { status: 201 });
+    }
+
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) {
+      return NextResponse.json(user, { status: 201 });
+    }
+
+    const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
+    const token = await createSessionToken(
+      { userId: user.id, role: user.role, exp },
+      secret,
+    );
+
+    return NextResponse.json({ ...user, token }, { status: 201 });
   } catch (e: unknown) {
     logError('REGISTER', e);
     const { response, status } = createErrorResponse(e, 400);

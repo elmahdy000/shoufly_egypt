@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
+    <div className="admin-page admin-page--spacious" dir="rtl">
       
       {/* 🚀 Header: Modern & Clean */}
       <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
@@ -98,16 +98,16 @@ export default function AdminUsersPage() {
                 <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">نظام إدارة العضويات المركزي</span>
              </div>
              <h1 className="text-2xl font-bold tracking-tight text-slate-900 border-r-4 border-indigo-500 pr-4">إدارة <span className="text-indigo-600">المستخدمين</span></h1>
-             <p className="text-sm text-slate-500 font-medium max-w-xl">تحكّم كامل في صلاحيات الحسابات، مراجعة التوثيق، ومتابعة النشاط المالي للأعضاء.</p>
+             <p className="text-sm text-slate-500 font-medium max-w-xl">تحكم كامل في صلاحيات الحسابات، توثيق الأعضاء، وتابع حركتهم المالية.</p>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-             <div className="relative group w-full sm:w-[350px]">
+             <div className="relative group w-full max-w-[350px]">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-all" size={18} />
                 <input
                    value={search}
                    onChange={(e) => setSearch(e.target.value)}
-                   placeholder="بحث باسم العميل أو بريده..."
+                   placeholder="بتدور على عميل أو بريد؟ اكتب هنا..."
                    className="w-full pr-12 pl-4 h-11 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                 />
              </div>
@@ -157,7 +157,7 @@ export default function AdminUsersPage() {
               ) : filtered.length === 0 ? (
                 <div className="h-80 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 gap-4">
                    <UserCircle2 size={48} className="opacity-20" />
-                   <p className="text-base font-bold">لا يوجد مستخدمين هذا التصنيف</p>
+                   <p className="text-base font-bold">مفيش مستخدمين بالتصنيف ده دلوقتي</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,8 +174,8 @@ export default function AdminUsersPage() {
                        >
                          <div>
                             <div className="flex items-start justify-between mb-6">
-                               <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl transition-all ${selected?.id === u.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'}`}>
-                                  {u.fullName.charAt(0)}
+                               <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl transition-all ${selected?.id === u.id ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'}`}>
+                                  {u.fullName?.charAt(0) || "U"}
                                </div>
                                <div className="flex flex-col items-end gap-2">
                                   {u.isVerified && (
@@ -188,8 +188,8 @@ export default function AdminUsersPage() {
                             </div>
                             
                             <div className="space-y-1">
-                               <h3 className="text-lg font-bold text-slate-900 leading-tight">{u.fullName}</h3>
-                               <p className="text-xs text-slate-400 font-medium truncate">{u.email}</p>
+                               <h3 className="text-lg font-bold text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">{u.fullName || "مستخدم غير مسمى"}</h3>
+                               <p className="text-xs text-slate-400 font-medium truncate">{u.email || "بدون بريد"}</p>
                             </div>
                          </div>
 
@@ -216,7 +216,7 @@ export default function AdminUsersPage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="lg:col-span-4 bg-white rounded-2xl p-8 border border-slate-200 shadow-xl sticky top-28 space-y-8 overflow-hidden"
+                    className="lg:col-span-4 bg-white rounded-2xl p-4 lg:p-8 border border-slate-200 shadow-sm lg:sticky lg:top-28 space-y-8 overflow-hidden"
                  >
                     <div className="flex items-center justify-between border-b border-slate-100 pb-6 text-slate-900">
                        <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ export default function AdminUsersPage() {
                          className={`w-full h-14 rounded-xl font-bold text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] border shadow-sm ${selected.isVerified ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-indigo-600 text-white border-indigo-700 hover:bg-indigo-700'}`}
                        >
                           {selected.isVerified ? <ShieldAlert size={20} className="text-rose-500" /> : <ShieldCheck size={20} />}
-                          {selected.isVerified ? "إلغاء توثيق الهوية" : "تفعيل التوثيق الرسمي"}
+                          {selected.isVerified ? "إلغاء توثيق الحساب" : "وثّق الحساب"}
                        </button>
                        
                        <button 
@@ -268,7 +268,7 @@ export default function AdminUsersPage() {
                          className={`w-full h-12 rounded-xl font-bold text-xs border transition-all active:scale-[0.98] ${!selected.isActive ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700' : 'bg-white border-rose-200 text-rose-600 hover:bg-rose-50'}`}
                        >
                           {!selected.isActive ? <CheckCircle2 size={18} /> : <Ban size={18} />}
-                          {!selected.isActive ? "استعادة نشاط الحساب" : "تعليق وصول الحساب"}
+                          {!selected.isActive ? "شغّل الحساب تاني" : "وقّف الحساب فوراً"}
                        </button>
 
                        <button className="w-full h-11 text-slate-400 hover:text-slate-600 transition-colors text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
@@ -279,7 +279,7 @@ export default function AdminUsersPage() {
               ) : (
                 <div className="lg:col-span-4 h-[400px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 gap-4">
                    <UserCircle2 size={48} className="opacity-20" />
-                   <p className="text-sm font-medium">اختر مستخدماً لعرض تفاصيل حسابه</p>
+                   <p className="text-sm font-medium">اختار مستخدم عشان تشوف تفاصيل حسابه</p>
                 </div>
               )}
            </AnimatePresence>

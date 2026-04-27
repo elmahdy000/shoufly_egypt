@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withAPCache } from '@/lib/api-optimizations';
 
-export async function GET(req: NextRequest) {
+export const GET = withAPCache(async (req: NextRequest) => {
   try {
     // Get all categories with their subcategories
     const categories = await prisma.category.findMany({
@@ -25,4 +26,4 @@ export async function GET(req: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 400 });
   }
-}
+}, { ttl: 3600 });

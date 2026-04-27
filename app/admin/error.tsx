@@ -64,7 +64,7 @@ export default function AdminError({
           <summary className="cursor-pointer text-xs font-bold text-slate-500">
             تفاصيل الخطأ (dev only)
           </summary>
-          <pre className="mt-2 overflow-auto rounded-xl bg-slate-900 p-4 text-xs text-slate-500">
+          <pre className="mt-2 overflow-auto rounded-xl bg-gray-50 p-4 text-xs text-gray-500 border border-gray-200">
             {error.message}
             {error.stack}
           </pre>

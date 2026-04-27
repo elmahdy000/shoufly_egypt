@@ -44,7 +44,7 @@ export default function ComplaintsPage() {
   }
 
   const closedRequests = (requests ?? []).filter(
-    (r: any) => ['CLOSED_SUCCESS', 'CLOSED_FAILED', 'OPEN_FOR_BIDDING', 'OFFERS_FORWARDED', 'PENDING_ADMIN_REVISION'].includes(r.status)
+    (r: { status: string }) => ['CLOSED_SUCCESS', 'CLOSED_FAILED', 'OPEN_FOR_BIDDING', 'OFFERS_FORWARDED', 'PENDING_ADMIN_REVISION'].includes(r.status)
   );
 
   return (
@@ -93,7 +93,7 @@ export default function ComplaintsPage() {
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors bg-white"
             >
               <option value="">— اختر الطلب —</option>
-              {closedRequests.map((r: any) => (
+              {closedRequests.map((r: { id: number; title: string }) => (
                 <option key={r.id} value={r.id}>
                   #{r.id} — {r.title}
                 </option>

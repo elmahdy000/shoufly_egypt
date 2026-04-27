@@ -4,6 +4,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { checkRateLimit } from '@/lib/utils/rate-limiter';
 import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 import path from 'path';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 /**
  * Enhanced Upload Route with VPS Persistence Support
@@ -74,11 +75,51 @@ export async function POST(request: NextRequest) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const filename = `${uniqueSuffix}-${sanitizeFilename(file.name)}`;
     
-    // PERSISTENCE LOGIC
+    // CLOUDFLARE R2 LOGIC
+    if (
+      process.env.R2_ACCOUNT_ID && 
+      process.env.R2_ACCESS_KEY_ID && 
+      process.env.R2_SECRET_ACCESS_KEY && 
+      process.env.R2_BUCKET_NAME
+    ) {
+      const s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
+      });
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME,
+          Key: filename,
+          Body: buffer,
+          ContentType: file.type,
+        })
+      );
+
+      // If a public URL mapping is provided, use it
+      const baseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL 
+        || `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev`; // Fallback to generic R2 dev URL format
+      
+      const fileUrl = `${baseUrl.replace(/\/$/, '')}/${filename}`;
+
+      return NextResponse.json({ 
+          success: true, 
+          fileUrl,
+          fileName: file.name
+      });
+    }
+
+    // PERSISTENCE LOGIC (Fallback to local VPS)
     const externalUploadDir = process.env.UPLOAD_PATH;
-    const uploadDir = externalUploadDir 
-      ? path.isAbsolute(externalUploadDir) ? externalUploadDir : path.join(process.cwd(), externalUploadDir)
-      : path.join(process.cwd(), 'public/uploads');
+    const uploadDir = externalUploadDir
+      ? path.isAbsolute(externalUploadDir)
+        ? externalUploadDir
+        : path.join(/* turbopackIgnore: true */ process.cwd(), externalUploadDir)
+      : path.join(/* turbopackIgnore: true */ process.cwd(), 'public/uploads');
     
     await mkdir(uploadDir, { recursive: true });
     const filepath = path.join(uploadDir, filename);
@@ -90,7 +131,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
         success: true, 
         fileUrl,
-        fileName: file.name
+        fileName: file.name,
+        mimeType: file.type,
+        fileSize: buffer.length
     });
 
   } catch (error: unknown) {

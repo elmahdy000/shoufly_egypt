@@ -39,6 +39,7 @@ export type ApiRequestDetails = ApiRequestSummary & {
   bids?: ApiBid[];
   selectedBid?: ApiBid | null; // Populated when client accepts a bid
   images?: Array<{ id: number; filePath: string; fileName: string }>;
+  qrCode?: string | null;
   review?: {
     rating: number;
     comment: string | null;
@@ -72,6 +73,14 @@ export type ApiDeliveryEntry = {
   note?: string | null;
   locationText?: string | null;
   createdAt: string;
+};
+
+export type ApiDeliveryTimeline = {
+  requestId: number;
+  requestStatus: string;
+  qrCode: string | null;
+  currentDeliveryStatus: string | null;
+  timeline: ApiDeliveryEntry[];
 };
 
 export type ApiTransaction = {

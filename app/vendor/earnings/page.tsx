@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ErrorState } from "@/components/shared/error-state";
+import { TransactionSkeleton } from "@/components/shoofly/skeleton";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { listVendorTransactions, requestVendorWithdrawal } from "@/lib/api/transactions";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
@@ -18,7 +19,28 @@ import {
 } from "react-icons/fi";
 
 export default function VendorEarningsPage() {
-  const { data, loading, error } = useAsyncData(() => listVendorTransactions(), []);
+  const { data, loading, error, refresh } = useAsyncData(() => listVendorTransactions(), []);
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR EARNING UPDATES
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("💰 Vendor earnings update received via SSE:", payload.type);
+        
+        // Refresh when a payment or settlement happens
+        if (['PAYMENT', 'SETTLEMENT', 'WITHDRAWAL', 'REFUND_TO_VENDOR', 'VENDOR_PAYOUT'].includes(payload.type)) {
+          refresh();
+        }
+      } catch (err) {
+        console.error("SSE Earnings Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [refresh]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [withdrawInput, setWithdrawInput] = useState("");
@@ -85,10 +107,11 @@ export default function VendorEarningsPage() {
           </div>
         )}
 
-        {(loading || isProcessing) && (
+        {loading && <TransactionSkeleton />}
+        {isProcessing && (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
-            <p className="text-sm font-medium">جاري تحميل البيانات...</p>
+            <p className="text-sm font-medium">جاري معالجة السحب...</p>
           </div>
         )}
 
@@ -196,7 +219,7 @@ export default function VendorEarningsPage() {
                       REFUND_TO_VENDOR: "فلوس راجعة",
                       WITHDRAWAL: "سحب للمحفظة",
                     };
-                    let txLabel = txArabicMap[tx.type] || "حركة مالية";
+                    const txLabel = txArabicMap[tx.type] || "حركة مالية";
 
                     return (
                       <div key={tx.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">

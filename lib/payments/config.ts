@@ -66,11 +66,39 @@ export function verifyWebhookSignature(
 }
 
 function verifyPaymobSignature(payload: any, signature: string): boolean {
-  // Implement Paymob HMAC verification
+  // Official Paymob HMAC Algorithm (concatenated fields in specific order)
   // https://docs.paymob.com/docs/hmac-calculation
+  const { obj } = payload;
+  if (!obj) return false;
+
   const crypto = require('crypto');
+  
+  // The order of fields MUST be exact as per Paymob documentation
+  const data = [
+    obj.amount_cents,
+    obj.created_at,
+    obj.currency,
+    obj.error_occured,
+    obj.has_parent_transaction,
+    obj.id,
+    obj.integration_id,
+    obj.is_3d_secure,
+    obj.is_auth,
+    obj.is_capture,
+    obj.is_refunded,
+    obj.is_standalone_payment,
+    obj.is_voided,
+    obj.order.id,
+    obj.owner,
+    obj.pending,
+    obj.source_data.pan,
+    obj.source_data.sub_type,
+    obj.source_data.type,
+    obj.success,
+  ].join('');
+
   const hmac = crypto.createHmac('sha512', PAYMOB_CONFIG.hmacSecret);
-  hmac.update(JSON.stringify(payload));
+  hmac.update(data);
   const calculated = hmac.digest('hex');
   return calculated === signature;
 }

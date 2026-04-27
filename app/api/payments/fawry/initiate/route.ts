@@ -1,9 +1,11 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { FAWRY_CONFIG } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
 import { createErrorResponse, logError } from '@/lib/utils/error-handler';
+import { checkRateLimit } from '@/lib/utils/rate-limiter';
 
 /**
  * Initialize Fawry Payment
@@ -16,6 +18,22 @@ export async function GET(req: NextRequest) {
     requireUser(user);
     requireRole(user, 'CLIENT');
 
+    // 🛡️ Rate limit: 5 payment initiations per minute per user
+    const { allowed, limit, remaining, resetTime } = await checkRateLimit(`fawry_initiate:${user.id}`, 5, 60000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'لقد تجاوزت الحد المسموح من طلبات الدفع. يرجى الانتظار دقيقة.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(resetTime),
+          },
+        }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const txnId = searchParams.get('txnId');
     const amount = searchParams.get('amount');
@@ -25,8 +43,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing transaction ID or amount' }, { status: 400 });
     }
 
+    const txnIdParsed = parseInt(txnId, 10);
+    if (isNaN(txnIdParsed)) {
+      return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
+    }
+
     const transaction = await prisma.transaction.findUnique({
-      where: { id: parseInt(txnId) },
+      where: { id: txnIdParsed },
     });
 
     if (!transaction || transaction.userId !== user.id) {
@@ -43,7 +66,6 @@ export async function GET(req: NextRequest) {
     const amountVal = parseFloat(amount).toFixed(2);
 
     // Build Fawry signature
-    const crypto = require('crypto');
     const signatureString = `${FAWRY_CONFIG.merchantCode}${referenceNumber}${amountVal}${FAWRY_CONFIG.securityKey}`;
     const signature = crypto.createHash('sha256').update(signatureString).digest('hex');
 
@@ -63,9 +85,12 @@ export async function GET(req: NextRequest) {
 
     // Store reference number in transaction
     await prisma.transaction.update({
-      where: { id: parseInt(txnId) },
+      where: { id: txnIdParsed },
       data: {
         metadata: {
+          ...((transaction.metadata as Record<string, unknown> | null) || {}),
+          status: 'PENDING',
+          provider: 'fawry',
           fawryReferenceNumber: referenceNumber,
           fawryMerchantRefNum: referenceNumber,
         },

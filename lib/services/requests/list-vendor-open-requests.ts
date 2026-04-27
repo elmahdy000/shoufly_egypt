@@ -11,7 +11,7 @@ export async function listVendorOpenRequests(vendorId: number, filters: { govern
 
   if (categoryIds.length === 0) return [];
 
-  return prisma.request.findMany({
+  const requests = await prisma.request.findMany({
     where: {
       status: {
         in: ['OPEN_FOR_BIDDING', 'BIDS_RECEIVED'],
@@ -22,8 +22,19 @@ export async function listVendorOpenRequests(vendorId: number, filters: { govern
       ...(filters.governorateId ? { governorateId: filters.governorateId } : {}),
       ...(filters.cityId ? { cityId: filters.cityId } : {}),
     },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      createdAt: true,
+      latitude: true,
+      longitude: true,
+      address: true,
+      images: { select: { filePath: true }, take: 1 },
       category: true,
+      governorate: true,
+      city: true,
       client: { 
         select: { id: true, fullName: true } 
       },
@@ -35,4 +46,13 @@ export async function listVendorOpenRequests(vendorId: number, filters: { govern
     take: limit,
     skip: offset,
   });
+
+  // Anonymize client names
+  return requests.map(req => ({
+    ...req,
+    client: {
+      ...req.client,
+      fullName: `عميل #${req.client.id}`
+    }
+  }));
 }

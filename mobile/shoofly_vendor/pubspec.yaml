@@ -1,0 +1,31 @@
+name: shoofly_vendor
+description: "Shoofly Vendor Application"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shoofly_core:
+    path: ../shoofly_core
+  flutter_bloc: ^9.1.0
+  get_it: ^8.0.3
+  flutter_secure_storage: ^9.0.0
+  image_picker: ^1.2.1
+  lucide_icons_flutter: ^3.1.13
+  google_maps_flutter: ^2.10.0
+  location: ^8.0.1
+  url_launcher: ^6.3.0
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

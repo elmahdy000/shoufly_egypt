@@ -15,8 +15,13 @@ import {
   FiAlertCircle, 
   FiCheck,
   FiPhone,
+  FiMapPin,
+  FiMap,
   FiChevronDown,
-  FiChevronLeft
+  FiChevronLeft,
+  FiUpload,
+  FiCamera,
+  FiClock
 } from "react-icons/fi";
 import { logoutUser } from "@/lib/api/auth";
 import { apiFetch } from "@/lib/api/client";
@@ -57,13 +62,21 @@ export default function VendorProfilePage() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [vendorAddress, setVendorAddress] = useState("");
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [selectedCats, setSelectedCats] = useState<number[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [kycFiles, setKycFiles] = useState<{ front: File | null; back: File | null }>({ front: null, back: null });
+  const [uploadingKyc, setUploadingKyc] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setFullName(profile.fullName || "");
       setPhone(profile.phone || "");
+      setVendorAddress(profile.vendorAddress || "");
+      if (profile.latitude && profile.longitude) {
+        setCoords({ lat: profile.latitude, lng: profile.longitude });
+      }
       setSelectedCats(profile.vendorCategories?.map((vc: any) => vc.categoryId) || []);
       setSelectedBrands(profile.vendorBrands?.map((vb: any) => vb.brandId) || []);
     }
@@ -129,13 +142,49 @@ export default function VendorProfilePage() {
     }
   };
 
+  const handleKycUpload = async () => {
+    if (!kycFiles.front || !kycFiles.back) {
+      setMessage({ text: "يا ريت ترفع صورة وش وضهر البطاقة الأول", type: 'error' });
+      return;
+    }
+
+    setUploadingKyc(true);
+    setMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('front', kycFiles.front);
+      formData.append('back', kycFiles.back);
+
+      const data = await apiFetch<any>('/api/upload/kyc', 'VENDOR', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      setMessage({ text: "تم رفع صور البطاقة بنجاح، الإدارة هتراجعها في أسرع وقت!", type: 'success' });
+      refreshProfile();
+      setKycFiles({ front: null, back: null });
+    } catch (err) {
+      setMessage({ text: err instanceof Error ? err.message : "حصلت مشكلة وإحنا بنرفع الصور", type: 'error' });
+    } finally {
+      setUploadingKyc(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setMessage(null);
     try {
       await apiFetch('/api/vendor/profile', "VENDOR", {
         method: "PATCH",
-        body: { fullName, phone, categoryIds: selectedCats, brandIds: selectedBrands }
+        body: { 
+          fullName, 
+          phone, 
+          vendorAddress,
+          latitude: coords?.lat,
+          longitude: coords?.lng,
+          categoryIds: selectedCats, 
+          brandIds: selectedBrands 
+        }
       });
       setMessage({ text: "تم تحديث البيانات بنجاح!", type: 'success' });
       refreshProfile();
@@ -163,14 +212,31 @@ export default function VendorProfilePage() {
         {/* Status Card */}
         <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                profile?.verificationStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-600' : 
+                profile?.verificationStatus === 'PENDING' ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-400'
+            }`}>
               <FiSettings size={20} />
             </div>
             <div className="flex-1">
               <h2 className="font-semibold text-[#0F1111]">حالة الحساب</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-sm text-emerald-600 font-medium">مورد نشط</span>
+                {profile?.verificationStatus === 'APPROVED' ? (
+                  <>
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+                    <span className="text-sm text-emerald-600 font-medium">حساب موثق وجاهز للشغل</span>
+                  </>
+                ) : profile?.verificationStatus === 'PENDING' ? (
+                  <>
+                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                    <span className="text-sm text-amber-600 font-medium">طلب التوثيق قيد المراجعة</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 bg-slate-400 rounded-full" />
+                    <span className="text-sm text-slate-500 font-medium">حساب غير موثق (ارفع البطاقة)</span>
+                  </>
+                )}
               </div>
             </div>
             <button 
@@ -181,6 +247,89 @@ export default function VendorProfilePage() {
             </button>
           </div>
         </div>
+
+        {/* KYC Verification Card */}
+        {profile?.verificationStatus !== 'VERIFIED' && (
+          <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-1 bg-amber-400 h-full" />
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                <FiCamera size={16} />
+              </div>
+              <div>
+                <h2 className="font-bold text-sm text-[#0F1111]">توثيق الهوية (مهم جداً)</h2>
+                <p className="text-[11px] text-[#565959]">عشان تقدر تسحب فلوسك، لازم ترفع صورة البطاقة الشخصية</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+               {/* Front Side */}
+               <div className="space-y-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">وش البطاقة</p>
+                  <label className={`flex flex-col items-center justify-center aspect-[1.6/1] rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                    kycFiles.front ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/20'
+                  }`}>
+                    {kycFiles.front ? (
+                      <div className="text-center p-4">
+                        <FiCheckCircle size={32} className="text-emerald-500 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-emerald-700">{kycFiles.front.name}</p>
+                      </div>
+                    ) : (
+                      <div className="text-center p-4">
+                        <FiUpload size={32} className="text-slate-300 mx-auto mb-2" />
+                        <p className="text-xs font-medium text-slate-500">اضغط لرفع وش البطاقة</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={(e) => setKycFiles(p => ({ ...p, front: e.target.files?.[0] || null }))}
+                    />
+                  </label>
+               </div>
+
+               {/* Back Side */}
+               <div className="space-y-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ظهر البطاقة</p>
+                  <label className={`flex flex-col items-center justify-center aspect-[1.6/1] rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                    kycFiles.back ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/20'
+                  }`}>
+                    {kycFiles.back ? (
+                      <div className="text-center p-4">
+                        <FiCheckCircle size={32} className="text-emerald-500 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-emerald-700">{kycFiles.back.name}</p>
+                      </div>
+                    ) : (
+                      <div className="text-center p-4">
+                        <FiUpload size={32} className="text-slate-300 mx-auto mb-2" />
+                        <p className="text-xs font-medium text-slate-500">اضغط لرفع ظهر البطاقة</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={(e) => setKycFiles(p => ({ ...p, back: e.target.files?.[0] || null }))}
+                    />
+                  </label>
+               </div>
+            </div>
+
+            <Button 
+              onClick={handleKycUpload}
+              isLoading={uploadingKyc}
+              disabled={profile?.verificationStatus === 'PENDING'}
+              className={`w-full ${profile?.verificationStatus === 'PENDING' ? 'bg-slate-100 text-slate-400' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'}`}
+            >
+               {profile?.verificationStatus === 'PENDING' ? (
+                 <span className="flex items-center gap-2"><FiClock /> الطلب قيد المراجعة</span>
+               ) : (
+                 <span className="flex items-center gap-2"><FiSave /> إرسال لطلب التوثيق</span>
+               )}
+            </Button>
+          </div>
+        )}
 
         {/* Basic Info Card */}
         <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
@@ -215,6 +364,57 @@ export default function VendorProfilePage() {
                   placeholder="+20 XXX XXX XXXX"
                 />
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Store Location Card */}
+        <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <FiMapPin size={16} />
+            </div>
+            <h2 className="font-semibold text-sm text-[#0F1111]">موقع المتجر / الاستلام</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-[#565959] font-medium block mb-2">العنوان بالتفصيل (للمندوب)</label>
+              <textarea 
+                value={vendorAddress}
+                onChange={(e) => setVendorAddress(e.target.value)}
+                rows={2}
+                className="w-full bg-slate-50 border border-[#E7E7E7] px-4 py-3 rounded-xl outline-none focus:border-primary font-medium text-[#0F1111] transition-all text-sm" 
+                placeholder="مثلاً: شارع التسعين، مول كذا، الدور الثاني..."
+              />
+            </div>
+
+            <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+               <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-slate-900 mb-1">الإحداثيات الجغرافية (GPS)</p>
+                    {coords ? (
+                      <p className="text-[10px] text-emerald-600 font-mono">
+                        {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-rose-400">لم يتم تحديد الموقع بدقة</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition((pos) => {
+                          setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                        });
+                      }
+                    }}
+                    className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-2 rounded-xl text-[11px] font-black text-slate-700 hover:border-primary hover:text-primary transition-all shadow-sm"
+                  >
+                    <FiMap size={14} /> تحديد موقعي الحالي
+                  </button>
+               </div>
             </div>
           </div>
         </div>

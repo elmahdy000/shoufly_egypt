@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/shoofly/button";
@@ -25,21 +25,50 @@ import {
 
 function TaskDetail({ requestId }: { requestId: number }) {
   const router = useRouter();
-  const { data, loading, error } = useAsyncData(
+  const { data, loading, error, refresh } = useAsyncData(
     () => listDeliveryTasks(),
     [requestId],
   );
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR TASK UPDATES
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        // Refresh if the event is related to this specific request
+        if (payload.data?.requestId === requestId || payload.type === 'ORDER_STATUS_CHANGED') {
+          console.log("🔄 Delivery task update received via SSE, refreshing...");
+          refresh();
+        }
+      } catch (err) {
+        console.error("SSE Task Detail Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [requestId, refresh]);
   const [message, setMessage] = useState<string | null>(null);
   const [failReason, setFailReason] = useState("");
+  const [qrCode, setQrCode] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
   const [isFailing, setIsFailing] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
   const task = data?.myTasks.find((t) => t.id === requestId);
 
   async function handleComplete() {
+    if (!qrCode) {
+      setQrError(true);
+      setMessage("يرجى إدخال كود التحقق من شاشة العميل أولاً");
+      return;
+    }
+
     try {
       setIsCompleting(true);
-      await completeDeliveryTask(requestId);
+      setQrError(false);
+      await completeDeliveryTask(requestId, qrCode);
       setMessage("تم تأكيد التسليم بنجاح");
       setTimeout(() => router.push("/delivery"), 1500);
     } catch (err) {
@@ -176,13 +205,29 @@ function TaskDetail({ requestId }: { requestId: number }) {
             <CheckCircle size={20} className="text-emerald-500" /> المطلوب تعمله
           </h2>
           
+          <div className="space-y-4">
+            <div className={`p-4 rounded-xl border-2 transition-all ${qrError ? 'border-rose-400 bg-rose-50' : 'border-slate-100 bg-slate-50 focus-within:border-emerald-400 focus-within:bg-white'}`}>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">كود الاستلام (موجود على موبايل العميل)</label>
+              <input 
+                value={qrCode}
+                onChange={(e) => {
+                  setQrCode(e.target.value);
+                  if (qrError) setQrError(false);
+                }}
+                placeholder="أدخل الـ 6 أرقام هنا..."
+                className="w-full bg-transparent border-none outline-none text-xl font-black text-slate-900 placeholder:text-slate-300 text-center tracking-[1em]"
+                maxLength={6}
+              />
+            </div>
+          </div>
+          
           <Button 
             onClick={handleComplete} 
-            className="w-full gap-2 h-12 rounded-xl text-base bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 font-bold"
+            className="w-full gap-2 h-14 rounded-2xl text-lg bg-emerald-500 hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 font-black transition-all active:scale-95"
             isLoading={isCompleting}
           >
-            <CheckCircle size={20} /> 
-            {isCompleting ? 'بنأكد...' : 'سلمت الأوردر بنجاح'}
+            <CheckCircle size={22} /> 
+            {isCompleting ? 'جاري التأكيد...' : 'تأكيد التسليم النهائي'}
           </Button>
 
           <div className="border-t border-slate-100 pt-6">

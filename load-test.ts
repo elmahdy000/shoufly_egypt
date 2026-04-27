@@ -6,9 +6,11 @@ async function runLoadTest() {
   console.log('⚡ Starting High Volume Load Test...\n');
   
   const client = await prisma.user.findFirst({ where: { role: 'CLIENT' } });
-  const category = await prisma.category.findFirst();
+  const category = await prisma.category.findFirst({ where: { parentId: { not: null } } });
+  const gov = await prisma.governorate.findFirst();
+  const city = await prisma.city.findFirst({ where: { governorateId: gov?.id } });
   
-  if (!client || !category) {
+  if (!client || !category || !gov || !city) {
     console.error('❌ Please run simulation.ts first to setup base data.');
     return;
   }
@@ -32,13 +34,14 @@ async function runLoadTest() {
         address: 'Test Address',
         latitude: 0,
         longitude: 0,
-        deliveryPhone: '0000000000'
+        deliveryPhone: '0000000000',
+        governorateId: gov.id,
+        cityId: city.id
       })
     );
-    chunks.push(Promise.all(chunk));
+    // Await each chunk sequentially to prevent exhausting the DB connection pool
+    await Promise.all(chunk);
   }
-
-  await Promise.all(chunks);
 
   const duration = (Date.now() - startTime) / 1000;
   console.log(`\n✅ Finished generating ${volume} requests in ${duration}s.`);

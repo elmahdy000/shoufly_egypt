@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -45,10 +46,12 @@ interface ImprovedButtonProps
   children: React.ReactNode;
   isLoading?: boolean;
   loadingText?: string;
+  href?: string;
+  target?: string;
 }
 
 export const ImprovedButton = React.forwardRef<
-  HTMLButtonElement,
+  HTMLButtonElement | HTMLAnchorElement,
   ImprovedButtonProps
 >(
   (
@@ -61,26 +64,46 @@ export const ImprovedButton = React.forwardRef<
       loadingText,
       disabled,
       children,
+      href,
+      target,
       ...props
     },
     ref
-  ) => (
-    <button
-      ref={ref}
-      disabled={disabled || isLoading}
-      className={cn(buttonVariants({ variant, size, full, className }))}
-      {...props}
-    >
-      {isLoading ? (
-        <>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          {loadingText || children}
-        </>
-      ) : (
-        children
-      )}
-    </button>
-  )
+  ) => {
+    const commonClasses = cn(buttonVariants({ variant, size, full, className }));
+
+    if (href) {
+      return (
+        <Link
+          href={href}
+          target={target}
+          className={commonClasses}
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          {...(props as any)}
+        >
+          {children}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        ref={ref as React.Ref<HTMLButtonElement>}
+        disabled={disabled || isLoading}
+        className={commonClasses}
+        {...props}
+      >
+        {isLoading ? (
+          <>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {loadingText || children}
+          </>
+        ) : (
+          children
+        )}
+      </button>
+    );
+  }
 );
 
 ImprovedButton.displayName = "ImprovedButton";

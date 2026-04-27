@@ -83,6 +83,7 @@ interface StatusBadgeProps {
     | "processing"
     | "completed";
   size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
 const statusConfig = {
@@ -95,8 +96,8 @@ const statusConfig = {
   completed: { bg: "bg-emerald-50", text: "text-emerald-700", label: "مكتمل" },
 };
 
-export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
-  const config = statusConfig[status];
+export function StatusBadge({ status, size = "md", className }: StatusBadgeProps) {
+  const config = statusConfig[status] || statusConfig.inactive;
   const sizeClass = {
     sm: "px-2 py-1 text-xs",
     md: "px-3 py-1.5 text-sm",
@@ -105,7 +106,13 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-block rounded-full font-semibold ${config.bg} ${config.text} ${sizeClass}`}
+      className={cn(
+        "inline-block rounded-full font-semibold",
+        config.bg,
+        config.text,
+        sizeClass,
+        className
+      )}
     >
       {config.label}
     </span>

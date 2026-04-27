@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/utils/logger";
+import { Notify } from "../notifications/hub";
 
 export async function failDeliveryAgent(params: {
   requestId: number;
@@ -16,6 +17,9 @@ export async function failDeliveryAgent(params: {
     });
 
     if (!request) throw new Error("Request not found");
+    if (request.status !== "ORDER_PAID_PENDING_DELIVERY") {
+      throw new Error('لا يمكن الإبلاغ عن فشل التوصيل لطلب في حالته الحالية.');
+    }
     if (request.assignedDeliveryAgentId !== deliveryAgentId) {
       throw new Error("You are not assigned to this delivery");
     }
@@ -36,14 +40,13 @@ export async function failDeliveryAgent(params: {
       },
     });
 
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: "DELIVERY_FAILED",
-        title: "Delivery Failed - Reassigning",
-        message: `Delivery for request #${requestId} has failed. Another delivery agent will be assigned shortly.`,
-      },
-    });
+    await Notify.send({
+      userId: request.clientId,
+      type: "DELIVERY_FAILED",
+      title: "تعذر التوصيل - جاري تعيين مندوب آخر 🚚",
+      message: `نعتذر، تعذر على المندوب الحالي توصيل الطلب رقم #${requestId}. سنقوم بتعيين مندوب آخر فوراً.`,
+      requestId,
+    }, tx);
 
     const admins = await tx.user.findMany({
       where: { role: "ADMIN" },
@@ -51,14 +54,13 @@ export async function failDeliveryAgent(params: {
     });
 
     if (admins.length > 0) {
-      await tx.notification.createMany({
-        data: admins.map((a: { id: number }) => ({
-          userId: a.id,
-          type: "DELIVERY_FAILED",
-          title: "Delivery Failed - Reassign Needed",
-          message: `Request #${requestId} delivery failed. Reassign to new agent or review for refund if repeated failures occur.`,
-        })),
-      });
+      await Notify.bulkSend(admins.map((a: { id: number }) => ({
+        userId: a.id,
+        type: "DELIVERY_FAILED",
+        title: "فشل توصيل بواسطة مندوب 🚨",
+        message: `الطلب رقم #${requestId} فشل توصيله بواسطة المندوب #${deliveryAgentId}. يرجى المتابعة.`,
+        requestId,
+      })), tx);
     }
 
 

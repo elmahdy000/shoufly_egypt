@@ -20,19 +20,22 @@ export async function GET(req: NextRequest) {
           senderId: true,
           receiverId: true,
           content: true,
+          requestId: true,
           createdAt: true,
           sender: { select: { id: true, fullName: true, role: true } },
           receiver: { select: { id: true, fullName: true, role: true } }
       }
     });
 
-    // Group and Deduplicate for UI
-    const partners = new Map();
+    // Group and Deduplicate for UI (by partner AND request)
+    const pairs = new Map();
     conversations.forEach(msg => {
         const partner = msg.senderId === user.id ? msg.receiver : msg.sender;
-        if (!partners.has(partner.id)) {
-            partners.set(partner.id, {
-                id: partner.id,
+        const key = `${partner.id}-${msg.requestId || 'no-req'}`;
+        if (!pairs.has(key)) {
+            pairs.set(key, {
+                partnerId: partner.id,
+                requestId: msg.requestId,
                 name: partner.fullName,
                 role: partner.role,
                 lastMsg: msg.content,
@@ -41,7 +44,7 @@ export async function GET(req: NextRequest) {
         }
     });
 
-    return NextResponse.json(Array.from(partners.values()));
+    return NextResponse.json(Array.from(pairs.values()));
   } catch (error: unknown) {
     return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
   }

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
           id: true,
           title: true,
           address: true,
+          deliveryPhone: true,
           latitude: true,
           longitude: true,
           status: true,

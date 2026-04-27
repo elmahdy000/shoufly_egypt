@@ -221,12 +221,12 @@ export default function ClientNotificationsPage() {
 
   // Mark all as read
   const handleMarkAllRead = useCallback(async () => {
-    const unreadIds = data?.filter((n: any) => !n.isRead).map((n: any) => n.id) || [];
+    const unreadIds = data?.filter((n: { isRead: boolean; id: number }) => !n.isRead).map((n: { id: number }) => n.id) || [];
     await Promise.all(unreadIds.map((id: number) => markRead(id)));
   }, [data, markRead]);
 
   // Handle notification click - navigate directly to relevant page
-  const handleNotificationClick = useCallback((item: any) => {
+  const handleNotificationClick = useCallback((item: { isRead: boolean; id: number; type: string; requestId?: number }) => {
     if (!item.isRead) {
       markRead(item.id);
     }
@@ -240,20 +240,20 @@ export default function ClientNotificationsPage() {
     }
   }, [markRead, router]);
 
-  const unreadCount = data?.filter((n: any) => !n.isRead).length ?? 0;
+  const unreadCount = data?.filter((n: { isRead: boolean }) => !n.isRead).length ?? 0;
 
   // Filter notifications
   const filteredNotifications = useMemo(() => {
     if (!data) return [];
     if (filter === 'all') return data;
-    if (filter === 'unread') return data.filter((n: any) => !n.isRead);
-    if (filter === 'orders') return data.filter((n: any) => 
+    if (filter === 'unread') return data.filter((n: { isRead: boolean }) => !n.isRead);
+    if (filter === 'orders') return data.filter((n: { type: string }) => 
       ['NEW_BID', 'REQUEST_CREATED', 'REQUEST_COMPLETED', 'REQUEST_CANCELLED', 'BID_ACCEPTED', 'REVIEW_REQUEST'].includes(n.type)
     );
-    if (filter === 'financial') return data.filter((n: any) => 
+    if (filter === 'financial') return data.filter((n: { type: string }) => 
       ['PAYMENT_RECEIVED', 'PAYMENT_FAILED', 'WALLET_TOPUP'].includes(n.type)
     );
-    if (filter === 'delivery') return data.filter((n: any) => 
+    if (filter === 'delivery') return data.filter((n: { type: string }) => 
       ['DELIVERY_ASSIGNED', 'DELIVERY_PICKED_UP', 'DELIVERY_DELIVERED'].includes(n.type)
     );
     return data;
@@ -261,7 +261,7 @@ export default function ClientNotificationsPage() {
 
   // Group notifications by date
   const groupedNotifications = useMemo(() => {
-    return filteredNotifications.reduce((groups: any, item: any) => {
+    return filteredNotifications.reduce((groups: Record<string, { createdAt: string }[]>, item: { createdAt: string }) => {
       const date = new Date(item.createdAt).toDateString();
       if (!groups[date]) groups[date] = [];
       groups[date].push(item);
@@ -406,7 +406,7 @@ export default function ClientNotificationsPage() {
 
         {/* Notifications Grouped by Date */}
         <div className="space-y-8">
-          {Object.entries(groupedNotifications).map(([date, items]: [string, any]) => (
+          {Object.entries(groupedNotifications).map(([date, items]: [string, any]) => (  
             <div key={date} className="space-y-4">
               <h3 className="text-sm font-bold text-slate-400 flex items-center gap-2">
                 <FiCalendar size={14} />
@@ -414,7 +414,7 @@ export default function ClientNotificationsPage() {
               </h3>
               
               <div className="space-y-3">
-                {items.map((item: any) => {
+                {items.map((item: any) => {  
                   const isUnread = !item.isRead;
                   const config = getNotificationConfig(item.type);
                   const Icon = config.icon;

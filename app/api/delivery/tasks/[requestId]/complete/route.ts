@@ -12,7 +12,11 @@ export async function PATCH(
     requireUser(user);
     requireRole(user, "DELIVERY");
     const { requestId } = await params;
-    const result = await completeDeliveryAgent(Number(requestId), user.id);
+    const { qrCode } = await req.json();
+    
+    if (!qrCode) throw new Error("كود التحقق مطلوب لإتمام العملية");
+
+    const result = await completeDeliveryAgent(Number(requestId), user.id, qrCode);
     return ok(result);
   } catch (error) {
     return fail(error);

@@ -1,11 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { d, toTwo, sub, toNumber } from '@/lib/utils/decimal';
+import { Notify } from '../notifications/hub';
 
 const MIN_WITHDRAWAL_AMOUNT = 50; // Minimum 50 EGP to prevent micro-transactions
-
-function toTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
 
 export async function requestWithdrawal(vendorId: number, amount: number) {
   logger.info('withdrawal.request.started', { vendorId, amount });
@@ -16,39 +14,48 @@ export async function requestWithdrawal(vendorId: number, amount: number) {
     });
 
     if (!vendor || vendor.role !== 'VENDOR' || !vendor.isActive) {
-      throw new Error('Only active vendors can request withdrawals');
+      throw new Error('فقط الموردين النشطين يمكنهم طلب سحب الرصيد.');
     }
 
     const wallet = toTwo(Number(vendor.walletBalance));
     const requested = toTwo(amount);
 
     // Validate minimum withdrawal amount
-    if (requested < MIN_WITHDRAWAL_AMOUNT) {
-      throw new Error(`Minimum withdrawal amount is ${MIN_WITHDRAWAL_AMOUNT} EGP`);
+    if (requested.lt(MIN_WITHDRAWAL_AMOUNT)) {
+      throw new Error(`الحد الأدنى للسحب هو ${MIN_WITHDRAWAL_AMOUNT} ج.م`);
     }
 
-    if (requested > wallet) {
-      throw new Error('Requested withdrawal exceeds available balance');
+    if (requested.gt(wallet)) {
+      throw new Error('المبلغ المطلوب يتجاوز الرصيد المتاح في محفظتك.');
+    }
+
+    // Prevent opening a new withdrawal while one is already PENDING
+    const existingPending = await tx.withdrawalRequest.findFirst({
+      where: { vendorId, status: 'PENDING' },
+      select: { id: true, amount: true },
+    });
+    if (existingPending) {
+      throw new Error(
+        `لديك طلب سحب قيد المراجعة بالفعل (رقم #${existingPending.id} بمبلغ ${existingPending.amount} ج.م). يرجى انتظار مراجعته قبل تقديم طلب جديد.`
+      );
     }
 
 
     const created = await tx.withdrawalRequest.create({
       data: {
         vendorId,
-        amount: requested,
+        amount: requested.toNumber(),
         status: 'PENDING',
       },
     });
 
     // CRITICAL: Deduct from wallet immediately (hold funds)
-    // We add `walletBalance: { gte: requested }` in updateMany to prevent concurrent race conditions
-    // where parallel requests could bypass the initial JS check and cause a negative balance.
     const updateResult = await tx.user.updateMany({
       where: { 
         id: vendorId,
-        walletBalance: { gte: requested } 
+        walletBalance: { gte: requested.toNumber() } 
       },
-      data: { walletBalance: { decrement: requested } }
+      data: { walletBalance: { decrement: requested.toNumber() } }
     });
 
     if (updateResult.count === 0) {
@@ -62,16 +69,12 @@ export async function requestWithdrawal(vendorId: number, amount: number) {
     });
 
     if (admins.length > 0) {
-      await tx.notification.createMany({
-        data: admins.map((a) => ({
-          userId: a.id,
-          type: 'WITHDRAWAL_REQUESTED',
-          title: 'New Withdrawal Request',
-
-
-          message: `Vendor #${vendorId} requested withdrawal of ${requested}.`,
-        })),
-      });
+      await Notify.bulkSend(admins.map((a) => ({
+        userId: a.id,
+        type: 'WITHDRAWAL_REQUESTED',
+        title: 'طلب سحب جديد 💸',
+        message: `المورد #${vendorId} طلب سحب مبلغ ${requested} ج.م.`,
+      })), tx);
       logger.info('notification.created', {
         event: 'withdrawal.requested',
         withdrawalId: created.id,
@@ -92,7 +95,7 @@ export async function requestWithdrawal(vendorId: number, amount: number) {
       vendorId: created.vendorId,
       amount: Number(created.amount),
       status: created.status,
-      availableBalance: wallet - requested,
+      availableBalance: toNumber(sub(wallet, requested)),
     };
 
   });

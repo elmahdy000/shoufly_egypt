@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireUser } from '@/lib/auth';
 import { getRequestDetails } from '@/lib/services/requests';
 import { RequestIdParamSchema } from '@/lib/validations/request';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 export async function GET(
   req: NextRequest,
@@ -21,14 +22,14 @@ export async function GET(
  
     return NextResponse.json(request);
   } catch (error: unknown) {
-
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { error: message },
-      { status: message.includes('not found') ? 404 : 400 }
-    );
+    console.error('*** REQUEST_GET_DEBUG ***', error);
+    logError('REQUEST_GET', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
-}export async function POST(
+}
+
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -36,8 +37,8 @@ export async function GET(
     const user = await getCurrentUser(req.headers);
     requireUser(user);
 
-    const { id } = await params;
-    const requestId = parseInt(id);
+    const parsedParams = RequestIdParamSchema.parse(await params);
+    const requestId = parsedParams.id;
 
     const { cancelRequest } = await import('@/lib/services/requests');
     const result = await cancelRequest({
@@ -48,7 +49,8 @@ export async function GET(
 
     return NextResponse.json({ success: true, request: result });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError('REQUEST_CANCEL', error);
+    const { response, status } = createErrorResponse(error, 400);
+    return NextResponse.json(response, { status });
   }
 }

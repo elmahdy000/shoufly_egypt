@@ -14,6 +14,8 @@ import {
   markAllNotificationsRead,
 } from "@/lib/api/notifications";
 import type { ApiNotification } from "@/lib/types/api";
+import { useToast } from "@/components/providers/toast-provider";
+import { playNotificationSound } from "@/lib/utils/sounds";
 
 const TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
   NEW_BID:          { icon: <FiPackage size={14} />,     color: "text-blue-600",    bg: "bg-blue-50" },
@@ -24,6 +26,11 @@ const TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: stri
   ORDER_ASSIGNED:   { icon: <FiTruck size={14} />,       color: "text-indigo-600",  bg: "bg-indigo-50" },
   ORDER_DELIVERED:  { icon: <FiCheckCircle size={14} />, color: "text-emerald-600", bg: "bg-emerald-50" },
   NEW_USER:         { icon: <FiUser size={14} />,        color: "text-slate-600",   bg: "bg-slate-100" },
+  DISPUTE_RAISED:   { icon: <FiAlertCircle size={14} />, color: "text-rose-500",    bg: "bg-rose-50" },
+  DISPUTE_RESOLVED: { icon: <FiCheckCircle size={14} />, color: "text-blue-600",    bg: "bg-blue-50" },
+  REQUEST_DISPATCHED: { icon: <FiPackage size={14} />,   color: "text-orange-600",  bg: "bg-orange-50" },
+  KYC_APPROVED:     { icon: <FiCheckCircle size={14} />, color: "text-emerald-600", bg: "bg-emerald-50" },
+  KYC_REJECTED:     { icon: <FiAlertCircle size={14} />, color: "text-rose-600",    bg: "bg-rose-50" },
 };
 
 function getTypeMeta(type: string) {
@@ -41,6 +48,7 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
   const [loading, setLoading] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -65,6 +73,31 @@ export function NotificationsDrawer({ isOpen, onClose, onUnreadCountChange }: Pr
       fetchNotifications();
     }
   }, [isOpen, fetchNotifications]);
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR ADMIN
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("🔔 Admin notification received via SSE:", payload.type);
+        
+        // Refresh notifications list if drawer is open, or just increment count
+        fetchNotifications();
+        playNotificationSound();
+        
+        // Show a toast for critical admin events
+        if (['WITHDRAWAL', 'PAYMENT', 'NEW_USER'].includes(payload.type)) {
+            toast('تنبيه إداري 🛡️', payload.data.message || 'حدث جديد على المنصة', 'info');
+        }
+      } catch (err) {
+        console.error("SSE Admin Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [fetchNotifications, toast]);
 
   useEffect(() => {
     if (!isOpen) return;

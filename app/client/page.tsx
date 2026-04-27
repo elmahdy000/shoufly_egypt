@@ -25,6 +25,8 @@ import {
   FiCornerDownLeft
 } from "react-icons/fi";
 
+import { ShooflyLoader } from "@/components/shoofly/loader";
+
 export default function ClientHomePage() {
   const { data, loading, error } = useAsyncData(() => listClientRequests(), []);
 
@@ -32,11 +34,15 @@ export default function ClientHomePage() {
     const rows = data ?? [];
     return {
       total: rows.length,
-      open: rows.filter((r: any) => ["OPEN_FOR_BIDDING", "OFFERS_FORWARDED"].includes(r.status)).length,
-      completed: rows.filter((r: any) => r.status === "CLOSED_SUCCESS").length,
-      hasOffers: rows.filter((r: any) => r.status === "OFFERS_FORWARDED").length,
+      open: rows.filter((r: { status: string }) => ["OPEN_FOR_BIDDING", "OFFERS_FORWARDED"].includes(r.status)).length,
+      completed: rows.filter((r: { status: string }) => r.status === "CLOSED_SUCCESS").length,
+      hasOffers: rows.filter((r: { status: string }) => r.status === "OFFERS_FORWARDED").length,
     };
   }, [data]);
+
+  if (loading && !data) {
+    return <ShooflyLoader />;
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-8 font-sans dir-rtl text-right pb-24 lg:pb-10">
@@ -44,7 +50,7 @@ export default function ClientHomePage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">لوحة التحكم</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">تابع طلباتك وإدارة حسابك</p>
+          <p className="text-sm text-slate-500 font-medium mt-1">تابع طلباتك ودير حسابك</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/client/wallet">
@@ -86,7 +92,7 @@ export default function ClientHomePage() {
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                   <FiClock size={20} />
                 </div>
-                <p className="text-xs text-slate-500 font-medium">قيد التنفيذ</p>
+                <p className="text-xs text-slate-500 font-medium">شغالة دلوقتي</p>
               </div>
               <p className="text-2xl font-bold text-slate-900">{stats.open}</p>
             </div>
@@ -96,7 +102,7 @@ export default function ClientHomePage() {
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                   <FiCheckCircle size={20} />
                 </div>
-                <p className="text-xs text-slate-500 font-medium">مكتملة</p>
+                <p className="text-xs text-slate-500 font-medium">خلصانة</p>
               </div>
               <p className="text-2xl font-bold text-slate-900">{stats.completed}</p>
             </div>
@@ -118,10 +124,10 @@ export default function ClientHomePage() {
         {/* Recent Requests */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">أحدث الطلبات</h2>
+            <h2 className="text-lg font-semibold text-slate-900">آخر الطلبات</h2>
             <Link href="/client/requests">
               <Button variant="ghost" className="text-sm font-medium text-primary hover:text-primary/80 gap-1">
-                عرض الكل <FiArrowLeft size={14} />
+                شوف الكل <FiArrowLeft size={14} />
               </Button>
             </Link>
           </div>
@@ -141,7 +147,7 @@ export default function ClientHomePage() {
           )}
           
           <div className="space-y-3">
-            {(data ?? []).slice(0, 5).map((request: any) => {
+            {(data ?? []).slice(0, 5).map((request: { id: number; title: string; address: string; status: string }) => {
               const hasOffers = request.status === 'OFFERS_FORWARDED';
               return (
                 <Link 
@@ -167,7 +173,7 @@ export default function ClientHomePage() {
                         <span className="text-xs text-slate-400">#{request.id}</span>
                         {hasOffers && (
                           <span className="text-xs font-medium px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">
-                            عروض متاحة
+                            جالك عروض
                           </span>
                         )}
                       </div>
@@ -176,7 +182,7 @@ export default function ClientHomePage() {
                     <div className="flex items-center gap-3 shrink-0">
                       <StatusBadge 
                         status={hasOffers ? 'pending' : request.status === 'CLOSED_SUCCESS' ? 'completed' : 'active'} 
-                        label={hasOffers ? 'عروض جديدة' : request.status === 'OPEN_FOR_BIDDING' ? 'مفتوح للعروض' : request.status === 'CLOSED_SUCCESS' ? 'مكتمل' : request.status === 'ORDER_PAID_PENDING_DELIVERY' ? 'جاري التنفيذ' : request.status === 'PENDING_ADMIN_REVISION' ? 'قيد المراجعة' : "طلب نشط"} 
+                        label={hasOffers ? 'عروض جديدة' : request.status === 'OPEN_FOR_BIDDING' ? 'مستني عروض' : request.status === 'CLOSED_SUCCESS' ? 'خلصان' : request.status === 'ORDER_PAID_PENDING_DELIVERY' ? 'شغالين فيه' : request.status === 'PENDING_ADMIN_REVISION' ? 'بيتراجع' : "طلب شغال"} 
                       />
                       <FiArrowLeft className="text-slate-300 group-hover:text-primary group-hover:-translate-x-1 transition-all" size={18} />
                     </div>
@@ -191,11 +197,11 @@ export default function ClientHomePage() {
               <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
                 <FiBox size={28} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">لا توجد طلبات</h3>
-              <p className="text-sm text-slate-500 mb-6">قم بإنشاء أول طلب لك الآن</p>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">مفيش طلبات لسه</h3>
+              <p className="text-sm text-slate-500 mb-6">يلا اعمل أول طلب ليك دلوقتي</p>
               <Link href="/client/requests/new">
                 <Button className="bg-primary text-white px-6 py-2.5 text-sm font-medium rounded-xl">
-                  إنشاء طلب جديد
+                  اعمل طلب جديد
                 </Button>
               </Link>
             </div>
@@ -205,7 +211,7 @@ export default function ClientHomePage() {
         {/* Quick Actions & Info */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-900 pb-2 border-b border-slate-200">
-            إجراءات سريعة
+            في السريع
           </h2>
           
           <div className="space-y-3">
@@ -215,8 +221,8 @@ export default function ClientHomePage() {
                   <FiPlus size={20} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">طلب خدمة جديدة</p>
-                  <p className="text-xs text-slate-500">أضف طلب صيانة أو خدمة</p>
+                  <p className="font-semibold text-slate-900 text-sm">اطلب خدمة جديدة</p>
+                  <p className="text-xs text-slate-500">اطلب صيانة أو أي خدمة محتاجها</p>
                 </div>
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
@@ -228,8 +234,8 @@ export default function ClientHomePage() {
                   <FiDollarSign size={20} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">شحن المحفظة</p>
-                  <p className="text-xs text-slate-500">أضف رصيد لدفع الطلبات</p>
+                  <p className="font-semibold text-slate-900 text-sm">اشحن المحفظة</p>
+                  <p className="text-xs text-slate-500">زوّد رصيدك عشان تدفع للطلبات</p>
                 </div>
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
@@ -242,7 +248,7 @@ export default function ClientHomePage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-slate-900 text-sm">طلباتي</p>
-                  <p className="text-xs text-slate-500">عرض جميع الطلبات</p>
+                  <p className="text-xs text-slate-500">شوف كل طلباتك</p>
                 </div>
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
@@ -254,8 +260,8 @@ export default function ClientHomePage() {
                   <FiMessageSquare size={20} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">المحادثات</p>
-                  <p className="text-xs text-slate-500">رسائلك مع التجار</p>
+                  <p className="font-semibold text-slate-900 text-sm">الرسايل</p>
+                  <p className="text-xs text-slate-500">كلامك مع الصنايعية والتجار</p>
                 </div>
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
@@ -267,8 +273,8 @@ export default function ClientHomePage() {
                   <FiAlertCircle size={20} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900 text-sm">تقديم شكوى</p>
-                  <p className="text-xs text-slate-500">الإبلاغ عن مشكلة</p>
+                  <p className="font-semibold text-slate-900 text-sm">قدم شكوى</p>
+                  <p className="text-xs text-slate-500">بلغنا لو في مشكلة</p>
                 </div>
                 <FiArrowLeft className="text-slate-300" size={16} />
               </div>
@@ -281,11 +287,11 @@ export default function ClientHomePage() {
               <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                 <FiTrendingUp size={16} />
               </div>
-              <p className="text-xs font-medium opacity-90">نصيحة اليوم</p>
+              <p className="text-xs font-medium opacity-90">خد بالك</p>
             </div>
-            <h4 className="font-semibold text-sm mb-2">كيف تحصل على أفضل العروض؟</h4>
+            <h4 className="font-semibold text-sm mb-2">إزاي تجيب أحسن سعر؟</h4>
             <p className="text-xs leading-relaxed opacity-90">
-              اكتب وصفاً تفصيلياً لمشكلتك وأضف صور واضحة. الموردون يفضلون الطلبات المفصلة.
+              اكتب تفاصيل مشكلتك بالظبط وحط صور واضحة. الصنايعية بيحبوا التفاصيل عشان يدوك سعر صح.
             </p>
           </div>
         </div>

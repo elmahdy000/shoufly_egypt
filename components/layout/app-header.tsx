@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -86,19 +88,20 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-border/50 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 dir-rtl">
-        <div className="flex items-center gap-4 group">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
+    <header className="relative sticky top-0 z-50 overflow-hidden border-b border-white/70 bg-white/90 shadow-[0_10px_30px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+      <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 dir-rtl">
+        <div className="flex min-w-0 items-center gap-4 group">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
             <Zap size={22} strokeWidth={2.5} />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-lg font-black leading-none text-slate-900 sm:text-xl tracking-tight">{title}</h1>
-            {subtitle && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{subtitle}</p>}
+          <div className="min-w-0 space-y-0.5">
+            <h1 className="truncate text-lg font-black leading-none text-slate-900 sm:text-xl tracking-tight">{title}</h1>
+            {subtitle && <p className="truncate text-[10px] font-black text-slate-400 uppercase tracking-widest">{subtitle}</p>}
           </div>
         </div>
 
-        <nav className="hidden xl:flex items-center gap-1.5 rounded-[20px] bg-muted/30 p-1.5 border border-border/40 backdrop-blur-sm">
+        <nav className="hidden xl:flex items-center gap-1.5 rounded-[22px] border border-slate-200/80 bg-white/70 p-1.5 shadow-sm backdrop-blur-sm">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -109,10 +112,10 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
                 className={`inline-flex items-center gap-2.5 rounded-xl px-5 py-2.5 text-xs font-black transition-all ${
                   active
                     ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                    : "text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900"
+                    : "text-slate-500 hover:bg-slate-50 hover:shadow-sm hover:text-slate-900"
                 }`}
               >
-                <Icon size={16} />
+                {Icon && React.createElement(Icon, { size: 16 })}
                 <span>{item.label}</span>
               </Link>
             );
@@ -123,7 +126,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
           <div className="hidden sm:flex items-center gap-2.5">
             <Link
               href="/messages"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-white text-slate-400 transition-all hover:border-primary hover:text-primary hover:shadow-lg hover:shadow-primary/5 active:scale-90"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 transition-all hover:border-primary/30 hover:text-primary hover:shadow-lg hover:shadow-primary/5 active:scale-90"
               title="الرسائل"
             >
               <MessageSquare size={18} />
@@ -137,7 +140,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
             className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all active:scale-90 ${
               isActivePath(pathname, navConfig.profileHref)
                 ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
-                : "border-border bg-white text-slate-400 hover:border-primary hover:text-primary"
+                : "border-slate-200 bg-white text-slate-400 hover:border-primary/30 hover:text-primary"
             }`}
             title="الملف الشخصي"
           >
@@ -157,7 +160,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
       </div>
 
       {/* Mobile Sub-Nav: High Fidelity Glass */}
-      <div className="xl:hidden border-t border-border/30 bg-white/40 px-4 py-3">
+      <div className="xl:hidden border-t border-white/60 bg-white/60 px-4 py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {navConfig.items.map((item) => {
             const Icon = item.icon;
@@ -169,14 +172,17 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
                 className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black transition-all ${
                   active
                     ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
-                    : "bg-white border border-border/60 text-slate-500"
+                    : "bg-white border border-slate-200 text-slate-500"
                 }`}
               >
-                <Icon size={14} />
+                {Icon && React.createElement(Icon, { size: 14 })}
                 {item.label}
               </Link>
             );
           })}
+          <div className="mr-auto pl-2">
+            <NotificationDropdown />
+          </div>
         </div>
       </div>
     </header>

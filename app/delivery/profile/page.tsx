@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/shoofly/button";
 import { logoutUser } from "@/lib/api/auth";
+import { getDeliveryStats } from "@/lib/api/delivery-agent";
+import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { formatCurrency } from "@/lib/formatters";
 import { 
   FiUser, 
   FiArrowLeft, 
@@ -11,11 +14,14 @@ import {
   FiLogOut,
   FiPackage,
   FiMap,
-  FiStar
+  FiStar,
+  FiDollarSign,
+  FiBell
 } from "react-icons/fi";
 
 export default function DeliveryProfilePage() {
   const router = useRouter();
+  const { data: stats, loading } = useAsyncData(() => getDeliveryStats(), []);
 
   async function handleLogout() {
     await logoutUser();
@@ -57,28 +63,34 @@ export default function DeliveryProfilePage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl border border-[#E7E7E7] p-4 text-center">
             <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 mx-auto mb-2">
               <FiPackage size={20} />
             </div>
-            <p className="text-lg font-bold text-[#0F1111]">0</p>
+            <p className="text-lg font-bold text-[#0F1111]">{loading ? "—" : stats?.completed ?? 0}</p>
             <p className="text-xs text-[#565959]">تم التوصيل</p>
           </div>
           <div className="bg-white rounded-xl border border-[#E7E7E7] p-4 text-center">
             <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 mx-auto mb-2">
               <FiTruck size={20} />
             </div>
-            <p className="text-lg font-bold text-[#0F1111]">0</p>
+            <p className="text-lg font-bold text-[#0F1111]">{loading ? "—" : stats?.active ?? 0}</p>
             <p className="text-xs text-[#565959]">قيد التوصيل</p>
           </div>
-          <div className="bg-white rounded-xl border border-[#E7E7E7] p-4 text-center">
-            <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mx-auto mb-2">
-              <FiStar size={20} />
+        </div>
+
+        {/* Wallet Balance */}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <FiDollarSign size={20} />
             </div>
-            <p className="text-lg font-bold text-[#0F1111]">5.0</p>
-            <p className="text-xs text-[#565959]">التقييم</p>
+            <p className="text-sm font-medium text-white/90">رصيد المحفظة</p>
           </div>
+          <p className="text-2xl font-black">
+            {loading ? "جاري التحميل..." : formatCurrency(stats?.walletBalance ?? 0)}
+          </p>
         </div>
 
         {/* Quick Links */}
@@ -106,6 +118,16 @@ export default function DeliveryProfilePage() {
                 <p className="text-xs text-[#565959]">الطلبات المتاحة والحالية</p>
               </div>
               <FiArrowLeft size={16} className="text-slate-300 group-hover:text-amber-600" />
+            </Link>
+            <Link href="/delivery/notifications" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors group">
+              <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                <FiBell size={18} />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm text-[#0F1111]">الإشعارات</p>
+                <p className="text-xs text-[#565959]">التنبيهات والرسائل</p>
+              </div>
+              <FiArrowLeft size={16} className="text-slate-300 group-hover:text-rose-600" />
             </Link>
           </div>
         </div>

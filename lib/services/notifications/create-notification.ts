@@ -1,6 +1,7 @@
 import { NotificationType } from '@/app/generated/prisma';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from './hub';
 
 export async function createNotification(params: {
   userId: number;
@@ -11,47 +12,44 @@ export async function createNotification(params: {
   metadata?: any;
 }) {
   const { userId, type, title, message, requestId, metadata } = params;
-  const created = await prisma.notification.create({
-    data: {
-      userId,
-      type,
-      title,
-      message,
-      requestId,
-      metadata,
-    },
-    include: {
-      user: { select: { fcmToken: true } }
-    }
+
+  // 1. Use the Unified Notify Hub for DB persistence + Redis broadcast
+  // This triggers the Redis Subscriber which then triggers the local SSE stream.
+  const notification = await Notify.send({
+    userId,
+    type,
+    title,
+    message,
+    requestId,
+    metadata
   });
 
-  // 1. Trigger real-time SSE notification
-  const { notificationEmitter } = await import('@/lib/utils/event-emitter');
-  notificationEmitter.sendNotification(userId, {
-    ...created,
-    requestId: created.requestId ?? undefined,
+  // 2. Fetch user for FCM token (Hub doesn't do Push Notifications yet)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { fcmToken: true }
   });
 
-  // 2. Trigger native Push Notification if token exists
-  if (created.user.fcmToken) {
+  // 3. Trigger native Push Notification if token exists
+  if (user?.fcmToken) {
     const { sendPushNotification } = await import('./push-notification');
-     sendPushNotification(created.user.fcmToken, {
-      title: created.title,
-      body: created.message,
+     sendPushNotification(user.fcmToken, {
+      title: notification.title,
+      body: notification.message,
       data: {
-        type: created.type,
-        requestId: created.requestId?.toString(),
-        notificationId: created.id.toString(),
+        type: notification.type,
+        ...(notification.requestId && { requestId: String(notification.requestId) }),
+        notificationId: notification.id.toString(),
       }
     }).catch(err => logger.error('push.notification.async.failed', { err }));
   }
 
   logger.info('notification.created', {
-    notificationId: created.id,
+    notificationId: notification.id,
     userId,
     type,
-    sentPush: !!created.user.fcmToken
+    sentPush: !!user?.fcmToken
   });
 
-  return created;
+  return notification;
 }

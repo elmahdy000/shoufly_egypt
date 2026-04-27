@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listDeliveryTasks } from "@/lib/api/delivery-agent";
@@ -15,8 +15,31 @@ import {
   Phone
 } from "lucide-react";
 
+import { ShooflyLoader } from "@/components/shoofly/loader";
+
 export default function DeliveryDashboard() {
-  const { data, loading, error } = useAsyncData(() => listDeliveryTasks(), []);
+  const { data, loading, error, refresh } = useAsyncData(() => listDeliveryTasks(), []);
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR DELIVERY AGENTS
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("🚚 Delivery dashboard update received via SSE:", payload.type);
+        
+        // Refresh when a new order is ready or status changes
+        if (['ORDER_PAID_PENDING_DELIVERY', 'ORDER_STATUS_CHANGED', 'NEW_BID'].includes(payload.type)) {
+          refresh();
+        }
+      } catch (err) {
+        console.error("SSE Delivery Dashboard Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [refresh]);
 
   const stats = useMemo(
     () => ({
@@ -25,6 +48,10 @@ export default function DeliveryDashboard() {
     }),
     [data],
   );
+
+  if (loading && !data) {
+    return <ShooflyLoader message="بنحمل المشاوير المتاحة..." />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 lg:pb-10 font-sans dir-rtl text-right">

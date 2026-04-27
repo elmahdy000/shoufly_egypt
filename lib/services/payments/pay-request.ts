@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 import { getPaymentRedirectUrl } from '@/lib/payments/config';
 import crypto from 'crypto';
 
@@ -37,13 +38,16 @@ export async function payRequest(requestId: number, clientId: number) {
 
     if (!request) {
       logger.warn('payment.request.not_found', { requestId, clientId });
-      throw new Error('عذراً، الطلب غير موجود أو قد تم حذفه.');
+      throw new Error('معلش، الطلب ده مش موجود أو اتمسح خلاص.');
     }
 
     if (request.clientId !== clientId) {
-      // SECURITY: Allow family/sponsor payments? 
-      // For now, we allow it but log that it's a 'Sponsor' payment.
-      logger.info('payment.request.sponsor_payment', { requestId, requesterId: request.clientId, payerId: clientId });
+      logger.warn('payment.request.unauthorized', { 
+        requestId, 
+        requestOwner: request.clientId, 
+        attemptedPayer: clientId 
+      });
+      throw new Error('معلش، صاحب الطلب بس هو اللي يقدر يدفع.');
     }
 
 
@@ -51,11 +55,20 @@ export async function payRequest(requestId: number, clientId: number) {
       request.status === 'ORDER_PAID_PENDING_DELIVERY' ||
       request.status === 'CLOSED_SUCCESS'
     ) {
-      throw new Error(`هذا الطلب تم سداد قيمته بالفعل أو مكتمل (الحالة الحالية: ${request.status})`);
+      const statusMap: Record<string, string> = {
+        'ORDER_PAID_PENDING_DELIVERY': 'اتدفع ومستني التوصيل',
+        'CLOSED_SUCCESS': 'خلص خلاص بنجاح'
+      };
+      throw new Error(`الطلب ده اتدفع تمنه فعلاً أو خلص (الحالة دلوقتي: ${statusMap[request.status] || request.status})`);
     }
 
     if (request.status !== 'OFFERS_FORWARDED') {
-      throw new Error(`لا يمكن السداد في هذه المرحلة، يجب أن يكون الطلب في مرحلة استقبال العروض (الحالة الحالية: ${request.status})`);
+      const statusMap: Record<string, string> = {
+        'PENDING_ADMIN_REVIEW': 'بيراجعه الإدارة',
+        'OPEN_FOR_BIDDING': 'مفتوح للعروض',
+        'BIDS_RECEIVED': 'جاله عروض',
+      };
+      throw new Error(`مينفعش تدفع دلوقتي، لازم تختار عرض الأول (الحالة دلوقتي: ${statusMap[request.status] || request.status})`);
     }
 
     if (!request.selectedBidId) {
@@ -77,6 +90,12 @@ export async function payRequest(requestId: number, clientId: number) {
     if (!payer) throw new Error('تعذر العثور على حساب الدافع، يرجى التأكد من تسجيل الدخول.');
 
     const amountToPay = toTwo(Number(selectedBid.clientPrice));
+    
+    // 🛡️ SECURITY: Validate positive amount
+    if (amountToPay <= 0) {
+      throw new Error('مبلغ الدفع يجب أن يكون أكبر من صفر.');
+    }
+    
     const currentWallet = toTwo(Number(payer.walletBalance));
 
     if (currentWallet < amountToPay) {
@@ -153,23 +172,21 @@ export async function payRequest(requestId: number, clientId: number) {
       });
     }
 
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'PAYMENT_RECEIVED',
-        title: 'Payment Recorded',
-        message: `Payment for request #${request.id} was recorded successfully.`,
-      },
-    });
+    await Notify.send({
+      userId: request.clientId,
+      type: 'PAYMENT_RECEIVED',
+      title: 'تم تأكيد الدفع! 💰',
+      message: `تم سداد قيمة الطلب رقم #${request.id} بنجاح.`,
+      requestId: request.id,
+    }, tx);
 
-    await tx.notification.create({
-      data: {
-        userId: selectedBid.vendorId,
-        type: 'PAYMENT_RECEIVED',
-        title: 'Order Paid',
-        message: `Client payment was completed for request #${request.id}.`,
-      },
-    });
+    await Notify.send({
+      userId: selectedBid.vendorId,
+      type: 'PAYMENT_RECEIVED',
+      title: 'تم سداد قيمة الطلب! 💸',
+      message: `قام العميل بسداد قيمة الطلب رقم #${request.id}. يمكنك الآن البدء في التنفيذ.`,
+      requestId: request.id,
+    }, tx);
 
     logger.info('notification.created', {
       event: 'payment.completed',

@@ -8,19 +8,24 @@ import { StatusBadge } from "@/components/shoofly/status-badge";
 import { confirmClientDelivery, listClientDeliveryTimeline } from "@/lib/api/delivery";
 import { formatDate } from "@/lib/formatters";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { ApiDeliveryTimeline } from "@/lib/types/api";
 import { FiMap, FiTruck, FiCheckCircle, FiClock, FiMaximize } from "react-icons/fi";
 
 function DeliveryPageContent({ requestId }: { requestId: number }) {
   const router = useRouter();
-  const { data, loading, error } = useAsyncData(() => listClientDeliveryTimeline(requestId), [requestId]);
+  const { data, loading, error } = useAsyncData<ApiDeliveryTimeline>(() => listClientDeliveryTimeline(requestId), [requestId]);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
   async function confirmDelivery() {
+    if (!data?.qrCode) {
+      setFeedback({ type: 'error', text: "لا يوجد كود تأكيد لهذا الطلب" });
+      return;
+    }
     try {
       setIsConfirming(true);
       setFeedback(null);
-      await confirmClientDelivery(requestId);
+      await confirmClientDelivery(requestId, data.qrCode);
       setFeedback({ type: 'success', text: "تم تأكيد استلام الخدمة وإغلاق الطلب بنجاح!" });
       setTimeout(() => router.push(`/client/requests/${requestId}`), 3000);
     } catch (err) {
@@ -30,8 +35,8 @@ function DeliveryPageContent({ requestId }: { requestId: number }) {
     }
   }
 
-  // Assuming the latest status is the first item if sorted DESC
-  const latestItem = data?.[0];
+  const timeline = [...(data?.timeline ?? [])].reverse();
+  const latestItem = timeline[0];
   const isDelivered = latestItem?.status === 'DELIVERED';
 
   return (
@@ -62,7 +67,7 @@ function DeliveryPageContent({ requestId }: { requestId: number }) {
 
       {error ? <ErrorState message={error} /> : null}
 
-      {!loading && !error && (data?.length ?? 0) === 0 ? (
+      {!loading && !error && timeline.length === 0 ? (
         <div className="shoofly-card bg-slate-50/50 p-12 text-center flex flex-col items-center justify-center border border-dashed border-slate-200">
            <div className="w-16 h-16 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center mb-4">
              <FiTruck size={24} />
@@ -72,7 +77,7 @@ function DeliveryPageContent({ requestId }: { requestId: number }) {
         </div>
       ) : null}
 
-      {!loading && !error && (data?.length ?? 0) > 0 && (
+      {!loading && !error && timeline.length > 0 && (
         <div className="grid gap-8 md:grid-cols-3">
           
           {/* Main Timeline Board */}
@@ -84,7 +89,7 @@ function DeliveryPageContent({ requestId }: { requestId: number }) {
                </h3>
                
                <div className="space-y-8 relative z-10">
-                 {(data ?? []).map((item: any, index: number) => {
+                 {timeline.map((item: { id: number; status: string; createdAt: string; note?: string | null }, index: number) => {
                    const isFirst = index === 0;
                    return (
                      <div key={item.id} className={`flex items-start gap-4 ${isFirst ? 'opacity-100' : 'opacity-60'}`}>

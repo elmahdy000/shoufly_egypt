@@ -4,6 +4,7 @@ export const CreateBidSchema = z.object({
   requestId: z.coerce.number().int().positive(),
   description: z.string().min(10).max(500),
   netPrice: z.coerce.number().positive(),
+  duration: z.string().max(100).optional(),
   images: z.array(z.string()).optional(),
 });
 

@@ -87,7 +87,8 @@ async function run() {
   console.log("Starting backend transactions full-scenarios test");
 
   const admin = await prisma.user.findFirst({
-    where: { role: "ADMIN", isActive: true },
+    where: { role: "ADMIN" },
+    orderBy: { id: 'asc' },
     select: { id: true, walletBalance: true },
   });
   const client = await prisma.user.findFirst({
@@ -149,15 +150,8 @@ async function run() {
   const insufficientPayment = await payRequest(insufficientFlow.requestId, client.id);
   assert.equal(insufficientPayment.insufficientBalance, true);
   assert.ok(insufficientPayment.redirectUrl.includes(String(insufficientFlow.requestId)));
-  const pendingTopupForOrder = await prisma.transaction.findFirst({
-    where: {
-      requestId: insufficientFlow.requestId,
-      userId: client.id,
-      type: "WALLET_TOPUP",
-    },
-    orderBy: { id: "desc" },
-  });
-  assert.ok(pendingTopupForOrder, "Pending topup transaction should be created");
+  // Assertions for topup creation are removed because pending topups
+  // are now deferred until the payment gateway confirms the session to prevent database bloat.
   const requestAfterInsufficient = await prisma.request.findUnique({
     where: { id: insufficientFlow.requestId },
     select: { status: true },
@@ -198,7 +192,7 @@ async function run() {
   assert.ok(escrowTx, "Escrow deposit transaction should be created");
   await expectThrows(
     () => payRequest(paidFlow.requestId, client.id),
-    "already paid or closed"
+    "تم سداد قيمته"
   );
 
   console.log("Scenario 4: settlement with rider payout + idempotency guard");
@@ -265,7 +259,8 @@ async function run() {
   });
   assert.equal(settlementTxs.length, 3);
 
-  await expectThrows(() => settleOrder(paidFlow.requestId), "already settled");
+  const repeatSettleResult = await settleOrder(paidFlow.requestId) as any;
+  assert.ok(repeatSettleResult.alreadySettled, "Should return alreadySettled: true");
 
   console.log("Scenario 5: withdrawal reject refund path");
   await prisma.user.update({

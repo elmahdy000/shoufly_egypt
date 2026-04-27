@@ -19,13 +19,20 @@ import {
   Clock
 } from "lucide-react";
 
+import { ShooflyLoader } from "@/components/shoofly/loader";
+
 export default function DeliveryTasksPage() {
   const { data, loading, error, setData } = useAsyncData(
     () => listDeliveryTasks(),
     [],
   );
+
   const [message, setMessage] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<number | null>(null);
+
+  if (loading && !data) {
+    return <ShooflyLoader message="بنحدث قائمة المهام..." />;
+  }
 
   async function accept(requestId: number) {
     try {

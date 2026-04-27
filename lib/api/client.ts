@@ -32,9 +32,13 @@ export async function apiFetch<T>(
   const method = options?.method ?? "GET";
   const isStateChanging = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const body = options?.body;
+  const isFormData = body instanceof FormData;
+
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json; charset=utf-8";
+  }
 
   // Add CSRF token for state-changing methods
   if (isStateChanging) {
@@ -47,7 +51,7 @@ export async function apiFetch<T>(
   const response = await fetch(path, {
     method,
     headers,
-    body: options?.body ? JSON.stringify(options.body) : undefined,
+    body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
     cache: options?.cache ?? "no-store",
     credentials: "include",
   });
@@ -68,9 +72,9 @@ export async function apiFetch<T>(
     }
     // For 500 HTML pages or 404 HTML pages, throw an error instead of logging user out.
     throw new ApiClientError(
-      response.status === 500 ? "Internal Server Error" : 
-      response.status === 404 ? "Not Found" : 
-      "Unexpected error response from server.", 
+      response.status === 500 ? "حصلت مشكلة في السيرفر عندنا (500)" : 
+      response.status === 404 ? "الصفحة أو الرابط ده مش موجود (404)" : 
+      "حصلت مشكلة مش متوقعة وإحنا بنكلم السيرفر.", 
       response.status || 500
     );
   }
@@ -81,7 +85,7 @@ export async function apiFetch<T>(
     const message =
       typeof payload === "object" && payload !== null && "error" in payload
         ? String((payload as { error: string }).error)
-        : `Request failed with ${response.status}`;
+        : `فشل الطلب. كود الخطأ: ${response.status}`;
 
     // Log CSRF and auth errors for debugging
     if (response.status === 403 || response.status === 401) {

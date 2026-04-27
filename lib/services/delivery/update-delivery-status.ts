@@ -16,7 +16,7 @@ type DeliveryStep = (typeof DELIVERY_PROGRESS)[number];
 function isValidForwardTransition(current: DeliveryStep, next: DeliveryStep) {
   const currentIdx = DELIVERY_PROGRESS.indexOf(current);
   const nextIdx = DELIVERY_PROGRESS.indexOf(next);
-  return nextIdx === currentIdx + 1;
+  return nextIdx >= currentIdx; // Allow same-state updates and forward moves
 }
 
 export async function updateDeliveryStatus(params: {

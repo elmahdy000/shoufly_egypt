@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
+import { Notify } from '../notifications/hub';
 
 type ActorRole = 'VENDOR' | 'ADMIN';
 
@@ -64,17 +65,19 @@ export async function markReturned(params: {
 
     await tx.request.update({
       where: { id: requestId },
-      data: { status: 'CLOSED_CANCELLED' },
-    });
-
-    await tx.notification.create({
-      data: {
-        userId: request.clientId,
-        type: 'DELIVERY_FAILED',
-        title: 'Order Returned',
-        message: `Request #${requestId} was marked as returned. Admin will review for refund.`,
+      data: { 
+        status: 'PENDING_ADMIN_REVISION',
+        notes: `تم إرجاع الطلب بواسطة ${actorRole === 'ADMIN' ? 'الإدارة' : 'المورد'}. ملاحظة: ${note || 'لا يوجد'}`
       },
     });
+
+    await Notify.send({
+      userId: request.clientId,
+      type: 'DELIVERY_FAILED',
+      title: 'تم إرجاع الطلب 🔙',
+      message: `تم تسجيل الطلب رقم #${requestId} كمرتجع. الإدارة ستقوم بمراجعة التفاصيل لرد المبلغ لمحفظتك.`,
+      requestId,
+    }, tx);
 
     const admins = await tx.user.findMany({
       where: { role: 'ADMIN' },
@@ -82,14 +85,13 @@ export async function markReturned(params: {
     });
 
     if (admins.length > 0) {
-      await tx.notification.createMany({
-        data: admins.map((a: { id: number }) => ({
-          userId: a.id,
-          type: 'DELIVERY_FAILED',
-          title: 'ORDER RETURNED - Refund Action Required',
-          message: `Request #${requestId} was marked as returned. Escrow funds need review.`,
-        })),
-      });
+      await Notify.bulkSend(admins.map((a: { id: number }) => ({
+        userId: a.id,
+        type: 'DELIVERY_FAILED',
+        title: 'طلب مرتجع - مراجعة مطلوبة 🚨',
+        message: `تم تسجيل الطلب رقم #${requestId} كمرتجع. يرجى مراجعة مبالغ الأمانات واتخاذ قرار الاسترداد.`,
+        requestId,
+      })), tx);
     }
 
 

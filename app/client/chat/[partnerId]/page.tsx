@@ -1,10 +1,11 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { apiFetch } from "@/lib/api/client";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { sendChatMessage } from "@/lib/api/chat";
 import { FiArrowLeft, FiSend, FiUser, FiRefreshCw } from "react-icons/fi";
 
 interface Message {
@@ -22,11 +23,13 @@ interface Me {
 
 export default function ChatPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const partnerId = Number(params.partnerId);
+  const requestId = Number(searchParams.get('requestId'));
 
   const { data: me } = useAsyncData<Me>(() => apiFetch('/api/auth/me', 'CLIENT'), []);
   const { data: msgs, loading, error, refresh } = useAsyncData<Message[]>(
-    () => apiFetch(`/api/messages/${partnerId}`, 'CLIENT'), [partnerId]
+    () => apiFetch(`/api/messages/${partnerId}?requestId=${requestId}`, 'CLIENT'), [partnerId, requestId]
   );
 
   const [text, setText] = useState('');
@@ -39,14 +42,14 @@ export default function ChatPage() {
   }, [msgs]);
 
   async function send() {
-    if (!text.trim()) return;
+    if (!text.trim() || !requestId) {
+        if (!requestId) setSendError('لا يمكن إرسال رسالة بدون رقم طلب');
+        return;
+    }
     try {
       setSending(true);
       setSendError(null);
-      await apiFetch(`/api/messages/${partnerId}`, 'CLIENT', {
-        method: 'POST',
-        body: { content: text.trim() },
-      });
+      await sendChatMessage(partnerId, text.trim(), requestId);
       setText('');
       refresh();
     } catch (err) {

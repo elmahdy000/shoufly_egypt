@@ -35,5 +35,5 @@ export async function registerUser(payload: {
 }
 
 export async function logoutUser() {
-  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  await apiFetch("/api/auth/logout", "CLIENT", { method: "POST" });
 }

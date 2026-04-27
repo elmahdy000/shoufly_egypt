@@ -9,6 +9,7 @@ export const CreateRequestSchema = z.object({
   longitude: z.coerce.number().min(-180).max(180),
   deliveryPhone: z.string().regex(/^\+?[0-9\s\-()]{8,}$/),
   budget: z.coerce.number().positive().min(1).max(500000).optional(),
+  brandId: z.coerce.number().int().positive().optional(),
   notes: z.string().max(500).optional(),
   governorateId: z.coerce.number().int().positive(),
   cityId: z.coerce.number().int().positive(),

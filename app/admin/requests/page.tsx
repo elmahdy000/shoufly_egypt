@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
+import { useDebounce } from "@/lib/hooks/use-performance";
 import { apiFetch } from "@/lib/api/client";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import {
   Search, RefreshCw,
   Truck, CheckCircle2,
   X, Calendar, User, Phone,
-  History, Box, ArrowUpRight, Zap
+  History, Box, ArrowUpRight, Zap,
+  ChevronLeft, ChevronRight, Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,24 +24,63 @@ interface OrderRequest {
   items: unknown[];
 }
 
+const STATUS_OPTIONS = [
+  { value: "ALL", label: "جميع الحالات", color: "bg-slate-100 text-slate-700" },
+  { value: "PENDING_ADMIN_REVISION", label: "بانتظار المراجعة", color: "bg-amber-100 text-amber-700" },
+  { value: "OPEN_FOR_BIDDING", label: "مفتوح للمزايدة", color: "bg-sky-100 text-sky-700" },
+  { value: "OFFERS_FORWARDED", label: "تم إرسال العروض", color: "bg-blue-100 text-blue-700" },
+  { value: "ORDER_PAID_PENDING_DELIVERY", label: "قيد التوصيل", color: "bg-indigo-100 text-indigo-700" },
+  { value: "CLOSED_SUCCESS", label: "تم التوصيل", color: "bg-emerald-100 text-emerald-700" },
+  { value: "CLOSED_CANCELLED", label: "ملغي", color: "bg-rose-100 text-rose-700" },
+];
+
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminRequestsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<OrderRequest | null>(null);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+
+  // 🚀 Debounced search for better performance
+  const debouncedSearch = useDebounce(search, 150);
 
   const { data: requests, loading, refresh } = useAsyncData<OrderRequest[]>(
-    () => apiFetch("/api/admin/requests", "ADMIN"),
+    () => apiFetch(`/api/admin/requests?limit=100`, "ADMIN"),
     []
   );
 
   const filtered = useMemo(() => {
-    return (requests ?? []).filter(r => 
-      r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.client?.fullName?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [requests, search]);
+    let list = requests ?? [];
+    if (statusFilter !== "ALL") {
+      list = list.filter(r => r.status === statusFilter);
+    }
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
+      list = list.filter(r =>
+        r.title.toLowerCase().includes(q) ||
+        r.client?.fullName?.toLowerCase().includes(q) ||
+        String(r.id).includes(q)
+      );
+    }
+    return list;
+  }, [requests, statusFilter, debouncedSearch]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, page]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+
+  const handleStatusChange = useCallback((status: string) => {
+    setStatusFilter(status);
+    setPage(1);
+    setSelected(null);
+  }, []);
 
   return (
-    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
+    <div className="admin-page admin-page--spacious" dir="rtl">
       
       {/* 🚀 Header: Professional Control */}
       <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
@@ -67,6 +108,28 @@ export default function AdminRequestsPage() {
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
              </button>
           </div>
+
+          {/* Status Filter */}
+          <div className="flex flex-wrap gap-2">
+            {STATUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleStatusChange(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  statusFilter === opt.value
+                    ? opt.color + " ring-2 ring-offset-1 ring-orange-300"
+                    : "bg-white text-slate-500 border border-slate-200 hover:border-orange-300"
+                }`}
+              >
+                {opt.label}
+                {opt.value !== "ALL" && (
+                  <span className="mr-1.5 text-[10px] opacity-70">
+                    ({(requests ?? []).filter(r => r.status === opt.value).length})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -88,9 +151,9 @@ export default function AdminRequestsPage() {
                     <tbody className="divide-y divide-slate-50">
                        {loading ? (
                          [1,2,3,4,5,6].map(i => <tr key={i} className="animate-pulse"><td colSpan={4} className="h-20 bg-slate-50/50" /></tr>)
-                       ) : filtered.length === 0 ? (
-                         <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-medium">لا توجد طلبات تطابق بحثك</td></tr>
-                       ) : filtered.map(req => (
+                       ) : paginated.length === 0 ? (
+                         <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-medium">لا توجد طلبات تطابق البحث</td></tr>
+                       ) : paginated.map(req => (
                          <tr 
                           key={req.id} 
                           onClick={() => setSelected(req)}
@@ -124,6 +187,34 @@ export default function AdminRequestsPage() {
                     </tbody>
                  </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                  <span className="text-xs text-slate-500">
+                    عرض {((page - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(page * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-orange-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                    <span className="text-xs font-bold text-slate-700 px-3 py-1 bg-white rounded-lg border border-slate-200">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-orange-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
            </div>
 
            {/* 🛡️ Order Inspector */}
@@ -133,7 +224,7 @@ export default function AdminRequestsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="lg:col-span-4 bg-white rounded-2xl p-8 border border-slate-200 shadow-xl sticky top-32 overflow-hidden"
+                    className="lg:col-span-4 bg-white rounded-2xl p-4 lg:p-8 border border-slate-200 shadow-sm lg:sticky lg:top-32 overflow-hidden"
                  >
                     <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
                        <h2 className="text-lg font-bold text-slate-900">تفاصيل الشحنة</h2>
@@ -194,14 +285,25 @@ export default function AdminRequestsPage() {
                              </button>
                           </div>
                        ) : (
-                          <>
-                             <button className="w-full h-14 bg-orange-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-                                <Truck size={20} /> تحديث مسار التوصيل
-                             </button>
-                             <button className="w-full h-12 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                                <History size={16} /> عرض سجل التغييرات
-                             </button>
-                          </>
+<>
+                              <button 
+                                onClick={async () => {
+                                  if (!selected.id) return;
+                                  try {
+                                    await apiFetch(`/api/admin/requests/${selected.id}/dispatch`, "ADMIN", { method: 'PATCH' });
+                                    refresh();
+                                  } catch (err) {
+                                    alert(err instanceof Error ? err.message : 'فشل تحديث المسار');
+                                  }
+                                }}
+                                className="w-full h-14 bg-orange-600 text-white rounded-xl font-semibold text-sm shadow-sm hover:bg-orange-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                              >
+                                 <Truck size={20} /> تحديث مسار التوصيل
+                              </button>
+                              <button className="w-full h-12 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                                 <History size={16} /> عرض سجل التغييرات
+                              </button>
+                           </>
                        )}
                     </div>
                  </motion.aside>

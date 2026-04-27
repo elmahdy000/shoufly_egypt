@@ -51,6 +51,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.isBlocked) {
+      return NextResponse.json(
+        { error: "حسابك محظور حالياً. يرجى التواصل مع الدعم الفني." },
+        { status: 403 },
+      );
+    }
+
     if (!user.isActive) {
       const isProvider = user.role === 'VENDOR' || user.role === 'DELIVERY';
       const errorMsg = isProvider 
@@ -75,6 +82,7 @@ export async function POST(req: NextRequest) {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
+      token,
     });
 
     const isReplit = !!process.env.REPLIT_DOMAINS;

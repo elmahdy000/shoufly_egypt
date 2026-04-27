@@ -1,19 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { Notify } from '../notifications/hub';
+import { d, toTwo, sub, mul, toNumber } from '@/lib/utils/decimal';
 
-function toTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
-/**
- * Resolves a failed order (FAILED_DELIVERY or RETURNED)
- * by penalizing the ghost/no-show client by a specific percentage.
- * 
- * @param adminId User ID of the Admin
- * @param requestId The ID of the failed request
- * @param penaltyPercentage 0 to 100. (e.g., 20 means Client gets 80% refund, Vendor gets 20% compensation)
- */
 export async function resolveDispute(adminId: number, requestId: number, penaltyPercentage: number) {
   logger.info('admin.resolve_dispute.started', { adminId, requestId, penaltyPercentage });
 
@@ -33,9 +22,11 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
     if (!request) throw new Error('Request not found');
 
     // Make sure it is legally able to be disputed/refunded
-    const validStates = ['ORDER_PAID_PENDING_DELIVERY'];
+    // NOTE: after markReturned / markFailedDelivery the request becomes CLOSED_CANCELLED —
+    // admin must still be able to resolve escrow distribution in that state.
+    const validStates = ['ORDER_PAID_PENDING_DELIVERY', 'CLOSED_CANCELLED', 'PENDING_ADMIN_REVISION'];
     if (!validStates.includes(request.status)) {
-        throw new Error(`Cannot dispute request in status ${request.status}. Order must be paid to resolve.`);
+        throw new Error(`لا يمكن حل نزاع على طلب في الحالة "${request.status}". يجب أن يكون الطلب مدفوعاً أو مغلقاً بانتظار المراجعة.`);
     }
 
     const acceptedBid = request.bids[0];
@@ -54,63 +45,95 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
         throw new Error('No escrow payment found for this request. Cannot resolve dispute.');
     }
 
-    const escrowTotal = Number(escrowTransaction.amount);
+    const escrowTotal      = toTwo(Number(escrowTransaction.amount));
 
     // 3. Calculate Math
-    const compensationAmount = toTwo(escrowTotal * (penaltyPercentage / 100));
-    const refundAmount = toTwo(escrowTotal - compensationAmount);
+    const netPrice          = d(acceptedBid.netPrice);
+    const adminCommission   = toTwo(sub(escrowTotal, netPrice));                   // platform's cut (always retained)
+    const compensationAmount = toTwo(mul(netPrice, penaltyPercentage / 100));     // vendor gets this
+    const refundAmount      = toTwo(sub(netPrice, compensationAmount));           // client gets this back
 
-    // 4. Refund Client
-    if (refundAmount > 0) {
+    // 4. Refund Client (their portion of the vendor's net price)
+    if (refundAmount.greaterThan(0)) {
         await tx.user.update({
             where: { id: request.clientId },
-            data: { walletBalance: { increment: refundAmount } }
+            data: { walletBalance: { increment: toNumber(refundAmount) } }
         });
 
         await tx.transaction.create({
             data: {
                 userId: request.clientId,
                 requestId: request.id,
-                amount: refundAmount,
+                amount: toNumber(refundAmount),
                 type: 'REFUND',
-                description: `Refund after ${penaltyPercentage}% dispute penalty for Request #${request.id}`
+                description: `استرداد أموال بعد تسوية نزاع (خصم ${penaltyPercentage}%) للطلب رقم #${request.id}`
             }
         });
 
-        await Notify.disputeResolved(request.clientId, request.id, 'CLIENT', refundAmount);
+        await Notify.disputeResolved(request.clientId, request.id, 'CLIENT', toNumber(refundAmount));
     }
 
-    // 5. Compensate Vendor
-    if (compensationAmount > 0) {
+    // 5. Compensate Vendor (their penalty share of net price)
+    if (compensationAmount.greaterThan(0)) {
         await tx.user.update({
             where: { id: acceptedBid.vendorId },
-            data: { walletBalance: { increment: compensationAmount } }
+            data: { walletBalance: { increment: toNumber(compensationAmount) } }
         });
 
         await tx.transaction.create({
             data: {
                 userId: acceptedBid.vendorId,
                 requestId: request.id,
-                amount: compensationAmount,
+                amount: toNumber(compensationAmount),
                 type: 'VENDOR_PAYOUT',
-                description: `Dispute compensation (${penaltyPercentage}% of escrow) for Failed Request #${request.id}`
+                description: `تعويض نزاع (${penaltyPercentage}% من سعر ${toNumber(netPrice)} ج.م) للطلب المتعثر رقم #${request.id}`
             }
         });
 
-        await Notify.disputeResolved(acceptedBid.vendorId, request.id, 'VENDOR', compensationAmount);
+        await Notify.disputeResolved(acceptedBid.vendorId, request.id, 'VENDOR', toNumber(compensationAmount));
     }
 
-    // 6. Close the request definitively
+    // 6. Record platform commission (properly add to admin wallet)
+    if (adminCommission.greaterThan(0)) {
+        // Find the admin to receive the funds
+        const systemAdmin = await tx.user.findFirst({
+            where: { role: 'ADMIN' },
+            orderBy: { id: 'asc' },
+            select: { id: true }
+        });
+
+        if (systemAdmin) {
+            await tx.user.update({
+                where: { id: systemAdmin.id },
+                data: { walletBalance: { increment: toNumber(adminCommission) } }
+            });
+
+            await tx.transaction.create({
+                data: {
+                    userId: systemAdmin.id,
+                    requestId: request.id,
+                    amount: toNumber(adminCommission),
+                    type: 'ADMIN_COMMISSION',
+                    description: `عمولة المنصة مستقطعة من النزاع للطلب رقم #${request.id}`
+                }
+            });
+            logger.info('admin.resolve_dispute.commission_credited', { requestId: request.id, adminId: systemAdmin.id, adminCommission: toNumber(adminCommission) });
+        }
+    }
+
+    // 7. Close the request definitively
     const closedReq = await tx.request.update({
         where: { id: request.id },
         data: {
             status: 'CLOSED_CANCELLED',
-            notes: `Dispute resolved by Admin #${adminId}. Penalty: ${penaltyPercentage}%.`
+            notes: `تم حل النزاع بواسطة الأدمن رقم #${adminId}. الغرامة: ${penaltyPercentage}%. عمولة المنصة المستقطعة: ${adminCommission} ج.م.`
         }
     });
 
     logger.info('admin.resolve_dispute.completed', {
         requestId: request.id,
+        escrowTotal,
+        adminCommission,
         refundAmount,
         compensationAmount
     });
@@ -118,6 +141,8 @@ export async function resolveDispute(adminId: number, requestId: number, penalty
     return {
         requestId: request.id,
         status: closedReq.status,
+        escrowTotal,
+        adminCommissionRetained: adminCommission,
         clientRefunded: refundAmount,
         vendorCompensated: compensationAmount
     };

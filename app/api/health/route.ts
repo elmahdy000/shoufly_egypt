@@ -9,7 +9,15 @@ import redis from '@/lib/redis';
  */
 
 export async function GET() {
-  const status: any = {
+  const status: {
+    status: 'UP' | 'DOWN';
+    timestamp: string;
+    services: {
+      database: 'UNKNOWN' | 'CONNECTED' | 'ERROR';
+      redis: 'UNKNOWN' | 'CONNECTED' | 'FALLBACK_MODE' | 'ERROR';
+      storage: 'UNKNOWN' | 'CONNECTED' | 'ERROR';
+    };
+  } = {
     status: 'UP',
     timestamp: new Date().toISOString(),
     services: {

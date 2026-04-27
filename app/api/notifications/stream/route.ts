@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { notificationEmitter } from '@/lib/utils/event-emitter';
+import { initRedisSubscriber } from '@/lib/redis-subscriber';
 
 /**
  * Real-time Notification & Chat Stream (SSE)
@@ -10,6 +11,9 @@ import { notificationEmitter } from '@/lib/utils/event-emitter';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  // Ensure Redis Subscriber is running to bridge messages to notificationEmitter
+  initRedisSubscriber();
+
   const user = await getCurrentUser(req.headers);
   if (!user) return new Response('Unauthorized', { status: 401 });
 
@@ -56,13 +60,15 @@ export async function GET(req: NextRequest) {
 
       // Handle explicit client disconnect
       req.signal.addEventListener('abort', cleanup);
+
+      // Store cleanup function so cancel() can access it
+      (controller as any)._cleanup = cleanup;
     },
-    cancel() {
+    cancel(controller) {
       // Called when the stream is cancelled by the consumer
-      // This is crucial in Next.js/Edge for preventing leaks
-      notificationEmitter.removeAllListeners(`user:${userId}`);
-      notificationEmitter.removeAllListeners(`chat:${userId}`);
-      clearInterval(heartbeatInterval);
+      // Execute the specific cleanup to avoid removing other tabs' listeners
+      const cleanup = (controller as any)._cleanup;
+      if (cleanup) cleanup();
     }
   });
 

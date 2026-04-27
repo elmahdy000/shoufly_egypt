@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/shoofly/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { listClientTransactions, topupClientWallet, withdrawClientWallet } from "@/lib/api/transactions";
+import { listClientTransactions, topupClientWallet, withdrawClientWallet, getClientBalance } from "@/lib/api/transactions";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { 
   FiArrowUpRight, 
@@ -146,36 +146,55 @@ const PAYMENT_METHODS: PaymentMethod[] = [
 type PaymentStep = 'select_method' | 'enter_amount' | 'confirm_details' | 'processing' | 'success' | 'error';
 
 export default function WalletPage() {
-  const { data, loading, error } = useAsyncData(() => listClientTransactions(), []);
+  const { data: transactions, loading: txLoading, error: txError, refresh: refreshTxs } = useAsyncData(() => listClientTransactions(), []);
+  const { data: balanceData, loading: balLoading, error: balError, refresh: refreshBal } = useAsyncData(() => getClientBalance(), []);
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR WALLET UPDATES
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        console.log("💰 Wallet update received via SSE:", payload.type);
+        
+        // Refresh balance and transactions for any financial event
+        if (['PAYMENT', 'SETTLEMENT', 'WITHDRAWAL', 'REFUND', 'WALLET_TOPUP'].includes(payload.type)) {
+          refreshTxs();
+          refreshBal();
+        }
+      } catch (err) {
+        console.error("SSE Wallet Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [refreshTxs, refreshBal]);
 
   const ledger = useMemo(() => {
-    let available = 0;
+    const available = balanceData?.balance ?? 0;
     let onHold = 0;
     let totalDeposits = 0;
 
-    (data ?? []).forEach((t: any) => {
+    (transactions ?? []).forEach((t: { amount?: number | string; type: string }) => {
       const amount = Number(t.amount ?? 0);
-      switch(t.type) {
-        case "WALLET_TOPUP":
-        case "REFUND":
-          available += amount;
-          totalDeposits += amount;
-          break;
-        case "ESCROW_DEPOSIT":
-        case "PAYMENT":
-        case "CLIENT_PAYMENT":
-          available -= amount;
-          onHold += amount;
-          break;
+      if (t.type === "WALLET_TOPUP" || t.type === "REFUND") {
+        totalDeposits += amount;
+      }
+      if (t.type === "ESCROW_DEPOSIT") {
+        onHold += amount;
       }
     });
 
     return { 
-      available: Math.max(available, 0),
+      available,
       onHold, 
       totalDeposits 
     };
-  }, [data]);
+  }, [transactions, balanceData]);
+
+  const loading = txLoading || balLoading;
+  const error = txError || balError;
 
   // Enhanced Top-up State
   const [showTopupModal, setShowTopupModal] = useState(false);
@@ -234,7 +253,12 @@ export default function WalletPage() {
       const response = await topupClientWallet(amount, selectedMethod.id);
 
       if (response.redirectUrl) {
-        window.location.href = response.redirectUrl;
+        const successUrl = new URL('/payments/success', window.location.origin);
+        successUrl.searchParams.set('txnId', response.transactionId?.toString() || '');
+        successUrl.searchParams.set('amount', amount.toString());
+        const fullRedirectUrl = new URL(response.redirectUrl);
+        fullRedirectUrl.searchParams.set('callback', successUrl.toString());
+        window.location.href = fullRedirectUrl.toString();
         return; 
       }
 
@@ -280,7 +304,7 @@ export default function WalletPage() {
             </Link>
             <div>
               <h1 className="text-xl font-bold text-[#0F1111]">المحفظة</h1>
-              <p className="text-sm text-[#565959] font-medium mt-0.5">إدارة رصيدك ومعاملاتك المالية</p>
+              <p className="text-sm text-[#565959] font-medium mt-0.5">تابع رصيدك وفلوسك من هنا</p>
             </div>
           </div>
         </div>
@@ -314,7 +338,7 @@ export default function WalletPage() {
                   <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center">
                     <FiDollarSign size={14} className="text-emerald-600" />
                   </div>
-                  <span className="text-xs font-medium">الرصيد المتاح</span>
+                  <span className="text-xs font-medium">الرصيد اللي معاك</span>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl font-bold text-[#0F1111]">
@@ -338,7 +362,7 @@ export default function WalletPage() {
                   <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                     <FiPlusCircle size={20} />
                   </div>
-                  <span className="text-sm font-semibold text-[#0F1111]">شحن</span>
+                  <span className="text-sm font-semibold text-[#0F1111]">اشحن</span>
                 </button>
                 
                 <button 
@@ -348,7 +372,7 @@ export default function WalletPage() {
                   <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
                     <FiArrowDownLeft size={20} />
                   </div>
-                  <span className="text-sm font-semibold text-[#0F1111]">سحب</span>
+                  <span className="text-sm font-semibold text-[#0F1111]">اسحب</span>
                 </button>
               </div>
             </div>
@@ -365,7 +389,7 @@ export default function WalletPage() {
                     <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                       <FiShield size={20} />
                     </div>
-                    <p className="text-sm text-[#565959] font-medium">رصيد محجوز للطلبات</p>
+                    <p className="text-sm text-[#565959] font-medium">فلوس محجوزة للطلبات</p>
                     <FiArrowLeft size={16} className="text-slate-300 mr-auto group-hover:text-[#FF5A00] transition-colors" />
                   </div>
                   <p className="text-xl font-bold text-[#0F1111]">{formatCurrency(ledger.onHold).split(' ')[0]} <span className="text-sm font-semibold text-[#767684]">{formatCurrency(ledger.onHold).split(' ')[1] || 'ج.م'}</span></p>
@@ -378,7 +402,7 @@ export default function WalletPage() {
                   <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                     <FiTrendingUp size={20} />
                   </div>
-                  <p className="text-sm text-[#565959] font-medium">إجمالي الشحنات</p>
+                  <p className="text-sm text-[#565959] font-medium">إجمالي شحناتك</p>
                   <FiInfo size={16} className="text-slate-300 mr-auto" />
                 </div>
                 <p className="text-xl font-bold text-[#0F1111]">{formatCurrency(ledger.totalDeposits).split(' ')[0]} <span className="text-sm font-semibold text-[#767684]">{formatCurrency(ledger.totalDeposits).split(' ')[1] || 'ج.م'}</span></p>
@@ -389,7 +413,7 @@ export default function WalletPage() {
             <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-sm overflow-hidden">
               <div className="p-5 border-b border-[#E7E7E7]">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-[#0F1111]">السجل المالي</h2>
+                  <h2 className="text-base font-bold text-[#0F1111]">سجل معاملاتك</h2>
                   <span className="text-sm font-medium text-slate-400 flex items-center gap-1.5 cursor-not-allowed">
                     <FiDownload size={16} /> تصدير (قريباً)
                   </span>
@@ -397,34 +421,34 @@ export default function WalletPage() {
               </div>
 
               <div className="divide-y divide-[#E7E7E7]">
-                {!data || data.length === 0 ? (
+                {!transactions || transactions.length === 0 ? (
                   <div className="p-12 text-center">
                     <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
                       <FiClock size={24} />
                     </div>
-                    <h3 className="text-base font-semibold text-[#0F1111] mb-1">لا توجد عمليات</h3>
-                    <p className="text-sm text-[#565959]">ستظهر هنا جميع عملياتك المالية</p>
+                    <h3 className="text-base font-semibold text-[#0F1111] mb-1">مفيش أي معاملات لسه</h3>
+                    <p className="text-sm text-[#565959]">أي حركة هتعملها هتظهر هنا</p>
                   </div>
                 ) : (
-                  (data ?? []).map((tx: any) => {
-                    const isDeduction = tx.type === "PAYMENT" || tx.type === "ESCROW_DEPOSIT" || tx.type === "CLIENT_PAYMENT";
+                  (transactions ?? []).map((tx: { id: number; type: string; amount: number | string; createdAt: string; requestId?: number | null }) => {
+                    const isDeduction = tx.type === "ESCROW_DEPOSIT" || tx.type === "WITHDRAWAL";
                     const isRefund = tx.type === "REFUND";
                     const isTopup = tx.type === "WALLET_TOPUP";
                     
                     const Icon = isDeduction ? FiArrowUpRight : FiArrowDownLeft;
                     const txArabicMap: Record<string, string> = {
-                      PAYMENT: "دفع مبلغ",
-                      CLIENT_PAYMENT: "دفع مبلغ",
                       ESCROW_DEPOSIT: "دفع متجمد للطلب",
-                      REFUND: "فلوس راجعة",
-                      REFUND_TO_CLIENT: "فلوس راجعة",
+                      REFUND: "استرداد مبلغ",
                       WALLET_TOPUP: "شحن رصيد",
-                      WITHDRAWAL: "سحب للمحفظة",
+                      WITHDRAWAL: "سحب من المحفظة",
+                      VENDOR_PAYOUT: "تحصيل أرباح",
+                      DELIVERY_PAYOUT: "أجرة توصيل",
                     };
-                    let txLabel = txArabicMap[tx.type] || "حركة مالية";
+                    const txLabel = txArabicMap[tx.type] || "حركة مالية";
 
                     const getTxHelp = () => {
-                      if (isDeduction) return "مبلغ تم خصمه من رصيدك لطلب جديد";
+                      if (tx.type === "ESCROW_DEPOSIT") return "تجميد مبلغ للطلب حتى الاستلام";
+                      if (isDeduction) return "سحب مبلغ من محفظتك";
                       if (isRefund) return "مبلغ تم إرجاعه لمحفظتك من طلب ملغي";
                       if (isTopup) return "شحن جديد لمحفظتك";
                       return "عملية مالية";
@@ -473,11 +497,11 @@ export default function WalletPage() {
                   <FiPlusCircle size={22} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#0F1111]">شحن المحفظة</h3>
+                  <h3 className="font-bold text-base text-[#0F1111]">اشحن المحفظة</h3>
                   <p className="text-xs text-[#565959] mt-0.5">
-                    {paymentStep === 'select_method' && 'اختر طريقة الدفع'}
-                    {paymentStep === 'enter_amount' && 'أدخل المبلغ'}
-                    {paymentStep === 'confirm_details' && 'تأكيد التفاصيل'}
+                    {paymentStep === 'select_method' && 'اختار هتدفع إزاي'}
+                    {paymentStep === 'enter_amount' && 'اكتب هتشحن بكام'}
+                    {paymentStep === 'confirm_details' && 'أكد البيانات'}
                     {paymentStep === 'processing' && 'جاري المعالجة...'}
                     {paymentStep === 'success' && 'تم بنجاح!'}
                   </p>
@@ -496,7 +520,7 @@ export default function WalletPage() {
               {/* Step 1: Select Method */}
               {paymentStep === 'select_method' && (
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold text-[#0F1111] mb-4">اختر طريقة الشحن:</p>
+                  <p className="text-sm font-semibold text-[#0F1111] mb-4">اختار طريقة الشحن اللي تريحك:</p>
                   {PAYMENT_METHODS.map((method) => (
                     <button
                       key={method.id}
@@ -544,7 +568,7 @@ export default function WalletPage() {
 
                   <div>
                     <label className="text-sm font-semibold text-[#0F1111] block mb-3">
-                      المبلغ (جنيه مصري)
+                      هتشحن بكام؟ (بالجنيه)
                     </label>
                     <div className="relative rounded-xl border-2 border-[#E7E7E7] bg-white focus-within:border-[#FF5A00] focus-within:ring-4 focus-within:ring-[#FF5A00]/10 transition-all overflow-hidden flex items-stretch">
                       <div className="flex items-center justify-center bg-slate-50 border-r-2 border-slate-100 px-4 font-bold text-sm text-[#767684] shrink-0">
@@ -580,13 +604,13 @@ export default function WalletPage() {
                       onClick={() => setPaymentStep('select_method')}
                       className="flex-1 py-3.5 px-4 bg-slate-100 text-[#0F1111] font-semibold rounded-xl hover:bg-slate-200 transition-all"
                     >
-                      رجوع
+                      ارجع
                     </button>
                     <button
                       onClick={handleAmountConfirm}
                       className="flex-1 py-3.5 px-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-all"
                     >
-                      متابعة
+                      كمل
                     </button>
                   </div>
                 </div>
@@ -623,14 +647,14 @@ export default function WalletPage() {
                       onClick={() => setPaymentStep('enter_amount')}
                       className="flex-1 py-3.5 px-4 bg-slate-100 text-[#0F1111] font-semibold rounded-xl hover:bg-slate-200 transition-all"
                     >
-                      تعديل
+                      غيّر
                     </button>
                     <button
                       onClick={executeTopup}
                       className="flex-1 py-3.5 px-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                     >
                       <FiCheck size={18} />
-                      تأكيد الشحن
+                      أكد الشحن
                     </button>
                   </div>
                 </div>
@@ -694,7 +718,7 @@ export default function WalletPage() {
                   <FiArrowDownLeft size={22} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#0F1111]">سحب من المحفظة</h3>
+                  <h3 className="font-bold text-base text-[#0F1111]">اسحب من المحفظة</h3>
                   <p className="text-xs text-[#565959] mt-0.5">الرصيد المتاح: <span className="font-semibold text-[#0F1111]">{formatCurrency(ledger.available).split(' ')[0]} {formatCurrency(ledger.available).split(' ')[1] || 'ج.م'}</span></p>
                 </div>
               </div>
@@ -741,7 +765,7 @@ export default function WalletPage() {
               {/* Amount Input */}
               <div>
                 <label className="text-sm font-semibold text-[#0F1111] block mb-3">
-                  المبلغ المطلوب سحبه
+                  عايز تسحب كام؟
                 </label>
                 <div className="relative rounded-xl border-2 border-[#E7E7E7] bg-white focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 transition-all overflow-hidden flex items-stretch">
                   <div className="flex items-center justify-center bg-slate-50 border-r-2 border-slate-100 px-4 font-bold text-sm text-[#767684] shrink-0">

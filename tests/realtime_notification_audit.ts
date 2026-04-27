@@ -13,32 +13,43 @@ async function runRealtimeNotificationAudit() {
 
     if (!client || !vendor) throw new Error('Client or Vendor missing for audit.');
 
+    const cat = await prisma.category.findFirst({ where: { parentId: { not: null } } }); // Get a subcategory
+    if (!cat) throw new Error('No category found. Run check-db.ts first.');
+
+    const req = await prisma.request.create({
+      data: {
+        clientId: client.id,
+        categoryId: cat.id,
+        title: 'Audit Request',
+        description: 'Testing notifications',
+        address: 'Test Addr',
+        latitude: 0,
+        longitude: 0,
+        deliveryPhone: '010'
+      }
+    });
+
     // 1. Trigger Bid Notification
     console.log('👉 ACTION: Vendor submits a new bid...');
-    await Notify.newBid(client.id, 999, 500);
+    await Notify.newBid(client.id, req.id, 500);
 
     // 2. Trigger Payment Notification
     console.log('\n👉 ACTION: Client pays for the order...');
-    await Notify.paymentConfirmed(vendor.id, 999, 500);
+    await Notify.paymentConfirmed(vendor.id, req.id, 500);
 
     // 3. Trigger Dispute Notification (Through the Service)
     console.log('\n👉 ACTION: Client raises a dispute via Dispute Service...');
     
-    const cat = await prisma.category.findFirst();
-    if (!cat) throw new Error('No category found');
-
-    const req = await prisma.request.create({
-        data: {
-            clientId: client.id, categoryId: cat.id, title: 'Realtime Check', description: 'Testing Hub',
-            address: 'X', latitude: 0, longitude: 0, deliveryPhone: '0',
-            status: 'ORDER_PAID_PENDING_DELIVERY'
-        }
-    });
     await prisma.bid.create({
         data: {
           requestId: req.id, vendorId: vendor.id, netPrice: 100, clientPrice: 115, description: 'Test',
           status: 'ACCEPTED_BY_CLIENT'
         }
+    });
+
+    await prisma.request.update({
+      where: { id: req.id },
+      data: { status: 'ORDER_PAID_PENDING_DELIVERY' }
     });
 
     await disputeOrder(client.id, req.id, 'لم يعجبني المنتج');

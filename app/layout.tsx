@@ -1,36 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal, Plus_Jakarta_Sans, Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ToastProvider } from "@/components/providers/toast-provider";
 import SupportChatWidget from "@/components/support/ChatWidget";
-
-const tajawal = Tajawal({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700", "800", "900"],
-  variable: "--next-tajawal",
-  display: "swap",
-});
-
-const cairo = Cairo({
-  subsets: ["arabic"],
-  weight: ["700", "800", "900"],
-  variable: "--next-cairo",
-  display: "swap",
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--next-jakarta",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
-    default: "شوفلي — اطلب أي خدمة في ثوانٍ",
+    default: "شوفلي — اطلب أي خدمة في ثانية",
     template: "%s | شوفلي",
   },
   description:
-    "منصة شوفلي تربطك بأفضل مقدمي الخدمات والموردين المعتمدين في مصر. اطلب خدمتك وتلقَّ عروض أسعار فورية من مئات المتخصصين.",
+    "منصة شوفلي بتوصلك بأحسن الصنايعية والموردين المعتمدين في مصر. اطلب خدمتك واستلم عروض أسعار في لحظتها من مئات المتخصصين.",
   applicationName: "شوفلي",
   keywords: [
     "خدمات منزلية",
@@ -39,7 +19,7 @@ export const metadata: Metadata = {
     "توصيل",
     "مزادات خدمات",
     "موردين مصر",
-    "أفضل أسعار",
+    "أحسن أسعار",
   ],
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
@@ -48,9 +28,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ar_EG",
     siteName: "شوفلي",
-    title: "شوفلي — اطلب أي خدمة في ثوانٍ",
+    title: "شوفلي — اطلب أي خدمة في ثانية",
     description:
-      "منصة شوفلي تربطك بأفضل مقدمي الخدمات والموردين المعتمدين في مصر.",
+      "منصة شوفلي بتوصلك بأحسن الصنايعية والموردين المعتمدين في مصر.",
     images: [
       {
         url: "/og-image.png",
@@ -62,14 +42,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "شوفلي — اطلب أي خدمة في ثوانٍ",
-    description: "اطلب خدمتك وتلقَّ عروض أسعار فورية من مئات المتخصصين.",
+    title: "شوفلي — اطلب أي خدمة في ثانية",
+    description: "اطلب خدمتك واستلم عروض أسعار في لحظتها من مئات المتخصصين.",
     images: ["/og-image.png"],
   },
   robots: {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true },
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "شوفلي",
   },
 };
 
@@ -83,24 +69,37 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+import { PageTransition } from "@/components/providers/page-transition";
+import { MobileBottomNav } from "@/components/landing/MobileBottomNav";
+import { getCurrentUserFromCookie } from "@/lib/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUserFromCookie();
+
   return (
     <html 
       lang="ar" 
       dir="rtl" 
-      className={`h-full antialiased ${tajawal.variable} ${cairo.variable} ${plusJakartaSans.variable}`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
-      <body className="min-h-full font-tajawal bg-slate-50 text-foreground selection:bg-primary/20">
+      <body 
+        className="min-h-full font-tajawal bg-slate-50 text-foreground selection:bg-primary/20"
+        suppressHydrationWarning
+      >
         <ThemeProvider>
-          <div className="min-h-screen">
-            {children}
-            <SupportChatWidget />
-          </div>
+          <ToastProvider>
+            <div className="min-h-screen">
+              <PageTransition>
+                {children}
+              </PageTransition>
+              <MobileBottomNav userRole={user?.role} />
+            </div>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -20,7 +20,7 @@ export default function LoginPage() {
     setError(null);
 
     if (!email || !password) {
-      setError("يرجى ملء جميع الحقول");
+      setError("يا ريت تملى كل البيانات");
       return;
     }
 
@@ -41,7 +41,7 @@ export default function LoginPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "فشل تسجيل الدخول. يرجى التأكد من البيانات."
+          : "فشل تسجيل الدخول. اتأكد من بياناتك وحاول تاني."
       );
       setIsLoading(false);
     }
@@ -61,7 +61,7 @@ export default function LoginPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-slate-900">تسجيل الدخول</h1>
-            <p className="text-slate-500 text-sm mt-1">أهلاً بك في منصة شوفلي</p>
+            <p className="text-slate-500 text-sm mt-1">أهلاً بيك في شوفلي</p>
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
           
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">البريد الإلكتروني</label>
+              <label className="text-sm font-medium text-slate-700">الإيميل</label>
               <div className="relative">
                 <FiMail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input 
@@ -92,8 +92,8 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-slate-700">كلمة المرور</label>
-                <Link href="#" className="text-xs text-primary hover:underline">نسيت كلمة السر؟</Link>
+                <label className="text-sm font-medium text-slate-700">الباسورد</label>
+                <Link href="#" className="text-xs text-primary hover:underline">نسيت الباسورد؟</Link>
               </div>
               <div className="relative">
                 <FiLock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -113,7 +113,7 @@ export default function LoginPage() {
               type="submit"
               full
               isLoading={isLoading}
-              loadingText="جاري التسجيل..."
+              loadingText="بنسجل دخولك..."
             >
               تسجيل الدخول
             </ImprovedButton>
@@ -121,16 +121,16 @@ export default function LoginPage() {
 
           <div className="mt-6 pt-6 border-t border-slate-100 text-center">
              <p className="text-sm text-slate-500">
-               ليس لديك حساب؟ <Link href="/register" className="text-primary font-medium hover:underline">سجل الآن</Link>
+               معندكش حساب؟ <Link href="/register" className="text-primary font-medium hover:underline">اعمل حساب جديد</Link>
              </p>
           </div>
         </div>
 
         {/* Development Fast Access */}
-        <div className="space-y-3">
+         <div className="space-y-3">
            <div className="flex items-center gap-3">
               <div className="h-px bg-slate-200 flex-1" />
-              <span className="text-xs text-slate-400">تسجيل سريع (للتطوير)</span>
+              <span className="text-xs text-slate-400">تسجيل سريع للمطورين</span>
               <div className="h-px bg-slate-200 flex-1" />
            </div>
            
@@ -138,7 +138,7 @@ export default function LoginPage() {
               <FastAccessBtn icon={<FiCpu />} label="أدمن" onClick={() => performLogin("admin@shoofly.com", "password123")} disabled={isLoading} />
               <FastAccessBtn icon={<FiUser />} label="عميل" onClick={() => performLogin("client1@shoofly.com", "password123")} disabled={isLoading} />
               <FastAccessBtn icon={<FiBriefcase />} label="تاجر" onClick={() => performLogin("vendor1@shoofly.com", "password123")} disabled={isLoading} />
-              <FastAccessBtn icon={<FiZap />} label="مندوب" onClick={() => performLogin("rider1@shoofly.com", "password123")} disabled={isLoading} />
+              <FastAccessBtn icon={<FiZap />} label="مندوب" onClick={() => performLogin("delivery1@shoofly.com", "password123")} disabled={isLoading} />
            </div>
         </div>
       </div>

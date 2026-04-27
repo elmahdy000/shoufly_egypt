@@ -41,6 +41,11 @@ async function runRaceConditionAudit() {
     console.log(`🥇 Winners: ${winners.length} (Expected: 1)`);
     console.log(`❌ Losers: ${losers.length} (Expected: 49)`);
 
+    if (losers.length > 0) {
+        console.log('\n📉 Sample Failures:');
+        losers.slice(0, 5).forEach((l: any, i: number) => console.log(`   ${i+1}. ${l.reason?.message || l.reason}`));
+    }
+
     if (winners.length === 1) {
         console.log('✅ SUCCESS: System maintained integrity. No double-payouts possible.');
         const finalAgent = await prisma.request.findUnique({ 

@@ -31,9 +31,14 @@ async function runFullFlow() {
     });
     console.log(`      ID: #${request.id} | Status: ${request.status}`);
 
-    console.log(`\n[2/9] 🛡️ Admin Reviewing...`);
-    await reviewRequest(request.id, 'approve');
-    console.log(`      Status Updated: OPEN_FOR_BIDDING`);
+    console.log(`\n[2/9] 🛡️ Admin Reviewing (Checking AI response)...`);
+    const currentReq = await prisma.request.findUnique({ where: { id: request.id } });
+    if (currentReq?.status === 'OPEN_FOR_BIDDING') {
+        console.log(`      AI already approved request. Skipping manual review.`);
+    } else {
+        await reviewRequest(request.id, 'approve');
+        console.log(`      Status Updated: OPEN_FOR_BIDDING`);
+    }
 
     console.log(`\n[3/9] 💰 Vendor Submitting Bid...`);
     const bid = await createBid(vendor.id, {
@@ -43,28 +48,32 @@ async function runFullFlow() {
     });
     console.log(`      Bid ID: #${bid.id} | Net: ${bid.netPrice} EGP | Client Price: ${bid.clientPrice} EGP`);
 
-    console.log(`\n[4/9] 📢 Admin Forwarding Offer...`);
+    console.log('\n[4/9] 📢 Admin Forwarding Offer...');
     await forwardOffer(bid.id);
     console.log(`      Offer is now visible to client`);
 
-    console.log(`\n[5/9] 💳 Client Accepting & Paying...`);
+    console.log('\n[5/9] 💳 Client Accepting & Paying...');
     await prisma.user.update({ where: { id: client.id }, data: { walletBalance: 500 } });
     await acceptOffer(bid.id, client.id);
     await payRequest(request.id, client.id);
     console.log(`      Payment Success | Status: ORDER_PAID_PENDING_DELIVERY`);
 
-    console.log(`\n[6/9] 🍳 Vendor Preparation...`);
-    await updateDeliveryStatus({ requestId: request.id, vendorId: vendor.id, status: 'VENDOR_PREPARING' });
-    await updateDeliveryStatus({ requestId: request.id, vendorId: vendor.id, status: 'READY_FOR_PICKUP' });
+    console.log('\n[6/9] 🍳 Vendor Preparation...');
+    // NOTE: passing userId (which maps to the vendor)
+    await updateDeliveryStatus({ requestId: request.id, userId: vendor.id, status: 'VENDOR_PREPARING' });
+    await updateDeliveryStatus({ requestId: request.id, userId: vendor.id, status: 'READY_FOR_PICKUP' });
     console.log(`      Status: READY_FOR_PICKUP`);
 
     console.log(`\n[7/9] 🚚 Delivery Pickup...`);
     await acceptDeliveryTask(request.id, agent.id);
     console.log(`      Agent (#${agent.id}) is on the way`);
 
-    console.log(`\n[8/9] 📍 Delivery Completion...`);
-    await completeDeliveryAgent(request.id, agent.id);
-    console.log(`      Arrived at Destination | Waiting for QR`);
+    console.log(`\n[8/9] 📍 Delivery Completion (QR Scan)...`);
+    const dbReq = await prisma.request.findUnique({ where: { id: request.id }, select: { qrCode: true } });
+    if (!dbReq?.qrCode) throw new Error('QR Code missing from database');
+
+    await completeDeliveryAgent(request.id, agent.id, dbReq.qrCode);
+    console.log(`      Arrived at Destination | QR Scanned Successfully`);
 
     console.log(`\n[9/9] 🏁 Final Settlement (QR Confirmed)...`);
     const finalResult = await settleOrder(request.id);

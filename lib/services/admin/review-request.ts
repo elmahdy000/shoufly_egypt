@@ -14,6 +14,16 @@ export async function reviewRequest(requestId: number, action: ReviewAction) {
     throw new Error('Request not found');
   }
 
+  // Idempotency check: If already approved/rejected, don't throw error for same action
+  if (request.status === 'OPEN_FOR_BIDDING' && action === 'approve') {
+    logger.info('request.review.idempotent_approve', { requestId });
+    return request;
+  }
+  if (request.status === 'REJECTED' && action === 'reject') {
+      logger.info('request.review.idempotent_reject', { requestId });
+      return request;
+  }
+
   if (request.status !== 'PENDING_ADMIN_REVISION') {
     throw new Error(`Request is in status ${request.status}, cannot review`);
   }
@@ -29,10 +39,12 @@ export async function reviewRequest(requestId: number, action: ReviewAction) {
 
   if (action === 'approve') {
     // Notify all vendors in this category
+    // Notify vendors who are in the same category AND same governorate
     const vendors = await prisma.user.findMany({
       where: {
         role: 'VENDOR',
         isActive: true,
+        governorateId: updated.governorateId, // Added location filter
         vendorCategories: {
           some: { categoryId: updated.categoryId },
         },
@@ -41,16 +53,16 @@ export async function reviewRequest(requestId: number, action: ReviewAction) {
     });
 
     if (vendors.length > 0) {
-      for (const v of vendors) {
-        await Notify.send({
-          userId: v.id,
-          type: 'NEW_REQUEST',
-          title: 'فرصة عمل جديدة! 🛠️',
-          message: `يوجد طلب جديد في قسم ${updated.category.name} بانتظار عروضك.`,
-        });
-      }
+      // ✅ Using Notify.bulkSend to ensure both DB persistence AND real-time Redis broadcast
+      await Notify.bulkSend(vendors.map((v) => ({
+        userId: v.id,
+        type: 'NEW_REQUEST',
+        requestId: requestId,
+        title: 'فرصة عمل جديدة! 🛠️',
+        message: `يوجد طلب جديد في قسم ${updated.category.name} بانتظار عروضك.`,
+      })));
 
-      logger.info('notification.created', {
+      logger.info('notification.bulk_dispatched', {
         event: 'request.opened',
         requestId,
         vendorCount: vendors.length,

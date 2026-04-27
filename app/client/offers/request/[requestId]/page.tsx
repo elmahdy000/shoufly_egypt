@@ -18,9 +18,9 @@ function OffersContent({ requestId }: { requestId: number }) {
   const [submittingId, setSubmittingId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'PRICE' | 'AI_SCORE'>('AI_SCORE');
 
-  const sortedOffers = (data ?? []).slice().sort((a: any, b: any) => {
+  const sortedOffers = (data ?? []).slice().sort((a: { clientPrice?: number | null; netPrice?: number | null; aiScore?: number | null }, b: { clientPrice?: number | null; netPrice?: number | null; aiScore?: number | null }) => {
     if (sortBy === 'PRICE') {
-      return (a.clientPrice ?? a.netPrice) - (b.clientPrice ?? b.netPrice);
+      return (a.clientPrice ?? a.netPrice ?? 0) - (b.clientPrice ?? b.netPrice ?? 0);
     } else {
       return (b.aiScore ?? 0) - (a.aiScore ?? 0);
     }
@@ -98,7 +98,7 @@ function OffersContent({ requestId }: { requestId: number }) {
       ) : null}
 
       <div className="grid gap-6">
-        {sortedOffers.map((offer: any) => {
+        {sortedOffers.map((offer: any) => {  
           const isAccepted = offer.status === 'ACCEPTED_BY_CLIENT';
           const isLoading = submittingId === offer.id;
           

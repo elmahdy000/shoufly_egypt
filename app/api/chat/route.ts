@@ -12,13 +12,17 @@ export async function GET(req: NextRequest) {
     requireUser(user);
 
     const { searchParams } = new URL(req.url);
-    const otherId = parseInt(searchParams.get('otherId') || '0');
-    if (!otherId) throw new Error('Other user ID is required');
+    const otherId = parseInt(searchParams.get('otherId') || '0', 10);
+    if (!otherId || isNaN(otherId)) throw new Error('Other user ID is required');
 
     const limit = Math.min(Number(searchParams.get('limit')) || 50, 100);
     const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
 
-    const messages = await listMessages(user.id, otherId, limit, offset);
+    const requestIdParam = searchParams.get('requestId');
+    const requestId = requestIdParam ? parseInt(requestIdParam, 10) : undefined;
+    const validRequestId = requestId && !isNaN(requestId) ? requestId : undefined;
+
+    const messages = await listMessages(user.id, otherId, limit, offset, validRequestId);
     return NextResponse.json(messages);
   } catch (error: unknown) {
     logError('CHAT_GET', error);

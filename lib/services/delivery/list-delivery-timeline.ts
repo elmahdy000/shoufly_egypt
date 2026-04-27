@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 export async function listDeliveryTimeline(requestId: number, clientId: number) {
   const request = await prisma.request.findUnique({
     where: { id: requestId },
-    select: { id: true, clientId: true, status: true },
+    select: { id: true, clientId: true, status: true, qrCode: true },
   });
 
   if (!request) {

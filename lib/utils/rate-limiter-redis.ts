@@ -68,12 +68,11 @@ export async function checkRateLimitRedis(
   } catch (error) {
     console.error('Redis rate limit error:', error);
     
-    // Fail open - allow request if Redis is down
-    // In production, you might want to fail closed
+    // Fail closed - deny request if Redis is down for security
     return {
-      allowed: true,
+      allowed: false,
       limit: maxRequests,
-      remaining: maxRequests - 1,
+      remaining: 0,
       resetTime: now + windowMs,
     };
   }
@@ -144,9 +143,9 @@ export async function getRateLimitInfo(
     console.error('Redis rate limit info error:', error);
     
     return {
-      allowed: true,
+      allowed: false,
       limit: maxRequests,
-      remaining: maxRequests,
+      remaining: 0,
       resetTime: now + windowMs,
     };
   }

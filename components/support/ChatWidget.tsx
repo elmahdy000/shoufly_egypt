@@ -11,7 +11,12 @@ interface Message {
 }
 
 export default function SupportChatWidget() {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -69,6 +74,8 @@ export default function SupportChatWidget() {
       setIsLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] direction-rtl">

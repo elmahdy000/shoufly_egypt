@@ -3,6 +3,7 @@ import { logger } from '@/lib/utils/logger';
 import { d, toTwo, sub, mul, min, toNumber } from '@/lib/utils/decimal';
 import { Notify } from '../notifications/hub';
 import { TransactionType } from '@/app/generated/prisma';
+import { MAX_DELIVERY_FEE, DELIVERY_FEE_PERCENTAGE } from '@/lib/constants/business';
 
 export async function settleOrder(requestId: number) {
   logger.info('qr.confirm.settlement.started', { requestId });
@@ -84,19 +85,39 @@ export async function settleOrder(requestId: number) {
       throw new Error('لا يوجد حساب أدمن متاح لإتمام التسوية.');
     }
 
-    // Use precise Decimal arithmetic for financial calculations
+    // ─── Financial Settlement Math ───────────────────────────────────────
+    // clientPrice was set at bid creation time as:
+    //   clientPrice = netPrice + (netPrice × commissionPercent%)
+    //
+    // Therefore: totalSpread = clientPrice - netPrice = platform's margin
+    //   This equals exactly (netPrice × commissionPercent%) — same result,
+    //   computed from the already-persisted prices to avoid rounding drift.
+    //
+    // Distribution:
+    //   riderPayout      = min(20, totalSpread × 50%)  ← delivery agent fee
+    //   finalCommission  = totalSpread - riderPayout    ← platform revenue
+    //   vendorPayout     = netPrice                     ← vendor's net amount
+    //
+    // Integrity check: vendorPayout + riderPayout + finalCommission = clientPrice ✅
+    // ──────────────────────────────────────────────────────────────────────
     const netPrice = toTwo(selectedBid.netPrice);
     const clientPrice = toTwo(selectedBid.clientPrice);
-    const totalSpread = toTwo(sub(clientPrice, netPrice));
     
+    // 🛡️ SECURITY: Validate positive amounts
+    if (netPrice.lessThanOrEqualTo(0) || clientPrice.lessThanOrEqualTo(0)) {
+      throw new Error('أسعار الطلب يجب أن تكون أكبر من صفر.');
+    }
+    
+    const totalSpread = toTwo(sub(clientPrice, netPrice));
+
     // Calculate Delivery Agent Pay if exists
     let riderPayout = d(0);
     if (request.assignedDeliveryAgentId) {
-       // Fixed delivery fee of 20 EGP or 50% of spread if spread is too low
-       const calculatedFee = toTwo(mul(totalSpread, 0.5));
-       riderPayout = min(20, calculatedFee);
+      // Fixed delivery fee with cap and percentage of spread
+      const calculatedFee = toTwo(mul(totalSpread, DELIVERY_FEE_PERCENTAGE));
+      riderPayout = min(MAX_DELIVERY_FEE, calculatedFee);
     }
-    
+
     const finalCommission = toTwo(sub(totalSpread, riderPayout));
     const vendorPayout = netPrice;
 
@@ -129,14 +150,13 @@ export async function settleOrder(requestId: number) {
             },
         });
 
-        await tx.notification.create({
-            data: {
-              userId: request.assignedDeliveryAgentId,
-              type: 'PAYMENT_RECEIVED',
-              title: 'تم استلام أجر التوصيل',
-              message: `تم إضافة ${riderPayout.toNumber()} ج.م لمحفظتك مقابل الطلب #${requestId}`,
-            },
-        });
+        await Notify.send({
+            userId: request.assignedDeliveryAgentId,
+            type: 'PAYMENT_RECEIVED',
+            title: 'تم استلام أجر التوصيل',
+            message: `تم إضافة ${riderPayout.toNumber()} ج.م لمحفظتك مقابل الطلب #${requestId}`,
+            requestId,
+        }, tx);
     }
 
     // Record Vendor/Admin transactions
@@ -146,7 +166,7 @@ export async function settleOrder(requestId: number) {
         requestId,
         amount: toNumber(vendorPayout),
         type: 'VENDOR_PAYOUT',
-        description: `Vendor payout for request #${requestId}`,
+        description: `تسوية مستحقات المورد للطلب رقم #${requestId}`,
       },
     });
 
@@ -156,7 +176,7 @@ export async function settleOrder(requestId: number) {
         requestId,
         amount: toNumber(finalCommission),
         type: 'ADMIN_COMMISSION',
-        description: `Admin commission for request #${requestId}`,
+        description: `عمولة المنصة للطلب رقم #${requestId}`,
       },
     });
 
@@ -196,6 +216,8 @@ export async function settleOrder(requestId: number) {
       finalRequestStatus: 'CLOSED_SUCCESS' as const,
       vendorPayout: toNumber(vendorPayout),
       adminCommission: toNumber(finalCommission),
+      riderPayout: toNumber(riderPayout),
+      totalAmount: toNumber(clientPrice),
       deliveryFinalStatus: 'DELIVERED' as const,
     };
   }, { timeout: 20000 }); // Increased timeout for stability under massive load

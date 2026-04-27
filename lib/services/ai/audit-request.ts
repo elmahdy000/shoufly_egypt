@@ -14,56 +14,58 @@ export interface AuditResult {
  * 🧠 The Watchtower: Intelligent AI Request Auditor
  * This service analyzes new requests using Gemini 1.5 Flash logic.
  */
+import { callGemini } from './gemini';
+
 export async function auditRequest(title: string, description: string): Promise<AuditResult> {
   logger.info('ai.audit.started', { title });
 
-  // In a real scenario, we call Google Generative AI here.
-  // For this simulation, we implement the "Intelligence Logic" to show the impact.
-  
-  const content = `${title} ${description}`.toLowerCase();
-  
-  // Real-world heuristics simulated as AI patterns
-  const spamKeywords = ['ربح سريع', 'دولارات مجانا', 'كاش باهر', 'اضغط هنا', 'fake', 'test test'];
-  const harmfulKeywords = ['سلاح', 'مخدرات', 'شتيمة', 'bomb', 'drugs'];
+  const systemInstruction = `
+    You are an expert content moderator for "شوفلي مصر" (Shoofly Egypt), a services marketplace.
+    Your task is to analyze service requests and return a JSON response.
+    
+    Rules:
+    1. isSpam: true if it contains promotional links, repetitive gibberish, or fake testing text.
+    2. isHarmful: true if it requests illegal services (drugs, weapons), violence, or hate speech.
+    3. recommendedAction: 
+       - 'REJECT' if isHarmful is true.
+       - 'ADMIN_REVIEW' if isSpam is true or content is very ambiguous.
+       - 'APPROVE' if it is a legitimate service request (plumbing, car repair, electronics, etc.).
+    4. suggestedCategory: Suggest the most relevant category in Arabic (e.g., 'سباكة', 'صيانة سيارات').
+    5. reasoning: A brief explanation in Egyptian Arabic.
 
-  const foundSpam = spamKeywords.filter(k => content.includes(k));
-  const foundHarmful = harmfulKeywords.filter(k => content.includes(k));
+    Return only JSON in this format:
+    {
+      "isSpam": boolean,
+      "score": number (0-100),
+      "suggestedCategory": string,
+      "isHarmful": boolean,
+      "reasoning": string,
+      "recommendedAction": "APPROVE" | "REJECT" | "ADMIN_REVIEW"
+    }
+  `;
 
-  // Simulated AI Logic
-  let result: AuditResult = {
-    isSpam: foundSpam.length > 0,
-    score: foundSpam.length * 25,
-    suggestedCategory: 'Needs Analysis',
-    isHarmful: foundHarmful.length > 0,
-    reasoning: 'محتوى طبيعي ولا يوجد مخالفات.',
-    recommendedAction: 'APPROVE'
-  };
+  const prompt = `Request Title: ${title}\nDescription: ${description}`;
 
-  if (result.isHarmful) {
-    result.reasoning = `🚨 تم اكتشاف محتوى مخالف: [${foundHarmful.join(', ')}]`;
-    result.recommendedAction = 'REJECT';
-  } else if (result.isSpam) {
-    result.reasoning = `⚠️ اشتباه في محتوى ترويجي أو غير لائق: [${foundSpam.join(', ')}]`;
-    result.recommendedAction = 'ADMIN_REVIEW';
-    result.score = Math.min(result.score, 100);
-  } else if (content.length < 10) {
-    result.reasoning = 'المحتوى قصير جداً وغير واضح.';
-    result.recommendedAction = 'ADMIN_REVIEW';
-    result.score = 40;
+  try {
+    const rawResponse = await callGemini(prompt, systemInstruction);
+    const result: AuditResult = JSON.parse(rawResponse);
+
+    logger.info('ai.audit.completed', { action: result.recommendedAction, score: result.score });
+    return result;
+  } catch (error: any) {
+    logger.error('ai.audit.fallback', { error: error.message });
+    
+    // Fallback to basic logic if AI fails or key is missing
+    const content = `${title} ${description}`.toLowerCase();
+    return {
+      isSpam: content.includes('ربح') || content.includes('كاش'),
+      score: 50,
+      suggestedCategory: 'Needs Analysis',
+      isHarmful: false,
+      reasoning: 'تم استخدام منطق المحاكاة (Fallback) لعدم توفر رد من الذكاء الاصطناعي.',
+      recommendedAction: 'ADMIN_REVIEW'
+    };
   }
-
-  // AI-Powered Automatic Categorization (Simplified Simulation)
-  if (content.includes('ايفون') || content.includes('موبايل') || content.includes('لاب توب') || content.includes('سيرفرات')) {
-    result.suggestedCategory = 'إلكترونيات وأجهزة كمبيوتر';
-  } else if (content.includes('ميكانيكي') || content.includes('عفشة') || content.includes('سيارة')) {
-    result.suggestedCategory = 'خدمات سيارات';
-  } else if (content.includes('اكل') || content.includes('ميزانية') || content.includes('وجبة')) {
-    result.suggestedCategory = 'تجهيزات ومأكولات';
-  }
-
-  logger.info('ai.audit.completed', { action: result.recommendedAction, score: result.score });
-  
-  return result;
 }
 
 /**
@@ -71,7 +73,10 @@ export async function auditRequest(title: string, description: string): Promise<
  */
 export async function processAiAudit(requestId: number) {
     const request = await prisma.request.findUnique({ where: { id: requestId } });
-    if (!request) return;
+    if (!request || request.status !== 'PENDING_ADMIN_REVISION') {
+        logger.info('ai.audit.skipped', { requestId, currentStatus: request?.status });
+        return;
+    }
 
     const audit = await auditRequest(request.title, request.description);
     const { createNotification } = await import('../notifications/create-notification');
@@ -111,6 +116,14 @@ export async function processAiAudit(requestId: number) {
             where: { id: requestId },
             data: { status: 'OPEN_FOR_BIDDING', notes: 'موافقة آلية فورية (AI)' }
         });
+
+        // 🚀 NEW: Automatically notify relevant vendors
+        try {
+            const { dispatchRequest } = await import('../admin/dispatch-request');
+            await dispatchRequest(requestId);
+        } catch (e) {
+            logger.error('ai.audit.dispatch_failed', { requestId, error: e });
+        }
 
         await createNotification({
             userId: request.clientId,

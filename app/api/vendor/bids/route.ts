@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireUser, requireRole } from '@/lib/auth';
 import { listVendorBids } from '@/lib/services/bids';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,11 +12,9 @@ export async function GET(req: NextRequest) {
     const bids = await listVendorBids(user.id);
     return NextResponse.json(bids);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { error: message },
-      { status: message.includes('Unauthorized') ? 401 : 400 }
-    );
+    logError('VENDOR_BIDS_GET', error);
+    const { response, status } = createErrorResponse(error);
+    return NextResponse.json(response, { status });
   }
 }
 

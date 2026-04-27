@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { FAWRY_CONFIG, verifyWebhookSignature } from '@/lib/payments/config';
 import { logger } from '@/lib/utils/logger';
 import { depositFunds } from '@/lib/services/transactions';
-import { createErrorResponse, logError } from '@/lib/utils/error-handler';
+import { createErrorResponse, logError, validateWebhookTimestamp } from '@/lib/utils/error-handler';
 
 /**
  * Fawry Webhook Handler
@@ -21,9 +21,20 @@ export async function POST(req: NextRequest) {
 
     // Verify webhook signature for security
     const isValid = verifyWebhookSignature(body, signature, 'fawry');
-    if (!isValid && process.env.NODE_ENV === 'production') {
+    if (!isValid && (process.env.NODE_ENV === 'production' || !!FAWRY_CONFIG.securityKey)) {
       logger.warn('payment.fawry.webhook.invalid_signature', { signature });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    // 🛡️ Timestamp validation to prevent replay attacks (Fawry may provide orderDate or use received time)
+    const fawryTimestamp = body.orderDate || body.paymentDate || new Date().toISOString();
+    if (!validateWebhookTimestamp(fawryTimestamp)) {
+      logger.warn('payment.fawry.webhook.replay_attack_detected', { 
+        merchantRefNumber: body.merchantRefNumber,
+        timestamp: fawryTimestamp,
+        ip: req.headers.get('x-forwarded-for') || 'unknown'
+      });
+      return NextResponse.json({ error: 'Webhook timestamp expired or invalid' }, { status: 400 });
     }
 
     const {
@@ -61,6 +72,7 @@ export async function POST(req: NextRequest) {
       include: { user: true },
     });
 
+    let txn = transaction;
     if (!transaction) {
       // Try finding by ID only as fallback
       const fallbackTxn = await prisma.transaction.findUnique({
@@ -72,9 +84,13 @@ export async function POST(req: NextRequest) {
         logger.error('payment.fawry.webhook.transaction_not_found', { transactionId, referenceNumber });
         return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
       }
+
+      txn = fallbackTxn;
     }
 
-    const txn = transaction!;
+    if (!txn) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
 
     // Check if already processed
     const currentMetadata = (txn.metadata as any) || {};
@@ -107,6 +123,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: 'failed_recorded' });
     }
 
+    const parsedAmount = Number.parseFloat(String(paymentAmount));
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
+    }
+
+    const expectedAmount = Number(txn.amount);
+    if (Math.abs(expectedAmount - parsedAmount) > 0.009) {
+      logger.warn('payment.fawry.webhook.amount_mismatch', {
+        transactionId: txn.id,
+        expectedAmount,
+        receivedAmount: parsedAmount,
+      });
+      return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+    }
+
     // Process successful payment
     logger.info('payment.fawry.webhook.success', {
       transactionId: txn.id,
@@ -116,7 +147,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Use depositFunds service to add balance and notify user
-    await depositFunds(txn.userId, parseFloat(paymentAmount));
+    await depositFunds(txn.userId, parsedAmount, txn.id);
 
     // If this transaction is linked to a request, auto-pay it
     if (txn.requestId) {
@@ -147,6 +178,7 @@ export async function POST(req: NextRequest) {
       data: {
         metadata: {
           ...currentMetadata,
+          status: 'SUCCESS',
           fawryStatus: 'PAID',
           fawryRefNumber,
           paymentMethod,

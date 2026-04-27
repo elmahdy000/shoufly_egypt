@@ -20,12 +20,12 @@ export async function acceptDeliveryTask(
       },
     });
 
-    if (!request) throw new Error("Request not found");
+    if (!request) throw new Error("الطلب ده مش موجود.");
     if (request.status !== "ORDER_PAID_PENDING_DELIVERY") {
-      throw new Error("Request is not available for delivery");
+      throw new Error("معلش، الطلب ده مش متاح للتوصيل دلوقتي.");
     }
     if (request.assignedDeliveryAgentId) {
-      throw new Error("This delivery task is already assigned");
+      throw new Error("المهمة دي راحت لمندوب تاني خلاص.");
     }
     
     // 🛡️ SECURITY SHIELD: Atomic Agent Assignment (Race-condition safe)
@@ -33,9 +33,9 @@ export async function acceptDeliveryTask(
       where: { id: requestId, assignedDeliveryAgentId: null },
       data: { assignedDeliveryAgentId: deliveryAgentId },
     });
-
+    
     if (updateResult.count === 0) {
-      throw new Error("This delivery task has just been taken by another agent");
+      throw new Error("نعتذر، لقد تم خطف هذه المهمة من قبل مندوب آخر للتو!");
     }
 
     const tracking = await tx.deliveryTracking.create({
@@ -55,5 +55,5 @@ export async function acceptDeliveryTask(
     });
 
     return tracking;
-  });
+  }, { timeout: 20000 });
 }

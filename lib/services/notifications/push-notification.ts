@@ -21,7 +21,7 @@ export async function sendPushNotification(fcmToken: string, payload: PushPayloa
     //   data: payload.data,
     // });
 
-    console.log(`[FCM MOCK] Sending Push to ${fcmToken}: ${payload.title} - ${payload.body}`);
+    logger.info('notification.push.mock', { fcmToken, title: payload.title, body: payload.body });
     
     return { success: true, messageId: `mock-id-${Date.now()}` };
   } catch (error) {

@@ -3,6 +3,7 @@ import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { fail, ok } from '@/lib/utils/http-response';
 import { getPlatformSettings } from '@/lib/services/admin/platform-settings';
+import { logAdminAction } from '@/lib/services/admin/audit-log';
 
 // GET - Fetch current settings
 export async function GET(req: NextRequest) {
@@ -40,6 +41,29 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { commission, vat, radius, minOrder, minVendorMatch, initialRadius, radiusStep } = body;
 
+    // 🛡️ VALIDATION: Ensure settings values are within acceptable ranges
+    if (typeof commission !== 'number' || commission < 0 || commission > 50) {
+      return ok({ error: 'عمولة المنصة يجب أن تكون بين 0% و 50%' }, 400);
+    }
+    if (typeof vat === 'number' && (vat < 0 || vat > 30)) {
+      return ok({ error: 'ضريبة القيمة المضافة يجب أن تكون بين 0% و 30%' }, 400);
+    }
+    if (typeof radius !== 'number' || radius < 1 || radius > 500) {
+      return ok({ error: 'نطاق البحث يجب أن يكون بين 1 و 500 كم' }, 400);
+    }
+    if (typeof minOrder === 'number' && (minOrder < 0 || minOrder > 10000)) {
+      return ok({ error: 'الحد الأدنى للطلب يجب أن يكون بين 0 و 10,000 ج.م' }, 400);
+    }
+    if (typeof minVendorMatch !== 'number' || minVendorMatch < 1 || minVendorMatch > 20) {
+      return ok({ error: 'الحد الأدنى لمطابقة الموردين يجب أن يكون بين 1 و 20' }, 400);
+    }
+    if (typeof initialRadius !== 'number' || initialRadius < 1 || initialRadius > 100) {
+      return ok({ error: 'نطاق البحث الابتدائي يجب أن يكون بين 1 و 100 كم' }, 400);
+    }
+    if (typeof radiusStep !== 'number' || radiusStep < 1 || radiusStep > 50) {
+      return ok({ error: 'خطوة توسيع النطاق يجب أن تكون بين 1 و 50 كم' }, 400);
+    }
+
     // Get the current settings first
     const currentSettings = await getPlatformSettings();
 
@@ -55,7 +79,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    return ok({
+    const result = {
       success: true,
       settings: {
         commission: Number(settings.commissionPercent),
@@ -64,7 +88,21 @@ export async function POST(req: NextRequest) {
         initialRadius: settings.initialRadiusKm,
         radiusStep: settings.radiusExpansionStepKm
       }
+    };
+    
+    // 📝 Log settings change to audit trail (non-blocking)
+    logAdminAction({
+      adminId: user.id,
+      action: 'SETTINGS_UPDATED',
+      targetType: 'SETTINGS',
+      oldValue: currentSettings,
+      newValue: result.settings,
+      metadata: { performedBy: user.fullName || user.email }
+    }).catch(() => {
+      // Audit logging failure should not break the main flow
     });
+    
+    return ok(result);
 
   } catch (error) {
     console.error('Settings POST API error:', error);

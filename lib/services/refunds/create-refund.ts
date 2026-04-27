@@ -1,10 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/utils/logger';
 import { Notify } from '../notifications/hub';
-
-function toTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+import { d, toTwo } from '@/lib/utils/decimal';
 
 export async function createRefund(params: {
   requestId: number;
@@ -23,6 +20,11 @@ export async function createRefund(params: {
           where: { type: { in: ['ESCROW_DEPOSIT', 'REFUND'] } },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           select: { id: true, type: true, amount: true },
+        },
+        bids: {
+          where: { status: 'ACCEPTED_BY_CLIENT' },
+          select: { vendorId: true },
+          take: 1,
         },
       },
     });
@@ -67,7 +69,7 @@ export async function createRefund(params: {
         amount: refundAmount,
         type: 'REFUND',
         description:
-          reason?.trim() || `Refund issued for request #${requestId}`,
+          reason?.trim() || `استرداد أموال للطلب رقم #${requestId}`,
       },
     });
 
@@ -77,7 +79,19 @@ export async function createRefund(params: {
       select: { id: true, status: true },
     });
 
-    await Notify.refundIssued(request.clientId, requestId, refundAmount);
+    await Notify.refundIssued(request.clientId, requestId, Number(refundAmount));
+
+    // Notify vendor (if one was assigned) that a refund was issued on their order
+    const vendorId = request.bids?.[0]?.vendorId;
+    if (vendorId) {
+      await Notify.send({
+        userId: vendorId,
+        requestId,
+        type: 'REQUEST_CANCELLED',
+        title: 'تم إلغاء الطلب ورد الأموال ❌',
+        message: `تم إصدار استرداد أموال للطلب #${requestId} من قِبل الإدارة. المبلغ المُعاد: ${refundAmount} ج.م.`,
+      }, tx);
+    }
 
     logger.info('notification.created', {
       event: 'refund.issued',

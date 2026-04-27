@@ -26,11 +26,11 @@ export async function acceptDeliveryTask(requestId: number) {
   );
 }
 
-export async function completeDeliveryTask(requestId: number) {
+export async function completeDeliveryTask(requestId: number, qrCode: string) {
   return apiFetch<{ requestId: number; status: string }>(
     `/api/delivery/tasks/${requestId}/complete`,
     "DELIVERY",
-    { method: "PATCH" },
+    { method: "PATCH", body: { qrCode } },
   );
 }
 
@@ -40,4 +40,14 @@ export async function failDeliveryTask(requestId: number, reason?: string) {
     "DELIVERY",
     { method: "POST", body: { reason } },
   );
+}
+
+export async function getDeliveryStats() {
+  return apiFetch<{
+    completed: number;
+    active: number;
+    failed: number;
+    rating: number;
+    walletBalance: number;
+  }>("/api/delivery/stats", "DELIVERY");
 }

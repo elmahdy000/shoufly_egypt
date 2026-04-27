@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, requireRole, requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createErrorResponse, logError } from '@/lib/utils/error-handler';
+
+const ALLOWED_VENDOR_STATUSES = ['VENDOR_PREPARING', 'READY_FOR_PICKUP'] as const;
 
 export async function PATCH(
   req: NextRequest,
@@ -12,45 +15,63 @@ export async function PATCH(
     requireRole(user, 'VENDOR');
 
     const { bidId } = await params;
-    const { status } = await req.json(); // e.g. VENDOR_PREPARING, READY_FOR_PICKUP
+    const { status } = await req.json();
+
+    if (!ALLOWED_VENDOR_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: 'حالة الطلب غير صحيحة' },
+        { status: 400 },
+      );
+    }
 
     const bid = await prisma.bid.findFirst({
       where: { id: parseInt(bidId), vendorId: user.id },
-      include: { request: true }
+      include: { request: true },
     });
 
-    if (!bid) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-
-    // 🛡️ Logic Check: Only active (accepted) bids can be updated
-    if (bid.status !== 'ACCEPTED_BY_CLIENT') {
-      return NextResponse.json({ error: 'هذا العرض لم يتم قبوله بعد من العميل' }, { status: 400 });
+    if (!bid) {
+      return NextResponse.json({ error: 'الطلب غير موجود' }, { status: 404 });
     }
 
-    // Check last status to avoid duplicates
+    if (bid.status !== 'ACCEPTED_BY_CLIENT') {
+      return NextResponse.json(
+        { error: 'هذا العرض لم يتم قبوله بعد من العميل' },
+        { status: 400 },
+      );
+    }
+
     const lastTracking = await prisma.deliveryTracking.findFirst({
-        where: { requestId: bid.requestId },
-        orderBy: { createdAt: 'desc' }
+      where: { requestId: bid.requestId },
+      orderBy: { createdAt: 'desc' },
     });
 
     if (lastTracking?.status === status) {
-        return NextResponse.json({ error: 'الطلب بالفعل في هذه الحالة' }, { status: 400 });
+      return NextResponse.json({
+        success: true,
+        message: 'الطلب بالفعل في هذه الحالة',
+        newStatus: status,
+        unchanged: true,
+      });
     }
 
-    // Update Request Progress
     await prisma.deliveryTracking.create({
       data: {
         requestId: bid.requestId,
-        status: status as any,
-        note: `المورد حدّث الحالة إلى: ${status === 'VENDOR_PREPARING' ? 'جاري التحضير' : 'جاهز للاستلام'}`
-      }
+        status,
+        note: `المورد حدّث الحالة إلى: ${
+          status === 'VENDOR_PREPARING' ? 'جاري التحضير' : 'جاهز للاستلام'
+        }`,
+      },
     });
 
-    return NextResponse.json({ 
-        success: true, 
-        message: 'تم تحديث حالة الطلب بنجاح',
-        newStatus: status
+    return NextResponse.json({
+      success: true,
+      message: 'تم تحديث حالة الطلب بنجاح',
+      newStatus: status,
     });
   } catch (error: unknown) {
-    return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    logError('VENDOR_BID_STATUS_PATCH', error);
+    const { response, status } = createErrorResponse(error, 500);
+    return NextResponse.json(response, { status });
   }
 }

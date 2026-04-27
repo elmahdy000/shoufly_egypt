@@ -37,26 +37,54 @@ const KNOWLEDGE_BASE = [
   }
 ];
 
+import { callGemini } from './gemini';
+
 export async function getSupportResponse(query: string): Promise<SupportResponse> {
   logger.info('ai.support_bot.queried', { query });
 
-  const input = query.toLowerCase();
-  
-  // 1. Semantic Search Logic
-  const match = KNOWLEDGE_BASE.find(k => 
-    k.keywords.some(word => input.includes(word))
-  );
+  const systemInstruction = `
+    You are "Shoofly Bot", the AI assistant for "شوفلي مصر" (Shoofly Egypt).
+    Your goal is to answer user questions about the platform in a helpful, friendly, and professional manner using Egyptian Arabic.
 
-  if (match) {
+    Platform Knowledge Base:
+    - Payments: Users can top up their wallet via "Sahl" or bank transfer. Funds are held in escrow until the service is completed.
+    - Refunds: Automated and immediate if a request is cancelled or if there's a verified issue.
+    - Vendors: Need to upload National ID and Commercial Register/License. Admin reviews before activation.
+    - Delivery: Real-time tracking is available in the order interface.
+    - Security: Use the "Dispute/Complaint" button for issues. Never finish an order until satisfied.
+
+    Response Rules:
+    1. Always answer in Egyptian Arabic.
+    2. Be concise but helpful.
+    3. If you don't know the answer, suggest talking to a human representative.
+    4. Provide 2-3 short "suggestions" for follow-up questions.
+
+    Return only JSON:
+    {
+      "answer": "string",
+      "suggestions": ["string", "string"]
+    }
+  `;
+
+  try {
+    const rawResponse = await callGemini(query, systemInstruction);
+    const result: SupportResponse = JSON.parse(rawResponse);
+
+    return result;
+  } catch (error: any) {
+    logger.error('ai.support_bot.fallback', { error: error.message });
+    
+    // Fallback to static matching
+    const input = query.toLowerCase();
+    const match = KNOWLEDGE_BASE.find(k => k.keywords.some(word => input.includes(word)));
+
+    if (match) {
+      return { answer: match.answer, suggestions: match.suggestions };
+    }
+
     return {
-      answer: match.answer,
-      suggestions: match.suggestions
+      answer: 'أهلاً بك! حالياً أواجه صعوبة في الاتصال بـ "عقلي الذكي"، لكن يمكنني مساعدتك في الأمور الأساسية مثل الدفع أو التسجيل. كيف أساعدك؟',
+      suggestions: ['كيف أشحن رصيدي؟', 'التواصل مع الدعم']
     };
   }
-
-  // 2. Generic AI Response
-  return {
-    answer: 'أهلاً بك في دعم "شوفلي مصر". حالياً، لم أستطع العثور على إجابة محددة لاستفسارك، ولكن يمكنك محاولة البحث بكلمات مثل (الدفع، التسجيل، المشاكل) أو الضغط على "التحدث لموظف" لمساعدتك بشكل أفضل.',
-    suggestions: ['كيف يعمل التطبيق؟', 'الأسعار والعمولات', 'تحدث لموظف']
-  };
 }

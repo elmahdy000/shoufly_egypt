@@ -7,11 +7,13 @@ import { ar } from "date-fns/locale";
 import Link from "next/link";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { apiFetch } from "@/lib/api/client";
+import { useToast } from "@/components/providers/toast-provider";
+import { playNotificationSound } from "@/lib/utils/sounds";
 
 // Types based on Prisma
 type Notification = {
   id: number;
-  type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
+  type: string;
   title: string;
   message: string;
   isRead: boolean;
@@ -53,35 +55,47 @@ function getNotificationsLink(role: UserRole | null): string {
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [userRole] = useState<UserRole>(detectUserRoleFromPath);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const { data: notifications, refresh, loading } = useAsyncData<Notification[]>(
-    () => apiFetch("/api/notifications", userRole || "CLIENT"), 
-    [userRole]
-  );
+    const { toast } = useToast();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const { data: notifications, refresh, loading } = useAsyncData<Notification[]>(
+      () => apiFetch("/api/notifications", userRole || "CLIENT"), 
+      [userRole]
+    );
 
-  const unreadCount = (notifications ?? []).filter(n => !n.isRead).length;
+    const unreadCount = (notifications ?? []).filter(n => !n.isRead).length;
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
 
-    // REAL-TIME SSE LISTENER
-    /*
-    const eventSource = new EventSource("/api/notifications/sse");
-    eventSource.onmessage = (event) => {
-       const newNotif = JSON.parse(event.data);
-       console.log("Live notification received:", newNotif);
-       refresh(); // Re-fetch from API to keep state consistent
+      // REAL-TIME SSE LISTENER
+      const eventSource = new EventSource("/api/notifications/stream");
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'notification') {
+            console.log("🔔 Live notification received:", payload.data);
+            playNotificationSound();
+            toast(payload.data.title, payload.data.message, 'info');
+            refresh(); // Re-fetch from API to keep state consistent
+          }
+        } catch (err) {
+          console.error("SSE Parse Error:", err);
+        }
+      };
+
+    eventSource.onerror = () => {
+      console.warn("SSE Connection lost. Reconnecting...");
     };
-    */
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      // eventSource.close();
+      eventSource.close();
     };
   }, [refresh]);
 
@@ -167,14 +181,15 @@ export function NotificationDropdown() {
                   {!n.isRead && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-primary rounded-full" />}
                   <div className={`flex gap-3 ${!n.isRead ? 'pr-4' : ''}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                      n.type === 'SUCCESS' ? 'bg-emerald-100 text-emerald-600' :
-                      n.type === 'WARNING' ? 'bg-amber-100 text-amber-600' :
-                      n.type === 'ERROR' ? 'bg-rose-100 text-rose-600' :
+                      n.type === 'BID_ACCEPTED' || n.type === 'DISPUTE_RESOLVED' || n.type === 'KYC_APPROVED' ? 'bg-emerald-100 text-emerald-600' :
+                      n.type === 'DISPUTE_RAISED' || n.type === 'PAYMENT_FAILED' || n.type === 'KYC_REJECTED' ? 'bg-rose-100 text-rose-600' :
+                      n.type === 'NEW_BID' || n.type === 'NEW_REQUEST' ? 'bg-blue-100 text-blue-600' :
+                      n.type === 'DELIVERY_UPDATE' ? 'bg-indigo-100 text-indigo-600' :
                       'bg-orange-100 text-orange-600'
                     }`}>
-                      {n.type === 'SUCCESS' ? <FiCheckCircle size={16} /> : 
-                       n.type === 'WARNING' ? <FiAlertCircle size={16} /> :
-                       n.type === 'ERROR' ? <FiTrash2 size={16} /> :
+                      {n.type === 'BID_ACCEPTED' || n.type === 'DISPUTE_RESOLVED' || n.type === 'KYC_APPROVED' ? <FiCheckCircle size={16} /> : 
+                       n.type === 'DISPUTE_RAISED' || n.type === 'KYC_REJECTED' ? <FiAlertCircle size={16} /> :
+                       n.type === 'PAYMENT_FAILED' ? <FiTrash2 size={16} /> :
                        <FiInfo size={16} />}
                     </div>
                     <div className="flex-1 min-w-0">

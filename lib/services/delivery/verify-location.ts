@@ -19,8 +19,41 @@ function deg2rad(deg: number): number {
 }
 
 /**
- * Service to verify if the delivery agent is actually at the customer's location
- * before allowing them to complete the delivery.
+ * Service to verify if the delivery agent is at the PICKUP location (Vendor)
+ */
+export async function verifyPickupLocation(requestId: number, agentLat: number, agentLon: number) {
+  const request = await prisma.request.findUnique({
+    where: { id: requestId },
+    include: { 
+        bids: { where: { status: 'ACCEPTED_BY_CLIENT' }, include: { vendor: true } }
+    }
+  });
+
+  if (!request) throw new Error('الطلب غير موجود');
+  const vendor = request.bids[0]?.vendor;
+  
+  if (!vendor || !vendor.latitude || !vendor.longitude) {
+    return { success: true, message: 'موقع التاجر مش مسجل، فـ هنعدي الخطوة دي دلوقتي.' };
+  }
+
+  const distance = calculateDistance(
+    vendor.latitude,
+    vendor.longitude,
+    agentLat,
+    agentLon
+  );
+
+  // 300m tolerance for pickup
+  if (distance > 0.3) {
+    const distM = Math.round(distance * 1000);
+    throw new Error(`إنت لسه مصلتش عند التاجر عشان تستلم. إنت فاضلك ${distM} متر. لازم تكون عنده عشان تأكد الاستلام.`);
+  }
+
+  return { success: true, distanceMeters: Math.round(distance * 1000) };
+}
+
+/**
+ * Service to verify if the delivery agent is at the DROPOFF location (Client)
  */
 export async function verifyDeliveryLocation(requestId: number, agentLat: number, agentLon: number) {
   const request = await prisma.request.findUnique({
@@ -28,7 +61,7 @@ export async function verifyDeliveryLocation(requestId: number, agentLat: number
     select: { latitude: true, longitude: true }
   });
 
-  if (!request) throw new Error('Request not found');
+  if (!request) throw new Error('الطلب ده مش موجود.');
 
   const distance = calculateDistance(
     Number(request.latitude),
@@ -37,9 +70,10 @@ export async function verifyDeliveryLocation(requestId: number, agentLat: number
     agentLon
   );
 
-  // Allow completion only if within 200 meters (0.2km)
-  if (distance > 0.2) {
-    throw new Error(`Location verification failed. You are ${Math.round(distance * 1000)}m away from the client. Please move closer to complete.`);
+  // Allow completion only if within 300 meters (0.3km) to account for GPS jitter in Egypt
+  if (distance > 0.3) {
+    const distM = Math.round(distance * 1000);
+    throw new Error(`إنت لسه مصلتش عند العميل. إنت على بُعد ${distM} متر. قرب شوية كمان (أقل من 300 متر) عشان تقفل الطلب.`);
   }
 
   return { success: true, distanceMeters: Math.round(distance * 1000) };

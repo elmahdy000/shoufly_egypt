@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/shoofly/button";
 import { ErrorState } from "@/components/shared/error-state";
@@ -10,6 +10,7 @@ import { payClientRequest } from "@/lib/api/transactions";
 import { getRequestDetails, cancelClientRequest } from "@/lib/api/requests";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { SuccessConfetti } from "@/components/shoofly/success-confetti";
+import { apiFetch } from "@/lib/api/client";
 import {
   FiFileText, FiMapPin, FiCheckCircle, FiAlignLeft, FiTruck,
   FiDollarSign, FiXCircle, FiMessageSquare, FiStar, FiActivity,
@@ -46,14 +47,36 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
   const [rating, setRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [showPayConfirm, setShowPayConfirm] = useState(false);
+  
+  // 🔄 Fetch platform commission rate from settings (dynamic)
+  const [commissionRate, setCommissionRate] = useState(0.15); // default 15%
+  
+  useEffect(() => {
+    apiFetch('/api/settings/public', 'CLIENT')
+      .then((data: any) => {
+        if (data?.commission) {
+          setCommissionRate(data.commission / 100);
+        }
+      })
+      .catch(() => {
+        // Keep default on error
+      });
+  }, []);
 
   async function handlePay() {
+    // 🛡️ Show confirmation dialog before payment
+    setShowPayConfirm(true);
+  }
+  
+  async function executePayment() {
     try {
       setIsPaying(true);
       setActionMsg(null);
       const result = await payClientRequest(requestId);
       if (result.redirectUrl) { window.location.href = result.redirectUrl; return; }
       setActionMsg({ type: "ok", text: `تمت عملية السداد بنجاح! الرصيد المتبقي: ${result.wallet?.balance} ج.م` });
+      setShowPayConfirm(false);
       setTimeout(refresh, 2000);
     } catch (err) {
       setActionMsg({ type: "err", text: err instanceof Error ? err.message : "حدث خطأ أثناء الدفع" });
@@ -98,6 +121,27 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
       setActionMsg({ type: "err", text: "فشل إرسال التقييم. حاول مرة أخرى." });
     } finally { setSubmittingReview(false); }
   }
+
+  useEffect(() => {
+    // REAL-TIME SSE FOR REQUEST UPDATES
+    const eventSource = new EventSource("/api/notifications/stream");
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        // Refresh if the event is related to this specific request
+        // or if it's a general notification for this user
+        if (payload.data?.requestId === requestId || payload.type === 'NEW_BID' || payload.type === 'ORDER_STATUS_CHANGED') {
+          console.log("🔄 Request update received via SSE, refreshing...");
+          refresh();
+        }
+      } catch (err) {
+        console.error("SSE Request Detail Error:", err);
+      }
+    };
+
+    return () => eventSource.close();
+  }, [requestId, refresh]);
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-32 text-slate-400 gap-4">
@@ -311,7 +355,7 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
               <FiZap size={16} className="text-amber-500" /> تحديثات المندوب
             </h3>
             <div className="relative space-y-5 before:absolute before:right-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-              {(data as any).deliveryTracking.map((step: any, idx: number) => (
+              {(data as { deliveryTracking?: Array<{ status: string; createdAt: string }> }).deliveryTracking?.map((step: { status: string; createdAt: string }, idx: number) => (
                 <div key={idx} className="relative pr-12">
                   <div className={`absolute right-0 top-0 w-8 h-8 rounded-xl border-2 border-white flex items-center justify-center z-10 shadow-sm ${
                     idx === 0 ? "bg-primary text-white" : "bg-slate-100 text-slate-400"
@@ -376,13 +420,13 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
                   <span className="font-semibold">{Number(data.selectedBid.netPrice).toFixed(2)} ج.م</span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-600">
-                  <span>رسوم المنصة</span>
-                  <span className="font-semibold">+{(Number(data.selectedBid.netPrice) * 0.15).toFixed(2)} ج.م</span>
+                  <span>رسوم المنصة ({(commissionRate * 100).toFixed(0)}%)</span>
+                  <span className="font-semibold">+{(Number(data.selectedBid.netPrice) * commissionRate).toFixed(2)} ج.م</span>
                 </div>
                 <div className="h-px bg-slate-200" />
                 <div className="flex justify-between text-sm font-bold text-slate-900">
                   <span>الإجمالي</span>
-                  <span className="text-primary">{(Number(data.selectedBid.netPrice) * 1.15).toFixed(2)} ج.م</span>
+                  <span className="text-primary">{(Number(data.selectedBid.netPrice) * (1 + commissionRate)).toFixed(2)} ج.م</span>
                 </div>
               </div>
             )}
@@ -420,7 +464,7 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
 
           {data.images && data.images.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              {data.images.map((img: any, idx: number) => (
+              {data.images.map((img: { filePath: string; fileName: string }, idx: number) => (
                 <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-slate-200 cursor-zoom-in hover:border-primary transition-colors">
                   <img src={img.filePath} alt={img.fileName} className="w-full h-full object-cover" />
                 </div>
@@ -497,6 +541,64 @@ function RequestDetailsContent({ requestId }: { requestId: number }) {
               >
                 {submittingReview ? <FiRefreshCw size={14} className="animate-spin" /> : <FiStar size={14} />}
                 إرسال التقييم
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Payment Confirmation Dialog ──────────────────────── */}
+      {showPayConfirm && data?.selectedBid?.netPrice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" dir="rtl">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                <FiInfo className="text-primary" /> تأكيد الدفع
+              </h3>
+              <button onClick={() => setShowPayConfirm(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Invoice Summary */}
+            <div className="bg-slate-50 rounded-2xl p-5 space-y-3 border border-slate-200">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">سعر الخدمة</span>
+                <span className="font-semibold text-slate-900">{Number(data.selectedBid.netPrice).toFixed(2)} ج.م</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">رسوم المنصة ({(commissionRate * 100).toFixed(0)}%)</span>
+                <span className="font-semibold text-rose-600">+{(Number(data.selectedBid.netPrice) * commissionRate).toFixed(2)} ج.م</span>
+              </div>
+              <div className="h-px bg-slate-200" />
+              <div className="flex justify-between text-base font-bold">
+                <span className="text-slate-900">المبلغ الإجمالي</span>
+                <span className="text-primary text-xl">{(Number(data.selectedBid.netPrice) * (1 + commissionRate)).toFixed(2)} ج.م</span>
+              </div>
+            </div>
+
+            {/* Warning */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <FiAlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+              <p className="text-sm text-amber-800">
+                بالضغط على "تأكيد الدفع"، سيتم خصم المبلغ من محفظتك أو تحويلك لبوابة الدفع الإلكتروني.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setShowPayConfirm(false)}
+                className="flex-1 py-3.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={executePayment}
+                disabled={isPaying}
+                className="flex-1 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+              >
+                {isPaying ? <FiRefreshCw size={18} className="animate-spin" /> : <FiCheckCircle size={18} />}
+                تأكيد الدفع
               </button>
             </div>
           </div>

@@ -1,248 +1,121 @@
-"use client";
-
+import { getCurrentUserFromCookie } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { StatusBadge } from "@/components/shoofly/status-badge";
-import { useAsyncData } from "@/lib/hooks/use-async-data";
-import { listClientRequests } from "@/lib/api/requests";
-import { formatDate } from "@/lib/formatters";
-import {
-  FiPlus, FiPackage, FiMapPin, FiSearch,
-  FiChevronLeft, FiRefreshCw, FiTag, FiCalendar, FiInbox
-} from "react-icons/fi";
+import { FiPlus, FiPackage, FiInbox } from "react-icons/fi";
+import { RequestRow } from "@/components/requests/RequestRow";
+import { FiltersBar } from "@/components/requests/FiltersBar";
+import { Pagination } from "@/components/requests/Pagination";
 
-const STATUSES = [
-  { value: "ALL",                         label: "الكل",      dot: "" },
-  { value: "PENDING_ADMIN_REVISION",      label: "مراجعة",   dot: "bg-slate-400" },
-  { value: "OPEN_FOR_BIDDING",            label: "مفتوح",    dot: "bg-blue-400" },
-  { value: "OFFERS_FORWARDED",            label: "عروض",     dot: "bg-amber-400" },
-  { value: "ORDER_PAID_PENDING_DELIVERY", label: "تنفيذ",    dot: "bg-violet-400" },
-  { value: "CLOSED_SUCCESS",              label: "مكتمل",    dot: "bg-emerald-400" },
-  { value: "CLOSED_CANCELLED",            label: "ملغي",     dot: "bg-rose-400" },
-];
-
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  PENDING_ADMIN_REVISION:      { label: "قيد المراجعة",    color: "bg-slate-100 text-slate-600" },
-  OPEN_FOR_BIDDING:            { label: "مفتوح للعروض",    color: "bg-blue-50 text-blue-600" },
-  OFFERS_FORWARDED:            { label: "عروض جديدة",       color: "bg-amber-50 text-amber-600" },
-  ORDER_PAID_PENDING_DELIVERY: { label: "جاري التنفيذ",    color: "bg-violet-50 text-violet-600" },
-  CLOSED_SUCCESS:              { label: "مكتمل",            color: "bg-emerald-50 text-emerald-700" },
-  CLOSED_FAILED:               { label: "فشل",              color: "bg-rose-50 text-rose-600" },
-  CLOSED_CANCELLED:            { label: "ملغي",             color: "bg-rose-50 text-rose-500" },
+export const metadata = {
+  title: "طلباتي | شوفلي",
 };
 
-function SkeletonCard() {
+export default async function RequestsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string; limit?: string; status?: string; search?: string };
+}) {
+  const user = await getCurrentUserFromCookie();
+  if (!user || user.role !== "CLIENT") {
+    return <div className="p-10 text-center font-bold">غير مصرح لك بدخول هذه الصفحة</div>;
+  }
+
+  // Ensure params are properly awaited for compatibility
+  const params = await Promise.resolve(searchParams);
+
+  const page = parseInt(params.page || "1") || 1;
+  const limit = parseInt(params.limit || "10") || 10;
+  const status = params.status || "ALL";
+  const search = params.search || "";
+  const skip = (page - 1) * limit;
+
+  // Build Query
+  const where: any = { clientId: user.id };  
+  if (status !== "ALL") where.status = status;
+  if (search) {
+    where.OR = [
+      { title: { contains: search } },
+      { address: { contains: search } }
+    ];
+    const id = parseInt(search);
+    if (!isNaN(id)) where.OR.push({ id });
+  }
+
+  const [total, requests, totalCountAll] = await Promise.all([
+    prisma.request.count({ where }),
+    prisma.request.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        address: true,
+        createdAt: true,
+      }
+    }),
+    prisma.request.count({ where: { clientId: user.id } }) // Raw total for stats
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 animate-pulse">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-slate-100 rounded-xl shrink-0" />
-        <div className="flex-1 space-y-1.5">
-          <div className="h-4 bg-slate-100 rounded w-3/5" />
-          <div className="h-3 bg-slate-100 rounded w-1/4" />
-        </div>
-        <div className="h-6 w-20 bg-slate-100 rounded-full" />
-      </div>
-      <div className="h-3 bg-slate-100 rounded w-2/3" />
-      <div className="h-3 bg-slate-100 rounded w-1/3" />
-    </div>
-  );
-}
-
-export default function ClientRequestsPage() {
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [search, setSearch] = useState("");
-  const { data, loading, error, refresh } = useAsyncData(() => listClientRequests(), []);
-
-  const counts = useMemo(() => {
-    const list = data ?? [];
-    const map: Record<string, number> = { ALL: list.length };
-    STATUSES.slice(1).forEach(s => {
-      map[s.value] = list.filter((r: any) => r.status === s.value).length;
-    });
-    return map;
-  }, [data]);
-
-  const rows = useMemo(() => {
-    let list = data ?? [];
-    if (statusFilter !== "ALL") list = list.filter((r: any) => r.status === statusFilter);
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((r: any) =>
-        r.title?.toLowerCase().includes(q) ||
-        r.address?.toLowerCase().includes(q) ||
-        String(r.id).includes(q)
-      );
-    }
-    return list;
-  }, [data, statusFilter, search]);
-
-  return (
-    <div className="p-5 max-w-3xl mx-auto space-y-5 font-sans text-right pb-28" dir="rtl">
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8 font-cairo text-right min-h-screen bg-slate-50" dir="rtl">
+      {/* StatsHeader */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FiPackage className="text-primary" size={20} /> طلباتي
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {loading ? 'جاري التحميل...' : `${data?.length ?? 0} طلب`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={refresh}
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-          >
-            <FiRefreshCw size={16} />
-          </button>
-          <Link
-            href="/client/requests/new"
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            <FiPlus size={16} /> جديد
-          </Link>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <FiSearch className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" size={16} />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="ابحث بالعنوان أو الرقم..."
-          className="w-full bg-white border border-slate-200 rounded-xl pr-10 pl-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-        />
-      </div>
-
-      {/* Filter tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-        {STATUSES.map(s => {
-          const count = counts[s.value] ?? 0;
-          const active = statusFilter === s.value;
-          if (s.value !== "ALL" && count === 0) return null;
-          return (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(s.value)}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                active
-                  ? "bg-primary text-white border-primary shadow-sm"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-              }`}
-            >
-              {s.dot && (
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-white/70" : s.dot}`} />
-              )}
-              {s.label}
-              <span className={`text-[10px] font-bold min-w-[16px] text-center tabular-nums ${active ? "opacity-80" : "text-slate-400"}`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-600 text-sm p-4 rounded-2xl">
-          {error}
-        </div>
-      )}
-
-      {/* Skeleton */}
-      {loading && (
-        <div className="space-y-3">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard />
-        </div>
-      )}
-
-      {/* Empty */}
-      {!loading && !error && rows.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
-            <FiInbox size={28} />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-sm">
+               <FiPackage size={20} />
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">طلباتي</h1>
           </div>
-          <h3 className="font-semibold text-slate-800 mb-1">
-            {search ? "لا نتائج مطابقة" : statusFilter === "ALL" ? "لا توجد طلبات" : "لا توجد طلبات في هذه الحالة"}
-          </h3>
-          <p className="text-sm text-slate-400 mb-5">
-            {search ? "جرب كلمة بحث مختلفة" : "ابدأ بإنشاء طلبك الأول"}
-          </p>
-          {!search && statusFilter === "ALL" && (
-            <Link
-              href="/client/requests/new"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90"
-            >
-              <FiPlus size={15} /> طلب جديد
-            </Link>
-          )}
+          <p className="text-sm font-bold text-slate-500">إجمالي {totalCountAll} طلب في حسابك</p>
         </div>
-      )}
+        <Link
+          href="/client/requests/new"
+          className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black shadow-lg shadow-primary/20 hover:bg-primary-hover hover:-translate-y-0.5 active:scale-95 transition-all"
+        >
+          <FiPlus size={20} /> إضافة طلب جديد
+        </Link>
+      </div>
 
-      {/* List */}
-      {!loading && rows.length > 0 && (
-        <div className="space-y-3">
-          {rows.map((request: any) => {
-            const st = STATUS_MAP[request.status] ?? { label: request.status, color: "bg-slate-100 text-slate-600" };
-            const hasNewOffers = request.status === "OFFERS_FORWARDED";
-            const isPaid = request.status === "ORDER_PAID_PENDING_DELIVERY";
+      <FiltersBar initialSearch={search} initialStatus={status} />
 
-            return (
-              <Link
-                key={request.id}
-                href={`/client/requests/${request.id}`}
-                className="bg-white rounded-2xl border border-slate-200 p-4 flex items-start gap-3 hover:shadow-md hover:border-primary/30 transition-all group block"
-              >
-                {/* Icon */}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                  hasNewOffers ? "bg-amber-50 text-amber-500"
-                  : isPaid ? "bg-violet-50 text-violet-500"
-                  : "bg-slate-100 text-slate-500"
-                }`}>
-                  <FiPackage size={20} />
-                </div>
+      {/* Requests Table */}
+      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden min-h-[400px]">
+        {requests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[400px] text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6 border border-slate-100">
+              <FiInbox size={32} />
+            </div>
+            <h3 className="font-black text-slate-800 mb-2 text-xl">لا توجد طلبات مطابقة</h3>
+            <p className="text-sm text-slate-400 font-bold max-w-xs">جرب تغيير الفلاتر أو كلمة البحث، أو ابدأ بإنشاء طلب جديد الآن.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                  <th className="px-4 lg:px-6 py-5 rounded-tr-3xl min-w-[200px]">تفاصيل الطلب</th>
+                  <th className="px-4 lg:px-6 py-5 whitespace-nowrap">الحالة</th>
+                  <th className="px-4 lg:px-6 py-5 min-w-[150px]">العنوان والتاريخ</th>
+                  <th className="px-4 lg:px-6 py-5 rounded-tl-3xl text-left w-20">إجراء</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {requests.map(req => (
+                  <RequestRow key={req.id} request={req} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-slate-900 text-sm leading-snug line-clamp-1">{request.title}</h3>
-                    <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${st.color}`}>
-                      {st.label}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-500 flex items-center gap-1.5 mb-1.5 truncate">
-                    <FiMapPin size={11} className="shrink-0 text-slate-400" />
-                    <span className="truncate">{request.address || "لا يوجد عنوان"}</span>
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                        <FiTag size={11} /> #{request.id}
-                      </span>
-                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                        <FiCalendar size={11} /> {formatDate(request.createdAt)}
-                      </span>
-                    </div>
-
-                    {hasNewOffers && (
-                      <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        عروض جديدة
-                      </span>
-                    )}
-
-                    <FiChevronLeft size={16} className="text-slate-300 group-hover:text-primary transition-colors shrink-0 mr-auto" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} />
     </div>
   );
 }

@@ -1,9 +1,41 @@
+import { logger } from './logger';
+
 /**
  * Secure error handling utility
  * Prevents information disclosure in production
  */
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Webhook timestamp validation config
+const WEBHOOK_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Validate webhook timestamp to prevent replay attacks
+ * @param timestamp - Webhook timestamp (ms or ISO string)
+ * @returns boolean - true if valid, false if too old or future
+ */
+export function validateWebhookTimestamp(timestamp: string | number | undefined): boolean {
+  if (!timestamp) return true; // No timestamp provided, skip validation
+
+  let timestampMs: number;
+  if (typeof timestamp === 'string') {
+    timestampMs = new Date(timestamp).getTime();
+  } else {
+    timestampMs = timestamp;
+  }
+
+  if (isNaN(timestampMs) || timestampMs <= 0) return false;
+
+  const now = Date.now();
+  const diff = now - timestampMs;
+
+  // Reject if too old (replay attack) or too far in future (clock skew attack)
+  if (diff > WEBHOOK_TIMESTAMP_TOLERANCE_MS) return false; // Too old
+  if (diff < -WEBHOOK_TIMESTAMP_TOLERANCE_MS) return false; // Too far in future
+
+  return true;
+}
 
 export interface ErrorResponse {
   error: string;
@@ -57,18 +89,16 @@ export function sanitizeError(error: unknown): ErrorResponse {
  * Log error securely (for server-side logging)
  * Logs full error details without exposing to client
  */
+
+
 export function logError(context: string, error: unknown): void {
   if (error instanceof Error) {
-    console.error(`[${context}]`, {
+    logger.error(`${context}.failed`, {
       message: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
     });
   } else {
-    console.error(`[${context}]`, {
-      error,
-      timestamp: new Date().toISOString(),
-    });
+    logger.error(`${context}.unknown`, { error });
   }
 }
 

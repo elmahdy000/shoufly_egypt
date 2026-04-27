@@ -16,11 +16,12 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Transaction {
   id: number;
   amount: number;
-  type: "IN" | "OUT";
+  type: string; // Real enum type
   description: string;
-  status: string;
   createdAt: string;
 }
+
+const IN_TYPES = ["ESCROW_DEPOSIT", "WALLET_TOPUP", "ADMIN_COMMISSION"];
 
 export default function AdminFinancePage() {
   const [filter, setFilter] = useState("ALL");
@@ -33,13 +34,13 @@ export default function AdminFinancePage() {
 
   const stats = useMemo(() => {
     const list = transactions ?? [];
-    const totalIn = list.filter(t => t.type === "IN").reduce((s, t) => s + t.amount, 0);
-    const totalOut = list.filter(t => t.type === "OUT").reduce((s, t) => s + t.amount, 0);
+    const totalIn = list.filter(t => IN_TYPES.includes(t.type)).reduce((s, t) => s + Number(t.amount), 0);
+    const totalOut = list.filter(t => !IN_TYPES.includes(t.type)).reduce((s, t) => s + Number(t.amount), 0);
     return { income: totalIn, expense: totalOut, net: totalIn - totalOut };
   }, [transactions]);
 
   return (
-    <div className="min-h-full bg-slate-50 pb-20 font-sans text-right" dir="rtl">
+    <div className="admin-page admin-page--spacious" dir="rtl">
       
       {/* 🚀 Header: Modern Financial Hub */}
       <section className="bg-white border-b border-slate-200 sticky top-0 z-40 overflow-hidden">
@@ -97,10 +98,10 @@ export default function AdminFinancePage() {
                  <table className="w-full text-right border-collapse">
                     <thead>
                        <tr className="bg-slate-50 text-slate-500">
-                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">نوع العملية</th>
-                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">التاريخ</th>
-                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">الوصف</th>
-                          <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-left">القيمة</th>
+                          <th className="px-4 lg:px-8 py-4 text-[11px] font-bold uppercase tracking-wider">نوع العملية</th>
+                          <th className="px-4 lg:px-8 py-4 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">التاريخ</th>
+                          <th className="px-4 lg:px-8 py-4 text-[11px] font-bold uppercase tracking-wider">الوصف</th>
+                          <th className="px-4 lg:px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-left">القيمة</th>
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -109,27 +110,40 @@ export default function AdminFinancePage() {
                        ) : transactions?.length === 0 ? (
                          <tr><td colSpan={4} className="py-20 text-center text-slate-300 text-lg font-bold opacity-40">لا توجد حركات مالية مسجلة</td></tr>
                        ) : (
-                         transactions!.map(tx => (
-                           <tr 
-                             key={tx.id} 
-                             onClick={() => setSelected(tx)}
-                             className={`group cursor-pointer transition-all ${selected?.id === tx.id ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
-                           >
-                              <td className="px-8 py-5">
-                                 <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${tx.type === 'IN' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
-                                       {tx.type === 'IN' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                                    </div>
-                                    <span className="text-sm font-bold text-slate-700">{tx.type === 'IN' ? 'وارد' : 'صادر'}</span>
-                                 </div>
-                              </td>
-                              <td className="px-8 py-5 text-xs font-bold text-slate-400 font-jakarta">{formatDate(tx.createdAt)}</td>
-                              <td className="px-8 py-5 text-sm font-bold text-slate-900">{tx.description}</td>
-                              <td className={`px-8 py-5 text-left font-jakarta text-lg font-bold tracking-tight ${tx.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                 {tx.type === 'IN' ? '+' : '-'}{formatCurrency(tx.amount)}
-                              </td>
-                           </tr>
-                         ))
+                         transactions!.map(tx => {
+                            const isIn = IN_TYPES.includes(tx.type);
+                            const txLabel = {
+                                ESCROW_DEPOSIT: "إيداع ضامن",
+                                WALLET_TOPUP: "شحن محفظة",
+                                ADMIN_COMMISSION: "عمولة منصة",
+                                VENDOR_PAYOUT: "تحويل للمورد",
+                                DELIVERY_PAYOUT: "تحويل للمندوب",
+                                WITHDRAWAL: "طلب سحب",
+                                REFUND: "استرداد مبلغ"
+                            }[tx.type] || tx.type;
+
+                            return (
+                            <tr
+                              key={tx.id}
+                              onClick={() => setSelected(tx)}
+                              className={`group cursor-pointer transition-all ${selected?.id === tx.id ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}
+                            >
+                               <td className="px-4 lg:px-8 py-5">
+                                  <div className="flex items-center gap-3">
+                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${isIn ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
+                                        {isIn ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                                     </div>
+                                     <span className="text-sm font-bold text-slate-700">{txLabel}</span>
+                                  </div>
+                               </td>
+                               <td className="px-4 lg:px-8 py-5 text-xs font-bold text-slate-400 font-jakarta whitespace-nowrap">{formatDate(tx.createdAt)}</td>
+                               <td className="px-4 lg:px-8 py-5 text-sm font-bold text-slate-900 max-w-[150px] lg:max-w-none truncate">{tx.description}</td>
+                               <td className={`px-4 lg:px-8 py-5 text-left font-jakarta text-lg font-bold tracking-tight ${isIn ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  {isIn ? '+' : '-'}{formatCurrency(tx.amount)}
+                               </td>
+                            </tr>
+                            );
+                          })
                        )}
                     </tbody>
                  </table>
@@ -143,7 +157,7 @@ export default function AdminFinancePage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="lg:col-span-4 bg-white rounded-2xl p-8 border border-slate-200 shadow-xl sticky top-28 space-y-8 overflow-hidden"
+                    className="lg:col-span-4 bg-white rounded-2xl p-4 lg:p-8 border border-slate-200 shadow-sm lg:sticky lg:top-28 space-y-8 overflow-hidden"
                  >
                     <div className="flex items-center justify-between border-b border-slate-100 pb-6 text-slate-900">
                        <h2 className="text-lg font-bold">تدقيق العملية</h2>
@@ -154,10 +168,10 @@ export default function AdminFinancePage() {
                        <div className="p-6 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">القيد المالي #TX_{selected.id}</p>
                           <div className="space-y-2">
-                             <h4 className="text-4xl font-bold tracking-tight text-slate-900 font-jakarta leading-none">{formatCurrency(selected.amount)}</h4>
-                             <p className={`text-sm font-bold flex items-center gap-2 ${selected.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {selected.type === 'IN' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                                {selected.type === 'IN' ? 'تحويل وارد' : 'تحويل صادر'}
+                             <h4 className="text-2xl font-bold tracking-tight text-slate-900 font-jakarta leading-none">{formatCurrency(selected.amount)}</h4>
+                             <p className={`text-sm font-bold flex items-center gap-2 ${IN_TYPES.includes(selected.type) ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {IN_TYPES.includes(selected.type) ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                                {IN_TYPES.includes(selected.type) ? 'تحويل وارد' : 'تحويل صادر'}
                              </p>
                           </div>
                        </div>
@@ -170,7 +184,7 @@ export default function AdminFinancePage() {
                     </div>
 
                     <div className="pt-8 border-t border-slate-100">
-                       <button className="w-full h-14 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                       <button className="w-full h-14 bg-emerald-600 text-white rounded-xl font-semibold text-sm shadow-sm hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                           <Download size={24} /> استخراج الفاتورة
                        </button>
                     </div>
@@ -196,7 +210,7 @@ function FinMetric({ label, val, icon: Icon, color, net }: any) {
        </div>
        <div className="space-y-1">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">{label}</p>
-          <p className={`text-3xl font-bold font-jakarta leading-none mt-1 ${net && val < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+          <p className={`text-2xl font-bold font-jakarta leading-none mt-1 ${net && val < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
              {formatCurrency(val).split('.')[0]}
           </p>
        </div>

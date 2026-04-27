@@ -1,19 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback, memo } from "react";
 import { ErrorState } from "@/components/shared/error-state";
+import { RequestGridSkeleton } from "@/components/shoofly/skeleton";
 import { useAsyncData } from "@/lib/hooks/use-async-data";
 import { listVendorOpenRequests } from "@/lib/api/requests";
 import {
   FiBriefcase, FiMapPin, FiFilter, FiInbox, FiChevronLeft
 } from "react-icons/fi";
 
+// 🚀 Memoized request card for better performance
+const RequestCard = memo(function RequestCard({ request }: { request: any }) {
+  return (
+    <Link
+      href={`/vendor/requests/${request.id}`}
+      className="block bg-white rounded-xl p-4 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <h3 className="font-bold text-slate-900 line-clamp-2">{request.title}</h3>
+        <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+          #{request.id}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-slate-600">
+        <FiMapPin size={14} className="text-slate-400" />
+        <span className="line-clamp-1">{request.address}</span>
+      </div>
+      {request.budget && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <span className="text-sm font-bold text-emerald-600">
+            {request.budget.toLocaleString()} ج.م
+          </span>
+        </div>
+      )}
+    </Link>
+  );
+});
+
 const FILTERS = [
   { value: "ALL", label: "الكل" },
   { value: "OPEN_FOR_BIDDING", label: "جديدة 🔥" },
   { value: "OFFERS_FORWARDED", label: "عليها عروض 📦" },
 ];
+
+import { ShooflyLoader } from "@/components/shoofly/loader";
 
 export default function VendorRequestsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -24,12 +55,12 @@ export default function VendorRequestsPage() {
   const [cities, setCities] = useState<any[]>([]);
 
   // Initial Fetch: Governorates
-  useState(() => {
+  useEffect(() => {
     fetch('/api/locations')
       .then(res => res.json())
       .then(data => setGovernorates(data))
       .catch(err => console.error('Failed to load governorates', err));
-  });
+  }, []);
 
   // Fetch Cities when gov changes
   const handleGovChange = (govId: string) => {
@@ -45,7 +76,7 @@ export default function VendorRequestsPage() {
       .catch(err => console.error('Failed to load cities', err));
   };
 
-  const { data, loading, error } = useAsyncData(
+  const { data, loading, error, refresh } = useAsyncData(
     () => listVendorOpenRequests({ 
       governorateId: selectedGov ? Number(selectedGov) : undefined,
       cityId: selectedCity ? Number(selectedCity) : undefined
@@ -53,11 +84,43 @@ export default function VendorRequestsPage() {
     [selectedGov, selectedCity]
   );
 
+  useEffect(() => {
+    // REAL-TIME SSE FOR NEW REQUESTS
+    let eventSource: EventSource;
+    
+    const connectSSE = () => {
+      eventSource = new EventSource("/api/notifications/stream");
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'NEW_REQUEST' || payload.type === 'ORDER_STATUS_CHANGED') {
+            refresh();
+          }
+        } catch (err) {
+          console.error("SSE Marketplace Error:", err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        setTimeout(connectSSE, 3000); // Retry after 3s
+      };
+    };
+
+    connectSSE();
+    return () => eventSource?.close();
+  }, [refresh]);
+
   const rows = useMemo(() => {
     const list = data ?? [];
     if (statusFilter === "ALL") return list;
     return list.filter((item: any) => item.status === statusFilter);
   }, [data, statusFilter]);
+
+  if (loading && !data) {
+    return <ShooflyLoader message="بنحمل أحدث طلبات السوق..." />;
+  }
 
   return (
     <div className="font-sans text-right" dir="rtl">
@@ -74,7 +137,7 @@ export default function VendorRequestsPage() {
         </div>
 
         {/* Location Filters */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative">
             <select
               value={selectedGov}
@@ -126,12 +189,7 @@ export default function VendorRequestsPage() {
         </div>
 
         {/* Loading */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
-            <p className="text-sm font-medium">بنجمع الطلبات المتاحة...</p>
-          </div>
-        )}
+        {loading && <RequestGridSkeleton />}
 
         {error && <ErrorState message={error} />}
 
