@@ -8,7 +8,6 @@ import 'package:shoofly_core/core/widgets/modern_widgets.dart';
 import 'package:shoofly_core/presentation/blocs/auth/auth_bloc.dart';
 import 'package:shoofly_core/presentation/blocs/vendor/vendor_bloc.dart';
 import 'package:shoofly_core/domain/entities/vendor_profile.dart';
-import 'package:intl/intl.dart';
 
 class VendorProfilePage extends StatelessWidget {
   const VendorProfilePage({super.key});

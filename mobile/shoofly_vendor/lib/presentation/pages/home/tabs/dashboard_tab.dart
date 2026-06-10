@@ -6,7 +6,6 @@ import 'package:shoofly_core/core/theme/app_typography.dart';
 import 'package:shoofly_core/core/widgets/modern_widgets.dart';
 import 'package:shoofly_core/core/widgets/app_image.dart';
 import 'package:shoofly_core/domain/entities/request.dart';
-import 'package:shoofly_core/presentation/blocs/auth/auth_bloc.dart';
 import 'package:shoofly_core/presentation/blocs/vendor/vendor_bloc.dart';
 import 'package:shoofly_core/presentation/widgets/empty_state.dart';
 import '../widgets/submit_bid_modal.dart';
@@ -591,55 +590,7 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
 
-  Widget _buildSimpleStatCard(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon, {
-    VoidCallback? onTap,
-  }) {
-    return ModernCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(12),
-      borderRadius: 16,
-      elevation: 0,
-      borderColor: Theme.of(context).dividerColor,
-      backgroundColor: Theme.of(context).cardTheme.color,
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primary.withOpacity(0.6), size: 18),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: AppTypography.labelLarge.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textDisabled,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            LucideIcons.chevronLeft,
-            color: AppColors.textDisabled,
-            size: 16,
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildRequestsSection() {
     return SliverPadding(

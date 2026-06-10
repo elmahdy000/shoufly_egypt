@@ -380,27 +380,7 @@ class _VendorWalletPageState extends State<VendorWalletPage> {
     );
   }
 
-  Widget _buildTrendIndicator(bool isUp) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          isUp ? LucideIcons.trendingUp : LucideIcons.trendingDown,
-          color: isUp ? AppColors.success : AppColors.error,
-          size: 14,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          isUp ? '+12%' : '-5%',
-          style: AppTypography.labelSmall.copyWith(
-            color: isUp ? AppColors.success : AppColors.error,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildEarningsSummary(List<VendorTransaction> transactions) {
     final days = ['سبت', 'أحد', 'اثني', 'ثلاث', 'أربع', 'خميس', 'جمعة'];
@@ -543,9 +523,7 @@ class _VendorWalletPageState extends State<VendorWalletPage> {
     }
   }
 
-  double _toDouble(dynamic value) {
-    return double.tryParse(value?.toString() ?? '') ?? 0;
-  }
+
 
   Widget _buildSearchSheet() {
     return StatefulBuilder(
